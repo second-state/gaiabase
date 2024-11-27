@@ -1,0 +1,8 @@
+firecrawl==1.6.1
+firecrawl_py==1.6.1
+Flask==3.1.0
+llama_parse==0.5.15
+nest_asyncio==1.6.0
+python-dotenv==1.0.1
+textract==1.6.5
+Werkzeug==3.1.3

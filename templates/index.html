@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Flask Tabs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+        }
+        .sidebar button.active {
+            background: #bbb;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .file-list li {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: #f9f9f9;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <button id="tab-uploads" class="active">Uploads</button>
+        <button id="tab-webs">Webs</button>
+        <button id="tab-qa">QA</button>
+    </div>
+    <div class="content">
+        <!-- Uploads -->
+        <div id="uploads">
+            <h3>Uploads</h3>
+            <button id="uploadFile">Upload Files</button>
+            <input style="display: none;" type="file" id="fileInput" accept=".txt, .pdf, .doc, .docx" multiple>
+            <button id="uploadBtn">Submit</button>
+            <ul id="fileList" class="file-list"></ul>
+        </div>
+        <!-- Webs -->
+        <div id="webs" class="hidden">
+            <h3>Webs</h3>
+            <input type="text" id="urlInput" placeholder="Enter URL">
+            <button id="submitUrlBtn">Submit</button>
+            <p id="urlResult"></p>
+        </div>
+        <!-- QA -->
+        <div id="qa" class="hidden">
+            <h3>QA</h3>
+            <div id="qaContainer">
+                <div class="qa-pair">
+                    <input type="text" class="q-input" placeholder="Q">
+                    <input type="text" class="a-input" placeholder="A">
+                    <button class="removeQaBtn">Remove</button>
+                </div>
+            </div>
+            <button id="addQaBtn">Add</button>
+            <button id="submitQaBtn">Submit</button>
+        </div>
+    </div>
+</div>
+<script src="/static/script.js"></script>
+</body>
+</html>
