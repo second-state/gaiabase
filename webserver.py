@@ -44,6 +44,8 @@ def prase_pdf(input_file, output_folder):
         verbose=True
     )
 
+    total_text = ""
+
     file_name = os.path.basename(input_file)
 
     extra_info = {"file_name": file_name}
@@ -51,9 +53,10 @@ def prase_pdf(input_file, output_folder):
     with open(input_file, "rb") as f:
         documents = parser.load_data(f, extra_info=extra_info)
         output_file = os.path.join(output_folder, os.path.basename(input_file) + ".md")
-
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(documents[0].text)
+        for data in documents:
+            total_text += data.text
+        with open(output_file, 'a', encoding='utf-8') as f:
+            f.write(total_text)
             print(f"文件内容已保存到: {output_file}")
 
 
