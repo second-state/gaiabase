@@ -75,7 +75,6 @@ function startAllRequest() {
             const logo = document.getElementById("submit-all-logo")
             const thisStatus = parseInt(data.data[0])
             logo.src = returnImgUrl(thisStatus)
-            logo.id = "url-logo"
             logo.style.width = "3rem";
             logo.style.marginRight = "0.5rem";
             if (thisStatus !== 0) {
