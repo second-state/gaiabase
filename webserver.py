@@ -240,4 +240,4 @@ def show_image(filename):
     return send_from_directory('img', filename)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=519)
