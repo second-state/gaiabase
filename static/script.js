@@ -1,23 +1,28 @@
 // Switch Tabs
 const tabs = document.querySelectorAll(".sidebar button");
 const sections = document.querySelectorAll(".content > div");
+const submitAll = document.getElementById("submit-all");
 
 let fileList = []
 let finishList = []
 let trans_id = ""
+let queryUrl = ""
+let queryUrlStatus = null
+let click_tab = 1
 
 tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
         tabs.forEach((t) => t.classList.remove("active"));
         sections.forEach((s) => s.classList.add("hidden"));
         tab.classList.add("active");
+        click_tab = index;
         sections[index].classList.remove("hidden");
+        sections[4].classList.remove("hidden");
     });
 });
 
-let intervalId; // 用于存储定时器的ID
+let intervalId;
 
-// 启动定时请求
 function startRequest() {
     intervalId = setInterval(async () => {
         const requestOptions = {
@@ -42,10 +47,37 @@ function startRequest() {
                     status: this_status
                 }
             })
+            try {
+                const urlLogo = document.getElementById("url-logo")
+                for (let i = 0; i < data.data.length; i++) {
+                    const item = data.data[i];
+                    if (queryUrl === item[0]) {
+                        urlLogo.src = returnImgUrl(item[1])
+                        queryUrlStatus = item[1];
+                        console.log(queryUrlStatus)
+                        break;
+                    }
+                }
+            }catch (e) {}
         }
         updateAllFile()
     }, 2000);
 }
+
+document.getElementById("collectionName").addEventListener("input", (e) => {
+    const c = document.getElementById("container")
+    if (e.target.value !== "") {
+        trans_id = e.target.value
+        console.log(trans_id)
+        c.style.pointerEvents = "auto";
+        c.style.opacity = "1";
+        c.style.userSelect = "auto";
+    } else {
+        c.style.pointerEvents = "none";
+        c.style.opacity = "0.5";
+        c.style.userSelect = "none";
+    }
+})
 
 // 停止定时请求
 function stopRequest() {
@@ -78,10 +110,25 @@ const updateAllFile = () => {
             allFinish = false
         }
     });
-    if (allFinish) {
+    if (allFinish && queryUrlStatus !== 0 && queryUrlStatus !== null) {
+        canSubmit()
         stopRequest()
     }
 }
+
+const canSubmit = () => {
+    submitAll.disabled = false;
+    submitAll.style.opacity = '1';
+    submitAll.style.cursor = "pointer";
+}
+
+const cannotSubmit = () => {
+    submitAll.disabled = true;
+    submitAll.style.opacity = '0.5';
+    submitAll.style.cursor = "not-allowed";
+}
+
+cannotSubmit()
 
 const showAllFile = () => {
     const fileListPlace = document.getElementById("fileList");
@@ -132,18 +179,13 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
     const fileListPlace = document.getElementById("fileList");
     const formData = new FormData();
 
+    cannotSubmit()
+
     for (const file of fileList) {
         formData.append("files[]", file);
     }
     formData.append("trans_id", trans_id);
 
-    const response = await fetch("/upload", {
-        method: "POST",
-        body: formData,
-    });
-
-    const data = await response.json();
-    trans_id = data['output_folder']
     fileList.forEach((file) => {
         finishList.push({
             status: 0,
@@ -158,8 +200,18 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
         li.textContent = data.file.name;
         fileListPlace.appendChild(li);
     });
-    startRequest()
+
     showAllFile()
+
+    const response = await fetch("/upload", {
+        method: "POST",
+        body: formData,
+    });
+    document.getElementById("collectionName").disabled = true;
+
+    const data = await response.json();
+    trans_id = data['output_folder']
+    startRequest()
 });
 
 // Submit URL
@@ -167,14 +219,33 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     const urlInput = document.getElementById("urlInput");
     const urlResult = document.getElementById("urlResult");
 
+    const logo = document.createElement("img");
+
+    logo.src = returnImgUrl(0)
+    logo.id = "url-logo"
+    logo.style.width = "1.5rem";
+    logo.style.marginRight = "0.5rem";
+
+    urlInput.disabled = true;
+
+    urlInput.parentNode.insertBefore(logo, urlInput);
+
+    document.getElementById("collectionName").disabled = true;
+
+    cannotSubmit()
+
+    queryUrl = urlInput.value
+
     const response = await fetch("/submit_url", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({url: urlInput.value, trans_id: trans_id}),
+        body: JSON.stringify({url: queryUrl, trans_id: trans_id}),
     });
 
     const data = await response.json();
     trans_id = data['output_folder']
+
+    startRequest()
 });
 
 // Manage QA
@@ -191,19 +262,31 @@ document.getElementById("addQaBtn").addEventListener("click", () => {
     qaContainer.appendChild(div);
 });
 
-document.getElementById("submitQaBtn").addEventListener("click", async () => {
-    const qaContainer = document.getElementById("qaContainer");
-    const qaPairs = Array.from(qaContainer.querySelectorAll(".qa-pair")).map((pair) => ({
-        q: pair.querySelector(".q-input").value,
-        a: pair.querySelector(".a-input").value,
-    }));
-
-    const response = await fetch("/submit_qa", {
+document.getElementById("submit-all").addEventListener("click", async () => {
+    // const qaContainer = document.getElementById("qaContainer");
+    // Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
+    //     const q = pair.querySelector(".q-input").value;
+    //     const a = pair.querySelector(".q-input").value;
+    //     if(q && a) {
+    //         fetch()
+    //     }
+    // });
+    //
+    // const response = await fetch("/submit_qa", {
+    //     method: "POST",
+    //     headers: {"Content-Type": "application/json"},
+    //     body: JSON.stringify({qa_list: qaPairs}),
+    // });
+    //
+    // document.getElementById("collectionName").disabled = true;
+    //
+    // const data = await response.json();
+    // alert(data.message);
+    const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({qa_list: qaPairs}),
+        body: JSON.stringify({trans_id: trans_id}),
     });
 
     const data = await response.json();
-    alert(data.message);
 });

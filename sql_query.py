@@ -75,6 +75,30 @@ def create_task(task_id):
             conn.close()
 
 
+def update_task(task_id, status):
+    conn = create_connection()
+    if conn is None:
+        return
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                UPDATE `task` SET task_status = %s
+                WHERE task_id = %s;
+            """, (status, task_id))
+
+        conn.commit()
+
+    except Error as e:
+        print(f"Update subtask failed and rolled back. Error: {e}")
+        conn.rollback()
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+
 def create_subtask(task_id, file_name):
     conn = create_connection()
     if conn is None:

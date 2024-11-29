@@ -1,7 +1,9 @@
+import json
 import nest_asyncio
 import os
 import random
 import re
+import requests
 import string
 import textract
 import threading
@@ -29,7 +31,8 @@ def create_dir(output_folder=None):
     letters = string.ascii_letters + string.digits
     if not output_folder:
         output_folder = ''.join(random.choice(letters) for _ in range(6)) + timestamp
-        create_task(output_folder)
+    print(f"创建{output_folder}")
+    create_task(output_folder)
     os.makedirs(output_folder)
     return output_folder
 
@@ -37,7 +40,7 @@ def create_dir(output_folder=None):
 def split_and_save(text, file_path, max_length=5000):
     parts = []
     while len(text) > max_length:
-        split_point = max(text.rfind(delim, 0, max_length) for delim in ['\n', '。', '!', '?', ','])
+        split_point = max(text.rfind(delim, 0, max_length) for delim in ['\n', '。', '!', '?', '!', '?', '.'])
         if split_point == -1:
             split_point = max_length
         parts.append(text[:split_point].strip())
@@ -114,21 +117,24 @@ def prase_text(input_file, output_folder):
 
 
 def crawl_web(url, output_folder):
-    crawl_status = FCApp.crawl_url(
-        url,
-        params={
-            'limit': 10000,
-            'scrapeOptions': {'formats': ['markdown']}
-        },
-        poll_interval=30
-    )
-    print(crawl_status)
-    for data in crawl_status['data']:
-        sanitized_url = re.sub(r'[\/:*?"<>|]', '_', data['metadata']['url'])
-        output_file = os.path.join(output_folder, os.path.basename(sanitized_url) + ".md")
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(data['markdown'])
-            print(f"[log] 文件内容已保存到: {output_file}")
+    create_subtask(output_folder, url)
+    try:
+        crawl_status = FCApp.crawl_url(
+            url,
+            params={
+                'limit': 10000,
+                'scrapeOptions': {'formats': ['markdown']}
+            }
+        )
+        for data in crawl_status['data']:
+            sanitized_url = re.sub(r'[\/:*?"<>|]', '_', data['metadata']['url'])
+            output_file = os.path.join(output_folder, os.path.basename(sanitized_url) + ".md")
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(data['markdown'])
+                print(f"[log] 文件内容已保存到: {output_file}")
+        update_subtask(output_folder, url, 1)
+    except Exception as e:
+        update_subtask(output_folder, url, 2)
 
 
 @app.route("/upload", methods=["POST"])
@@ -180,10 +186,60 @@ def submit_url():
     return jsonify({"output_folder": output_folder})
 
 
-@app.route("/submit_qa", methods=["POST"])
-def submit_qa():
-    qa_list = request.json.get("qa_list", [])
-    return jsonify({"message": "QA pairs received", "qa_list": qa_list})
+@app.route("/submit_all_data", methods=["POST"])
+def submit_all_data():
+    folder_path = request.json.get("trans_id")
+    print(folder_path)
+    all_ok = True
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+
+        if filename.endswith('.txt') or filename.endswith('.md'):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+                content_len = len(content)
+                if content_len < 400:
+                    try:
+                        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{folder_path}"
+                        print(url)
+                        payload = json.dumps({
+                            "full_text": content
+                        })
+                        print(payload)
+                        headers = {
+                            'Content-Type': 'application/json'
+                        }
+                        response = requests.request("POST", url, headers=headers, data=payload)
+                        this_status = response.json()["status"]
+                        if not this_status:
+                            all_ok = False
+                        print(f"[info] embed请求成功: {filename}")
+                    except Exception as e:
+                        print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                        all_ok = False
+                else:
+                    try:
+                        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{folder_path}"
+                        payload = json.dumps({
+                            "full_text": content
+                        })
+                        headers = {
+                            'Content-Type': 'application/json'
+                        }
+                        response = requests.request("POST", url, headers=headers, data=payload)
+                        this_status = response.json()["status"]
+                        if not this_status:
+                            all_ok = False
+                        print(f"[info] summarize embed请求成功: {filename}")
+                    except Exception as e:
+                        print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                        all_ok = False
+    if all_ok:
+        os.rmdir(folder_path)
+        update_task(folder_path, 1)
+    else:
+        update_task(folder_path, 2)
+    return jsonify(success=True)
 
 
 @app.route('/listFiles/<dirname>')
@@ -193,7 +249,7 @@ def file_list(dirname):
     files = os.listdir(dirname)
     files = [f for f in files if os.path.isfile(os.path.join(dirname, f))]  # 只列出文件
     return render_template_string('''
-        <h1>文件浏览器</h1>
+        <h1>{{dirname}}的处理结果</h1>
         <ul>
         {% for file in files %}
             <li><a href="{{ url_for('get_file', dirname=dirname, filename=file) }}">{{ file }}</a></li>
@@ -235,9 +291,11 @@ def check_subtask_status_serve():
     data = check_subtask_status(task_id)
     return jsonify({'status': 'success', 'data': data}), 200
 
+
 @app.route('/img/<path:filename>')
 def show_image(filename):
     return send_from_directory('img', filename)
 
+
 if __name__ == "__main__":
-    app.run(debug=True, port=519)
+    app.run(port=519)

@@ -10,9 +10,11 @@
             margin: 0;
             padding: 0;
         }
+        button {
+            cursor: pointer;
+        }
         .container {
             display: flex;
-            height: 100vh;
         }
         .sidebar {
             width: 200px;
@@ -52,7 +54,11 @@
     </style>
 </head>
 <body>
-<div class="container">
+<div style="display:flex;align-items: center;padding: 4vw;font-size: 3vw;">
+    <div style="font-weight: bold;">Collection name:</div>
+    <input id="collectionName" style="font-size: 3vw;margin-left: 1rem;" type="text"/>
+</div>
+<div id="container" class="container" style="pointer-events: none;opacity: 0.5;user-select: none;">
     <div class="sidebar">
         <button id="tab-uploads" class="active">Uploads</button>
         <button id="tab-webs">Webs</button>
@@ -66,13 +72,14 @@
             <input style="display: none;" type="file" id="fileInput" accept=".txt, .pdf, .doc, .docx" multiple>
             <button id="uploadBtn">Submit</button>
             <ul id="fileList" class="file-list"></ul>
-            <div id="upload-result"></div>
         </div>
         <!-- Webs -->
         <div id="webs" class="hidden">
             <h3>Webs</h3>
-            <input type="text" id="urlInput" placeholder="Enter URL">
-            <button id="submitUrlBtn">Submit</button>
+            <div style="display: flex;align-items: center;">
+                <input type="text" id="urlInput" placeholder="Enter URL">
+                <button id="submitUrlBtn">Submit</button>
+            </div>
             <p id="urlResult"></p>
         </div>
         <!-- QA -->
@@ -89,8 +96,13 @@
             <button id="submitQaBtn">Submit</button>
         </div>
         <div id="result"></div>
+        <div id="upload-result"></div>
     </div>
 </div>
+<div style="display: flex;justify-content: center;">
+    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;margin-top: 1rem;">Submit All Data</button>
+</div>
+
 <script src="/static/script.js"></script>
 </body>
 </html>
