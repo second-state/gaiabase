@@ -15,21 +15,93 @@ tabs.forEach((tab, index) => {
     });
 });
 
+let intervalId; // 用于存储定时器的ID
 
-// Upload Files
-document.getElementById("fileInput").addEventListener("change", async (e) => {
+// 启动定时请求
+function startRequest() {
+    intervalId = setInterval(async () => {
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        };
+        const response = await fetch(`/sqlApi/checkSubtaskStatus?task_id=${trans_id}`, requestOptions)
+        const data = await response.json()
+        if (data && data.data) {
+            finishList = finishList.map(finish => {
+                const this_file_name = finish.file.name
+                let this_status = 0
+                for (let i = 0; i < data.data.length; i++) {
+                    const item = data.data[i];
+                    if (this_file_name === item[0]) {
+                        this_status = item[1];
+                        break;
+                    }
+                }
+                return {
+                    file: finish.file,
+                    status: this_status
+                }
+            })
+        }
+        updateAllFile()
+    }, 2000);
+}
+
+// 停止定时请求
+function stopRequest() {
+    clearInterval(intervalId);
+    const result = document.getElementById("upload-result")
+    result.innerHTML = `You can see the results on <a target="_blank" href="/listFiles/${trans_id}">this page</a>`
+    console.log(`停止请求: ${intervalId}`);
+}
+
+function returnImgUrl(status) {
+    status = parseInt(status)
+    if (status === 1) {
+        return "img/success.svg"
+    } else if (status === 2) {
+        return "img/error.svg"
+    } else {
+        return "img/loading.svg"
+    }
+}
+
+
+const updateAllFile = () => {
+    let allFinish = true;
+    finishList.forEach((data) => {
+        const logo = document.getElementById(data.file.name);
+        logo.src = returnImgUrl(data.status)
+        // logo.id = data.file.name;
+        logo.style.width = "1.5rem";
+        if (data.status === 0) {
+            allFinish = false
+        }
+    });
+    if (allFinish) {
+        stopRequest()
+    }
+}
+
+const showAllFile = () => {
     const fileListPlace = document.getElementById("fileList");
-    const formData = new FormData();
-
-    console.log(e.target.files)
-
-    fileList.push(...e.target.files)
-
-    fileListPlace.innerHTML = ""; // Clear previous list
-    finishList.forEach((file) => {
+    fileListPlace.innerHTML = "";
+    finishList.forEach((data) => {
+        const div = document.createElement("div");
+        const nameDiv = document.createElement("div");
+        const logo = document.createElement("img");
         const li = document.createElement("li");
-        li.textContent = file.name;
+        logo.src = returnImgUrl(data.status)
+        logo.id = data.file.name;
+        logo.style.width = "1.5rem";
+        nameDiv.textContent = data.file.name;
+        nameDiv.style.marginLeft = "0.5rem";
+        div.appendChild(logo)
+        div.appendChild(nameDiv)
+        div.style.display = "flex";
+        div.style.alignItems = "center";
         fileListPlace.appendChild(li);
+        li.appendChild(div);
     });
     fileList.forEach((file) => {
         const li = document.createElement("li");
@@ -43,6 +115,13 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
         li.appendChild(removeBtn);
         fileListPlace.appendChild(li);
     });
+}
+
+
+// Upload Files
+document.getElementById("fileInput").addEventListener("change", async (e) => {
+    fileList.push(...e.target.files)
+    showAllFile()
 });
 
 document.getElementById("uploadFile").addEventListener("click", async (e) => {
@@ -65,14 +144,22 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
 
     const data = await response.json();
     trans_id = data['output_folder']
-    finishList.push(...fileList)
+    fileList.forEach((file) => {
+        finishList.push({
+            status: 0,
+            file: file
+        })
+
+    })
     fileList = []
     fileListPlace.innerHTML = ""; // Clear previous list
-    finishList.forEach((file) => {
+    finishList.forEach((data) => {
         const li = document.createElement("li");
-        li.textContent = file.name;
+        li.textContent = data.file.name;
         fileListPlace.appendChild(li);
     });
+    startRequest()
+    showAllFile()
 });
 
 // Submit URL

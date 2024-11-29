@@ -38,6 +38,9 @@
         .hidden {
             display: none;
         }
+        .file-list {
+            padding: 0;
+        }
         .file-list li {
             list-style: none;
             display: flex;
@@ -63,6 +66,7 @@
             <input style="display: none;" type="file" id="fileInput" accept=".txt, .pdf, .doc, .docx" multiple>
             <button id="uploadBtn">Submit</button>
             <ul id="fileList" class="file-list"></ul>
+            <div id="upload-result"></div>
         </div>
         <!-- Webs -->
         <div id="webs" class="hidden">
@@ -84,6 +88,7 @@
             <button id="addQaBtn">Add</button>
             <button id="submitQaBtn">Submit</button>
         </div>
+        <div id="result"></div>
     </div>
 </div>
 <script src="/static/script.js"></script>
