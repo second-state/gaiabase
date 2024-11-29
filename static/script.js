@@ -302,6 +302,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     //
     // const data = await response.json();
     // alert(data.message);
+    document.getElementById("submit-all").disabled = true;
     const logo = document.getElementById("submit-all-logo")
     logo.src = returnImgUrl(0)
     logo.style.width = "3rem";
@@ -313,6 +314,8 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     });
 
     const data = await response.json();
+
+    document.getElementById("submit-text").style.display = "block";
 
     startAllRequest();
 });

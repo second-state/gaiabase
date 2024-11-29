@@ -207,10 +207,12 @@ def send_req(folder_path):
                             'Content-Type': 'application/json'
                         }
                         response = requests.request("POST", url, headers=headers, data=payload)
-                        this_data = response.text
-                        if 'true' in this_data:
+                        this_status = response.status_code
+                        if this_status == 200:
+                            print(f"[info] embed请求成功: {filename}")
+                        else:
+                            print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                             all_ok = False
-                        print(f"[info] embed请求成功: {filename}")
                     except Exception as e:
                         print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
@@ -224,10 +226,12 @@ def send_req(folder_path):
                             'Content-Type': 'application/json'
                         }
                         response = requests.request("POST", url, headers=headers, data=payload)
-                        this_data = response.text
-                        if  'true' in this_data:
+                        this_status = response.status_code
+                        if this_status == 200:
+                            print(f"[info] summarize embed请求成功: {filename}")
+                        else:
+                            print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                             all_ok = False
-                        print(f"[info] summarize embed请求成功: {filename}")
                     except Exception as e:
                         print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
