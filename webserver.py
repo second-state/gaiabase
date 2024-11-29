@@ -1,6 +1,7 @@
 import json
 import nest_asyncio
 import os
+import shutil
 import random
 import re
 import requests
@@ -186,10 +187,8 @@ def submit_url():
     return jsonify({"output_folder": output_folder})
 
 
-@app.route("/submit_all_data", methods=["POST"])
-def submit_all_data():
-    folder_path = request.json.get("trans_id")
-    print(folder_path)
+
+def send_req(folder_path):
     all_ok = True
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
@@ -201,17 +200,15 @@ def submit_all_data():
                 if content_len < 400:
                     try:
                         url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{folder_path}"
-                        print(url)
                         payload = json.dumps({
                             "full_text": content
                         })
-                        print(payload)
                         headers = {
                             'Content-Type': 'application/json'
                         }
                         response = requests.request("POST", url, headers=headers, data=payload)
-                        this_status = response.json()["status"]
-                        if not this_status:
+                        this_data = response.text
+                        if 'true' in this_data:
                             all_ok = False
                         print(f"[info] embed请求成功: {filename}")
                     except Exception as e:
@@ -227,18 +224,26 @@ def submit_all_data():
                             'Content-Type': 'application/json'
                         }
                         response = requests.request("POST", url, headers=headers, data=payload)
-                        this_status = response.json()["status"]
-                        if not this_status:
+                        this_data = response.text
+                        if  'true' in this_data:
                             all_ok = False
                         print(f"[info] summarize embed请求成功: {filename}")
                     except Exception as e:
                         print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
     if all_ok:
-        os.rmdir(folder_path)
+        shutil.rmtree(folder_path)
         update_task(folder_path, 1)
     else:
         update_task(folder_path, 2)
+
+
+@app.route("/submit_all_data", methods=["POST"])
+def submit_all_data():
+    folder_path = request.json.get("trans_id")
+    print(folder_path)
+    thread = threading.Thread(target=send_req, args=(folder_path,))
+    thread.start()
     return jsonify(success=True)
 
 
@@ -289,6 +294,13 @@ def update_subtask_serve():
 def check_subtask_status_serve():
     task_id = request.args.get("task_id")
     data = check_subtask_status(task_id)
+    return jsonify({'status': 'success', 'data': data}), 200
+
+
+@app.route('/sqlApi/checkTaskStatus')
+def check_task_status_serve():
+    task_id = request.args.get("task_id")
+    data = check_task_status(task_id)
     return jsonify({'status': 'success', 'data': data}), 200
 
 

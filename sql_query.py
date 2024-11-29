@@ -52,6 +52,30 @@ def check_subtask_status(task_id):
             conn.close()
 
 
+def check_task_status(task_id):
+    conn = create_connection()
+    if conn is None:
+        return
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                SELECT task_status FROM `task` WHERE task_id = %s;
+            """, (task_id,))
+
+        result = cursor.fetchone()
+
+        return result
+
+    except Error as e:
+        print(f"Check subtask failed and rolled back. Error: {e}")
+        conn.rollback()
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
 def create_task(task_id):
     conn = create_connection()
     if conn is None:

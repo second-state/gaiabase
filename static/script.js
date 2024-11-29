@@ -54,13 +54,35 @@ function startRequest() {
                     if (queryUrl === item[0]) {
                         urlLogo.src = returnImgUrl(item[1])
                         queryUrlStatus = item[1];
-                        console.log(queryUrlStatus)
                         break;
                     }
                 }
             }catch (e) {}
         }
         updateAllFile()
+    }, 2000);
+}
+
+function startAllRequest() {
+    intervalId = setInterval(async () => {
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        };
+        const response = await fetch(`/sqlApi/checkTaskStatus?task_id=${trans_id}`, requestOptions)
+        const data = await response.json()
+        if (data && data.data) {
+            const logo = document.getElementById("submit-all-logo")
+            const thisStatus = parseInt(data.data[0])
+            logo.src = returnImgUrl(thisStatus)
+            logo.id = "url-logo"
+            logo.style.width = "3rem";
+            logo.style.marginRight = "0.5rem";
+            if (thisStatus !== 0) {
+                clearInterval(intervalId);
+            }
+        }
+
     }, 2000);
 }
 
@@ -110,7 +132,7 @@ const updateAllFile = () => {
             allFinish = false
         }
     });
-    if (allFinish && queryUrlStatus !== 0 && queryUrlStatus !== null) {
+    if (allFinish && queryUrlStatus !== 0 && (queryUrl === "" || queryUrlStatus !== null)) {
         canSubmit()
         stopRequest()
     }
@@ -219,10 +241,9 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     const urlInput = document.getElementById("urlInput");
     const urlResult = document.getElementById("urlResult");
 
-    const logo = document.createElement("img");
+    const logo = document.getElementById("url-logo");
 
     logo.src = returnImgUrl(0)
-    logo.id = "url-logo"
     logo.style.width = "1.5rem";
     logo.style.marginRight = "0.5rem";
 
@@ -282,6 +303,10 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     //
     // const data = await response.json();
     // alert(data.message);
+    const logo = document.getElementById("submit-all-logo")
+    logo.src = returnImgUrl(0)
+    logo.style.width = "3rem";
+    logo.style.marginRight = "0.5rem";
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -289,4 +314,6 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     });
 
     const data = await response.json();
+
+    startAllRequest();
 });

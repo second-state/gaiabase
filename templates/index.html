@@ -10,18 +10,22 @@
             margin: 0;
             padding: 0;
         }
+
         button {
             cursor: pointer;
         }
+
         .container {
             display: flex;
         }
+
         .sidebar {
             width: 200px;
             background-color: #f4f4f4;
             padding: 20px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
+
         .sidebar button {
             width: 100%;
             padding: 10px;
@@ -30,19 +34,24 @@
             background: #ddd;
             cursor: pointer;
         }
+
         .sidebar button.active {
             background: #bbb;
         }
+
         .content {
             flex-grow: 1;
             padding: 20px;
         }
+
         .hidden {
             display: none;
         }
+
         .file-list {
             padding: 0;
         }
+
         .file-list li {
             list-style: none;
             display: flex;
@@ -77,6 +86,7 @@
         <div id="webs" class="hidden">
             <h3>Webs</h3>
             <div style="display: flex;align-items: center;">
+                <img id="url-logo"/>
                 <input type="text" id="urlInput" placeholder="Enter URL">
                 <button id="submitUrlBtn">Submit</button>
             </div>
@@ -99,8 +109,11 @@
         <div id="upload-result"></div>
     </div>
 </div>
-<div style="display: flex;justify-content: center;">
-    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;margin-top: 1rem;">Submit All Data</button>
+<div style="display: flex;justify-content: center;align-items: center;">
+    <img id="submit-all-logo"/>
+    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;margin-top: 1rem;">Submit All
+        Data
+    </button>
 </div>
 
 <script src="/static/script.js"></script>
