@@ -269,6 +269,22 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     startRequest()
 });
 
+const checkAllQA = () => {
+    let checkStatus = false
+    const qaContainer = document.getElementById("qaContainer");
+    Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
+        const q = pair.querySelector(".q-input").value
+        const a = pair.querySelector(".a-input").value
+        if(q && a){
+            checkStatus = true
+        }
+    });
+    if(checkStatus) {
+        canSubmit()
+    }
+    return checkStatus
+}
+
 // Manage QA
 document.getElementById("addQaBtn").addEventListener("click", () => {
     const qaContainer = document.getElementById("qaContainer");
@@ -279,9 +295,15 @@ document.getElementById("addQaBtn").addEventListener("click", () => {
         <input type="text" class="a-input" placeholder="A">
         <button class="removeQaBtn">Remove</button>
     `;
+    div.querySelector(".q-input").addEventListener("input", () => checkAllQA());
+    div.querySelector(".a-input").addEventListener("input", () => checkAllQA());
     div.querySelector(".removeQaBtn").addEventListener("click", () => div.remove());
     qaContainer.appendChild(div);
 });
+
+const qaContainer = document.getElementById("qaContainer");
+qaContainer.querySelector(".q-input").addEventListener("input", () => checkAllQA());
+qaContainer.querySelector(".a-input").addEventListener("input", () => checkAllQA());
 
 document.getElementById("submit-all").addEventListener("click", async () => {
     const qaContainer = document.getElementById("qaContainer");
@@ -289,18 +311,13 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
         const q = pair.querySelector(".q-input").value
         const a = pair.querySelector(".a-input").value
-        qaPairs.push({
-            question: q,
-            answer: a
-        })
+        if(q && a) {
+            qaPairs.push({
+                question: q,
+                answer: a
+            })
+        }
     });
-
-    const QAResponse = await fetch("/submit_qa", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({qa_list: qaPairs}),
-    });
-    const qaData = await response.json();
     document.getElementById("submit-all").disabled = true;
     const logo = document.getElementById("submit-all-logo")
     logo.src = returnImgUrl(0)
@@ -309,7 +326,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({trans_id: trans_id}),
+        body: JSON.stringify({trans_id: trans_id, qa_list: qaPairs}),
     });
 
     const data = await response.json();

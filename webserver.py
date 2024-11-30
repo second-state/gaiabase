@@ -33,8 +33,8 @@ def create_dir(output_folder=None):
     if not output_folder:
         output_folder = ''.join(random.choice(letters) for _ in range(6)) + timestamp
     print(f"创建{output_folder}")
-    create_task(output_folder)
     os.makedirs(output_folder)
+    create_task(output_folder)
     return output_folder
 
 
@@ -188,6 +188,10 @@ def submit_url():
 
 
 def send_req(folder_path, content_list):
+    if not folder_path:
+        create_dir()
+    elif not os.path.exists(folder_path):
+        create_dir(folder_path)
     all_ok_file = send_file_req(folder_path)
     all_ok_req = send_qa_req(folder_path, content_list)
     if all_ok_file and all_ok_req:
@@ -251,7 +255,6 @@ def send_file_req(folder_path):
     all_ok = True
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
-
         if filename.endswith('.txt') or filename.endswith('.md'):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
@@ -299,7 +302,8 @@ def send_file_req(folder_path):
 @app.route("/submit_all_data", methods=["POST"])
 def submit_all_data():
     folder_path = request.json.get("trans_id")
-    content_list = request.json.get("content_list")
+    content_list = request.json.get("qa_list")
+    print(content_list)
     print(folder_path)
     thread = threading.Thread(target=send_req, args=(folder_path, content_list))
     thread.start()
