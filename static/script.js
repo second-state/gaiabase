@@ -323,6 +323,8 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     logo.src = returnImgUrl(0)
     logo.style.width = "3rem";
     logo.style.marginRight = "0.5rem";
+    const result = document.getElementById("upload-result")
+    result.innerHTML = ""
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
