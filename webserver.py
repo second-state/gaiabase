@@ -1,10 +1,10 @@
 import json
 import nest_asyncio
 import os
-import shutil
 import random
 import re
 import requests
+import shutil
 import string
 import textract
 import threading
@@ -187,8 +187,67 @@ def submit_url():
     return jsonify({"output_folder": output_folder})
 
 
+def send_req(folder_path, content_list):
+    all_ok_file = send_file_req(folder_path)
+    all_ok_req = send_qa_req(folder_path, content_list)
+    if all_ok_file and all_ok_req:
+        update_task(folder_path, 1)
+    else:
+        update_task(folder_path, 2)
 
-def send_req(folder_path):
+
+def send_qa_req(folder_path, content_list):
+    all_ok = True
+    short_text_list = ["the question", "the answer"]
+    for content_obj in content_list:
+        content = content_obj["question"] + " \n" + content_obj["answer"]
+        content_len = len(content)
+        if content_len < 400:
+            try:
+                for short_text in short_text_list:
+                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{folder_path}"
+                    headers = {
+                        'Content-Type': 'application/json'
+                    }
+                    payload = json.dumps({
+                        "short_text": short_text,
+                        "full_text": content
+                    })
+                    response = requests.request("POST", url, headers=headers, data=payload)
+                    this_status = response.status_code
+                    if this_status == 200:
+                        print(f"[info] QA embed请求成功")
+                    else:
+                        print(f"[error] QA embed请求失败：\n错误码：{this_status}")
+                        all_ok = False
+            except Exception as e:
+                print(f"[error] QA embed请求失败：\n错误原因：{e}")
+                all_ok = False
+        else:
+            try:
+                for short_text in short_text_list:
+                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{folder_path}"
+                    headers = {
+                        'Content-Type': 'application/json'
+                    }
+                    payload = json.dumps({
+                        "short_text": short_text,
+                        "full_text": content
+                    })
+                    response = requests.request("POST", url, headers=headers, data=payload)
+                    this_status = response.status_code
+                    if this_status == 200:
+                        print(f"[info] QA summarize embed请求成功")
+                    else:
+                        print(f"[error] QA summarize embed请求失败：\n错误码：{this_status}")
+                        all_ok = False
+            except Exception as e:
+                print(f"[error] QA summarize embed请求失败：\n错误原因：{e}")
+                all_ok = False
+    return all_ok
+
+
+def send_file_req(folder_path):
     all_ok = True
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
@@ -197,12 +256,12 @@ def send_req(folder_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
                 content_len = len(content)
+                payload = json.dumps({
+                    "full_text": content
+                })
                 if content_len < 400:
                     try:
                         url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{folder_path}"
-                        payload = json.dumps({
-                            "full_text": content
-                        })
                         headers = {
                             'Content-Type': 'application/json'
                         }
@@ -211,7 +270,7 @@ def send_req(folder_path):
                         if this_status == 200:
                             print(f"[info] embed请求成功: {filename}")
                         else:
-                            print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                            print(f"[error] embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
                     except Exception as e:
                         print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
@@ -219,9 +278,6 @@ def send_req(folder_path):
                 else:
                     try:
                         url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{folder_path}"
-                        payload = json.dumps({
-                            "full_text": content
-                        })
                         headers = {
                             'Content-Type': 'application/json'
                         }
@@ -230,23 +286,22 @@ def send_req(folder_path):
                         if this_status == 200:
                             print(f"[info] summarize embed请求成功: {filename}")
                         else:
-                            print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                            print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
                     except Exception as e:
                         print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
     if all_ok:
         shutil.rmtree(folder_path)
-        update_task(folder_path, 1)
-    else:
-        update_task(folder_path, 2)
+    return all_ok
 
 
 @app.route("/submit_all_data", methods=["POST"])
 def submit_all_data():
     folder_path = request.json.get("trans_id")
+    content_list = request.json.get("content_list")
     print(folder_path)
-    thread = threading.Thread(target=send_req, args=(folder_path,))
+    thread = threading.Thread(target=send_req, args=(folder_path, content_list))
     thread.start()
     return jsonify(success=True)
 

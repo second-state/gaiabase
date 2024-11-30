@@ -57,7 +57,8 @@ function startRequest() {
                         break;
                     }
                 }
-            }catch (e) {}
+            } catch (e) {
+            }
         }
         updateAllFile()
     }, 2000);
@@ -283,25 +284,23 @@ document.getElementById("addQaBtn").addEventListener("click", () => {
 });
 
 document.getElementById("submit-all").addEventListener("click", async () => {
-    // const qaContainer = document.getElementById("qaContainer");
-    // Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
-    //     const q = pair.querySelector(".q-input").value;
-    //     const a = pair.querySelector(".q-input").value;
-    //     if(q && a) {
-    //         fetch()
-    //     }
-    // });
-    //
-    // const response = await fetch("/submit_qa", {
-    //     method: "POST",
-    //     headers: {"Content-Type": "application/json"},
-    //     body: JSON.stringify({qa_list: qaPairs}),
-    // });
-    //
-    // document.getElementById("collectionName").disabled = true;
-    //
-    // const data = await response.json();
-    // alert(data.message);
+    const qaContainer = document.getElementById("qaContainer");
+    let qaPairs = []
+    Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
+        const q = pair.querySelector(".q-input").value
+        const a = pair.querySelector(".a-input").value
+        qaPairs.push({
+            question: q,
+            answer: a
+        })
+    });
+
+    const QAResponse = await fetch("/submit_qa", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({qa_list: qaPairs}),
+    });
+    const qaData = await response.json();
     document.getElementById("submit-all").disabled = true;
     const logo = document.getElementById("submit-all-logo")
     logo.src = returnImgUrl(0)
