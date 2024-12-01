@@ -84,8 +84,9 @@ def create_task(task_id):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                INSERT INTO `task` (`task_id`)
-            VALUES (%s);
+            INSERT INTO `task` (`task_id`)
+            VALUES (%s)
+            ON DUPLICATE KEY UPDATE `task_status` = 0;
             """, (task_id,))
 
         conn.commit()
