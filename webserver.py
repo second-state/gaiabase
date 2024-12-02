@@ -29,9 +29,6 @@ upload_folder = "uploads"
 
 nest_asyncio.apply()
 
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
-
 
 def create_dir(output_folder=None):
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
