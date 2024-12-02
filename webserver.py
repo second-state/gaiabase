@@ -130,9 +130,7 @@ def crawl_web(url, output_folder):
         for data in crawl_status['data']:
             sanitized_url = re.sub(r'[\/:*?"<>|]', '_', data['metadata']['url'])
             output_file = os.path.join(output_folder, os.path.basename(sanitized_url) + ".md")
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(data['markdown'])
-                print(f"[log] 文件内容已保存到: {output_file}")
+            split_and_save(data['markdown'], output_file)
         update_subtask(output_folder, url, 1)
     except Exception as e:
         update_subtask(output_folder, url, 2)
