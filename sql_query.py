@@ -132,7 +132,7 @@ def create_subtask(task_id, file_name):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                INSERT INTO `subtask` (`task_id`, `file_name`)
+                INSERT INTO `fileSubtask` (`task_id`, `file_name`)
             VALUES (%s, %s);
             """, (task_id, file_name))
 
@@ -155,7 +155,7 @@ def update_subtask(task_id, file_name, status):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                UPDATE `subtask` SET subtask_status = %s
+                UPDATE `fileSubtask` SET subtask_status = %s
                 WHERE task_id = %s AND file_name = %s;
             """, (status, task_id, file_name))
 
