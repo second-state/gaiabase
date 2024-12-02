@@ -313,8 +313,8 @@ def send_file_req(folder_path, collection_name):
                         all_ok = False
                         with open(log_file_path, 'a') as log_file:
                             log_file.write("file summarize embed:" + filename + "\nerror:" + e + "\n")
-    if all_ok:
-        shutil.rmtree(folder_path)
+    # if all_ok:
+    #     shutil.rmtree(folder_path)
     return all_ok
 
 
