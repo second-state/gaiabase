@@ -14,12 +14,11 @@ from firecrawl import FirecrawlApp
 from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string
 from llama_parse import LlamaParse
 from werkzeug.utils import secure_filename
-
+import logging
 from sql_query import *
 
 load_dotenv()
 
-import logging
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
@@ -29,6 +28,9 @@ app = Flask(__name__)
 upload_folder = "uploads"
 
 nest_asyncio.apply()
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 
 def create_dir(output_folder=None):
