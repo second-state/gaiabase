@@ -194,17 +194,19 @@ def send_req(folder_path, collection_name, content_list):
     elif not os.path.exists(folder_path):
         create_dir(folder_path)
     all_ok_file = send_file_req(folder_path, collection_name)
-    all_ok_req = send_qa_req(folder_path, collection_name, content_list)
+    all_ok_req = send_qa_req(collection_name, content_list)
     if all_ok_file and all_ok_req:
         update_task(folder_path, 1)
     else:
         update_task(folder_path, 2)
 
 
-def send_qa_req(folder_path, collection_name, content_list):
+def send_qa_req(collection_name, content_list):
     all_ok = True
     short_text_list = ["the question", "the answer"]
     log_file_path = os.path.join(collection_name, 'response.log')
+    if not os.path.exists(collection_name):
+        os.makedirs(collection_name)
     for content_obj in content_list:
         content = content_obj["question"] + " \n" + content_obj["answer"]
         content_len = len(content)
@@ -264,6 +266,8 @@ def send_qa_req(folder_path, collection_name, content_list):
 def send_file_req(folder_path, collection_name):
     all_ok = True
     log_file_path = os.path.join(collection_name, 'response.log')
+    if not os.path.exists(collection_name):
+        os.makedirs(collection_name)
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
         if filename.endswith('.txt') or filename.endswith('.md'):
