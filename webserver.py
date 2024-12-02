@@ -19,6 +19,10 @@ from sql_query import *
 
 load_dotenv()
 
+import logging
+log = logging.getLogger('werkzeug')
+log.disabled = True
+
 FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 app = Flask(__name__)
@@ -370,4 +374,4 @@ def show_image(filename):
 
 
 if __name__ == "__main__":
-    app.run(port=519)
+    app.run(port=519, debug=True)
