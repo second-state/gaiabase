@@ -341,7 +341,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({trans_id: trans_id, qa_list: qaPairs}),
+        body: JSON.stringify({trans_id: trans_id, collection_name: collection_name, qa_list: qaPairs}),
     });
 
     const data = await response.json();

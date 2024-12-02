@@ -187,20 +187,20 @@ def submit_url():
     return jsonify({"output_folder": output_folder})
 
 
-def send_req(folder_path, content_list):
+def send_req(folder_path, collection_name, content_list):
     if not folder_path:
         create_dir()
     elif not os.path.exists(folder_path):
         create_dir(folder_path)
-    all_ok_file = send_file_req(folder_path)
-    all_ok_req = send_qa_req(folder_path, content_list)
+    all_ok_file = send_file_req(folder_path, collection_name)
+    all_ok_req = send_qa_req(folder_path, collection_name, content_list)
     if all_ok_file and all_ok_req:
         update_task(folder_path, 1)
     else:
         update_task(folder_path, 2)
 
 
-def send_qa_req(folder_path, content_list):
+def send_qa_req(folder_path, collection_name, content_list):
     all_ok = True
     short_text_list = ["the question", "the answer"]
     for content_obj in content_list:
@@ -209,7 +209,7 @@ def send_qa_req(folder_path, content_list):
         if content_len < 400:
             try:
                 for short_text in short_text_list:
-                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{folder_path}"
+                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
                     headers = {
                         'Content-Type': 'application/json'
                     }
@@ -251,7 +251,7 @@ def send_qa_req(folder_path, content_list):
     return all_ok
 
 
-def send_file_req(folder_path):
+def send_file_req(folder_path, collection_name):
     all_ok = True
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
@@ -264,7 +264,7 @@ def send_file_req(folder_path):
                 })
                 if content_len < 400:
                     try:
-                        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{folder_path}"
+                        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
                         headers = {
                             'Content-Type': 'application/json'
                         }
@@ -302,10 +302,9 @@ def send_file_req(folder_path):
 @app.route("/submit_all_data", methods=["POST"])
 def submit_all_data():
     folder_path = request.json.get("trans_id")
+    collection_name = request.json.get("collection_name")
     content_list = request.json.get("qa_list")
-    print(content_list)
-    print(folder_path)
-    thread = threading.Thread(target=send_req, args=(folder_path, content_list))
+    thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list))
     thread.start()
     return jsonify(success=True)
 
