@@ -204,7 +204,7 @@ def send_req(folder_path, collection_name, content_list):
 def send_qa_req(folder_path, collection_name, content_list):
     all_ok = True
     short_text_list = ["the question", "the answer"]
-    log_file_path = os.path.join(folder_path, 'response.log')
+    log_file_path = os.path.join(collection_name, 'response.log')
     for content_obj in content_list:
         content = content_obj["question"] + " \n" + content_obj["answer"]
         content_len = len(content)
@@ -263,7 +263,7 @@ def send_qa_req(folder_path, collection_name, content_list):
 
 def send_file_req(folder_path, collection_name):
     all_ok = True
-    log_file_path = os.path.join(folder_path, 'response.log')
+    log_file_path = os.path.join(collection_name, 'response.log')
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
         if filename.endswith('.txt') or filename.endswith('.md'):
@@ -313,8 +313,8 @@ def send_file_req(folder_path, collection_name):
                         all_ok = False
                         with open(log_file_path, 'a') as log_file:
                             log_file.write("file summarize embed:" + filename + "\nerror:" + e + "\n")
-    # if all_ok:
-    #     shutil.rmtree(folder_path)
+    if all_ok:
+        shutil.rmtree(folder_path)
     return all_ok
 
 
