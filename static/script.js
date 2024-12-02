@@ -5,6 +5,7 @@ const submitAll = document.getElementById("submit-all");
 
 let fileList = []
 let finishList = []
+let collection_name = ""
 let trans_id = ""
 let queryUrl = ""
 let queryUrlStatus = null
@@ -89,8 +90,7 @@ function startAllRequest() {
 document.getElementById("collectionName").addEventListener("input", (e) => {
     const c = document.getElementById("container")
     if (e.target.value !== "") {
-        trans_id = e.target.value
-        console.log(trans_id)
+        collection_name = e.target.value
         c.style.pointerEvents = "auto";
         c.style.opacity = "1";
         c.style.userSelect = "auto";
@@ -206,6 +206,10 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
     for (const file of fileList) {
         formData.append("files[]", file);
     }
+    if(trans_id === "") {
+        const timestamp = Date.now();
+        trans_id = collection_name + timestamp
+    }
     formData.append("trans_id", trans_id);
 
     fileList.forEach((file) => {
@@ -256,6 +260,11 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     cannotSubmit()
 
     queryUrl = urlInput.value
+
+    if(trans_id === "") {
+        const timestamp = Date.now();
+        trans_id = collection_name + timestamp
+    }
 
     const response = await fetch("/submit_url", {
         method: "POST",
@@ -325,6 +334,10 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     logo.style.marginRight = "0.5rem";
     const result = document.getElementById("upload-result")
     result.innerHTML = ""
+    if(trans_id === "") {
+        const timestamp = Date.now();
+        trans_id = collection_name + timestamp
+    }
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
