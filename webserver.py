@@ -204,6 +204,7 @@ def send_req(folder_path, collection_name, content_list):
 def send_qa_req(folder_path, collection_name, content_list):
     all_ok = True
     short_text_list = ["the question", "the answer"]
+    log_file_path = os.path.join(folder_path, 'response.log')
     for content_obj in content_list:
         content = content_obj["question"] + " \n" + content_obj["answer"]
         content_len = len(content)
@@ -225,13 +226,17 @@ def send_qa_req(folder_path, collection_name, content_list):
                     else:
                         print(f"[error] QA embed请求失败：\n错误码：{this_status}")
                         all_ok = False
+                    with open(log_file_path, 'a') as log_file:
+                        log_file.write("QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
             except Exception as e:
                 print(f"[error] QA embed请求失败：\n错误原因：{e}")
                 all_ok = False
+                with open(log_file_path, 'a') as log_file:
+                    log_file.write("QA embed:" + content_obj["question"] + "\nerror:" + e + "\n")
         else:
             try:
                 for short_text in short_text_list:
-                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{folder_path}"
+                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
                     headers = {
                         'Content-Type': 'application/json'
                     }
@@ -246,14 +251,19 @@ def send_qa_req(folder_path, collection_name, content_list):
                     else:
                         print(f"[error] QA summarize embed请求失败：\n错误码：{this_status}")
                         all_ok = False
+                    with open(log_file_path, 'a') as log_file:
+                        log_file.write("QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
             except Exception as e:
                 print(f"[error] QA summarize embed请求失败：\n错误原因：{e}")
                 all_ok = False
+                with open(log_file_path, 'a') as log_file:
+                    log_file.write("QA summarize embed:" + content_obj["question"] + "\nerror:" + e + "\n")
     return all_ok
 
 
 def send_file_req(folder_path, collection_name):
     all_ok = True
+    log_file_path = os.path.join(folder_path, 'response.log')
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
         if filename.endswith('.txt') or filename.endswith('.md'):
@@ -276,9 +286,13 @@ def send_file_req(folder_path, collection_name):
                         else:
                             print(f"[error] embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
+                        with open(log_file_path, 'a') as log_file:
+                            log_file.write("file embed:" + filename + "\nresponse:" + response.text + "\n")
                     except Exception as e:
                         print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
+                        with open(log_file_path, 'a') as log_file:
+                            log_file.write("file embed:" + filename + "\nerror:" + e + "\n")
                 else:
                     try:
                         url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{folder_path}"
@@ -292,9 +306,13 @@ def send_file_req(folder_path, collection_name):
                         else:
                             print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
+                        with open(log_file_path, 'a') as log_file:
+                            log_file.write("file summarize embed:" + filename + "\nresponse:" + response.text + "\n")
                     except Exception as e:
                         print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
+                        with open(log_file_path, 'a') as log_file:
+                            log_file.write("file summarize embed:" + filename + "\nerror:" + e + "\n")
     if all_ok:
         shutil.rmtree(folder_path)
     return all_ok
