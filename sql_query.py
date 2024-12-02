@@ -36,7 +36,7 @@ def check_subtask_status(task_id):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                SELECT file_name, subtask_status FROM `subtask` WHERE task_id = %s;
+                SELECT file_name, subtask_status FROM `fileSubtask` WHERE task_id = %s;
             """, (task_id,))
 
         result = cursor.fetchall()
