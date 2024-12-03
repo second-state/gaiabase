@@ -230,17 +230,17 @@ def send_qa_req(collection_name, content_list):
                     response = requests.request("POST", url, headers=headers, data=payload)
                     this_status = response.status_code
                     if this_status == 200:
-                        print(f"[info] QA embed请求成功")
+                        print(f"[info] {collection_name} QA embed请求成功")
                     else:
-                        print(f"[error] QA embed请求失败：\n错误码：{this_status}")
+                        print(f"[error] {collection_name} QA embed请求失败：\n错误码：{this_status}")
                         all_ok = False
                     with open(log_file_path, 'a') as log_file:
-                        log_file.write("QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
+                        log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
             except Exception as e:
-                print(f"[error] QA embed请求失败：\n错误原因：{e}")
+                print(f"[error] {collection_name} QA embed请求失败：\n错误原因：{e}")
                 all_ok = False
                 with open(log_file_path, 'a') as log_file:
-                    log_file.write("QA embed:" + content_obj["question"] + "\nerror:" + e + "\n")
+                    log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nerror:" + e + "\n")
         else:
             try:
                 for short_text in short_text_list:
@@ -255,17 +255,17 @@ def send_qa_req(collection_name, content_list):
                     response = requests.request("POST", url, headers=headers, data=payload)
                     this_status = response.status_code
                     if this_status == 200:
-                        print(f"[info] QA summarize embed请求成功")
+                        print(f"[info] {collection_name} QA summarize embed请求成功")
                     else:
-                        print(f"[error] QA summarize embed请求失败：\n错误码：{this_status}")
+                        print(f"[error] {collection_name} QA summarize embed请求失败：\n错误码：{this_status}")
                         all_ok = False
                     with open(log_file_path, 'a') as log_file:
-                        log_file.write("QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
+                        log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
             except Exception as e:
-                print(f"[error] QA summarize embed请求失败：\n错误原因：{e}")
+                print(f"[error] {collection_name} QA summarize embed请求失败：\n错误原因：{e}")
                 all_ok = False
                 with open(log_file_path, 'a') as log_file:
-                    log_file.write("QA summarize embed:" + content_obj["question"] + "\nerror:" + e + "\n")
+                    log_file.write(f"{collection_name} QA summarize embed:" + content_obj["question"] + "\nerror:" + e + "\n")
     return all_ok
 
 
@@ -292,37 +292,37 @@ def send_file_req(folder_path, collection_name):
                         response = requests.request("POST", url, headers=headers, data=payload)
                         this_status = response.status_code
                         if this_status == 200:
-                            print(f"[info] embed请求成功: {filename}")
+                            print(f"[info] {collection_name} embed请求成功: {filename}")
                         else:
-                            print(f"[error] embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
+                            print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write("file embed:" + filename + "\nresponse:" + response.text + "\n")
+                            log_file.write(f"{collection_name} file embed:" + filename + "\nresponse:" + response.text + "\n")
                     except Exception as e:
-                        print(f"[error] embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                        print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write("file embed:" + filename + "\nerror:" + e + "\n")
+                            log_file.write(f"{collection_name} file embed:" + filename + "\nerror:" + e + "\n")
                 else:
                     try:
-                        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{folder_path}"
+                        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
                         headers = {
                             'Content-Type': 'application/json'
                         }
                         response = requests.request("POST", url, headers=headers, data=payload)
                         this_status = response.status_code
                         if this_status == 200:
-                            print(f"[info] summarize embed请求成功: {filename}")
+                            print(f"[info] {collection_name} summarize embed请求成功: {filename}")
                         else:
-                            print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
+                            print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write("file summarize embed:" + filename + "\nresponse:" + response.text + "\n")
+                            log_file.write(f"{collection_name} file summarize embed:" + filename + "\nresponse:" + response.text + "\n")
                     except Exception as e:
-                        print(f"[error] summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                        print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write("file summarize embed:" + filename + "\nerror:" + e + "\n")
+                            log_file.write(f"{collection_name} file summarize embed:" + filename + "\nerror:" + e + "\n")
     if all_ok:
         shutil.rmtree(folder_path)
     return all_ok
