@@ -34,7 +34,7 @@ function startRequest() {
         const data = await response.json()
         if (data && data.data) {
             finishList = finishList.map(finish => {
-                const this_file_name = finish.file.name
+                const this_file_name = finish.save_file_name
                 let this_status = 0
                 for (let i = 0; i < data.data.length; i++) {
                     const item = data.data[i];
@@ -45,6 +45,7 @@ function startRequest() {
                 }
                 return {
                     file: finish.file,
+                    save_file_name: finish.save_file_name,
                     status: this_status
                 }
             })
@@ -124,7 +125,7 @@ function returnImgUrl(status) {
 const updateAllFile = () => {
     let allFinish = true;
     finishList.forEach((data) => {
-        const logo = document.getElementById(data.file.name);
+        const logo = document.getElementById(data.save_file_name);
         logo.src = returnImgUrl(data.status)
         // logo.id = data.file.name;
         logo.style.width = "1.5rem";
@@ -161,7 +162,7 @@ const showAllFile = () => {
         const logo = document.createElement("img");
         const li = document.createElement("li");
         logo.src = returnImgUrl(data.status)
-        logo.id = data.file.name;
+        logo.id = data.save_file_name;
         logo.style.width = "1.5rem";
         nameDiv.textContent = data.file.name;
         nameDiv.style.marginLeft = "0.5rem";
@@ -212,23 +213,6 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
     }
     formData.append("trans_id", trans_id);
 
-    fileList.forEach((file) => {
-        finishList.push({
-            status: 0,
-            file: file
-        })
-
-    })
-    fileList = []
-    fileListPlace.innerHTML = ""; // Clear previous list
-    finishList.forEach((data) => {
-        const li = document.createElement("li");
-        li.textContent = data.file.name;
-        fileListPlace.appendChild(li);
-    });
-
-    showAllFile()
-
     const response = await fetch("/upload", {
         method: "POST",
         body: formData,
@@ -236,7 +220,19 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
     document.getElementById("collectionName").disabled = true;
 
     const data = await response.json();
-    trans_id = data['output_folder']
+    const file_name_list = data['file_name_list']
+    fileListPlace.innerHTML = ""; // Clear previous list
+    fileList.forEach((file) => {
+        const fileName = file.name;
+        finishList.push({
+            status: 0,
+            save_file_name: file_name_list[fileName],
+            file: file
+        })
+
+    })
+    fileList = []
+    showAllFile()
     startRequest()
 });
 

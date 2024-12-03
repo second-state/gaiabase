@@ -144,6 +144,8 @@ def upload():
     files = request.files.getlist("files[]")
     output_folder = request.form.get("trans_id")
 
+    file_name_list = {}
+
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
 
@@ -152,10 +154,14 @@ def upload():
     elif not os.path.exists(output_folder):
         output_folder = create_dir(output_folder)
     for file in files:
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(upload_folder, filename)
-        file.save(file_path)
+        filename = file.filename
         file_extension = filename.rsplit('.', 1)[-1].lower()
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        letters = string.ascii_letters + string.digits
+        random_value = ''.join(random.choice(letters) for _ in range(6)) + timestamp + "." + file_extension
+        file_path = os.path.join(upload_folder, random_value)
+        file.save(file_path)
+        file_name_list[filename] = random_value
 
         if file_extension in ['doc', 'docx']:
             thread = threading.Thread(target=prase_doc, args=(file_path, output_folder))
@@ -172,7 +178,7 @@ def upload():
         else:
             print(f"{filename} 不是有效的文件格式")
 
-    return jsonify({"output_folder": output_folder})
+    return jsonify({"file_name_list": file_name_list})
 
 
 @app.route("/submit_url", methods=["POST"])
