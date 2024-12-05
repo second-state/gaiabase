@@ -145,7 +145,7 @@ def upload():
     files = request.files.getlist("files[]")
     output_folder = request.form.get("trans_id")
 
-    file_name_list = {}
+    file_name_list = []
 
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
@@ -162,7 +162,7 @@ def upload():
         random_value = ''.join(random.choice(letters) for _ in range(6)) + timestamp + "." + file_extension
         file_path = os.path.join(upload_folder, random_value)
         file.save(file_path)
-        file_name_list[filename] = random_value
+        file_name_list.append({"name": filename, "rename": random_value})
         log_file_path = os.path.join(output_folder, 'fileNameComparisonTable.txt')
         with open(log_file_path, 'a') as log_file:
             log_file.write(f"{filename} -- {random_value}\n")

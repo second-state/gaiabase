@@ -224,12 +224,17 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
     fileListPlace.innerHTML = ""; // Clear previous list
     fileList.forEach((file) => {
         const fileName = file.name;
-        finishList.push({
-            status: 0,
-            save_file_name: file_name_list[fileName],
-            file: file
-        })
-        delete file_name_list[fileName];
+        let index = file_name_list.findIndex(item => item.name === fileName);
+
+        if (index !== -1) {
+            let renameValue = file_name_list[index].rename;
+            file_name_list.splice(index, 1);
+            finishList.push({
+                status: 0,
+                save_file_name: renameValue,
+                file: file
+            })
+        }
     })
     fileList = []
     showAllFile()
