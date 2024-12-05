@@ -137,6 +137,7 @@ def crawl_web(url, output_folder):
         update_subtask(output_folder, url, 1)
     except Exception as e:
         update_subtask(output_folder, url, 2)
+        print(f"[error] url处理失败! \n url：{url} \n 原因： {e}")
 
 
 @app.route("/upload", methods=["POST"])
