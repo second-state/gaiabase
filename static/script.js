@@ -229,7 +229,7 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
             save_file_name: file_name_list[fileName],
             file: file
         })
-
+        delete file_name_list[fileName];
     })
     fileList = []
     showAllFile()
