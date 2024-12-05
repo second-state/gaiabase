@@ -162,6 +162,9 @@ def upload():
         file_path = os.path.join(upload_folder, random_value)
         file.save(file_path)
         file_name_list[filename] = random_value
+        log_file_path = os.path.join(output_folder, 'fileNameComparisonTable.txt')
+        with open(log_file_path, 'a') as log_file:
+            log_file.write(f"{filename} -- {random_value}\n")
 
         if file_extension in ['doc', 'docx']:
             thread = threading.Thread(target=prase_doc, args=(file_path, output_folder))
@@ -175,6 +178,10 @@ def upload():
             thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
             thread.start()
             print(f"{filename} 是txt")
+        elif file_extension in ['md']:
+            thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
+            thread.start()
+            print(f"{filename} 是md")
         else:
             print(f"{filename} 不是有效的文件格式")
 
@@ -341,7 +348,6 @@ def submit_all_data():
 @app.route('/listFiles/<dirname>')
 def file_list(dirname):
     # 获取文件夹中的所有文件
-    print(dirname)
     files = os.listdir(dirname)
     files = [f for f in files if os.path.isfile(os.path.join(dirname, f))]  # 只列出文件
     return render_template_string('''
