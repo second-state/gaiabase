@@ -298,8 +298,8 @@ def send_file_req(folder_path, collection_name, summarize_list):
         if filename.endswith('.txt') or filename.endswith('.md'):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
-                content += this_summarize
-                content_len = len(content+"\n"+this_summarize)
+                content = content + "\n" + this_summarize
+                content_len = len(content)
                 payload = json.dumps({
                     "full_text": content
                 })
@@ -344,7 +344,7 @@ def send_file_req(folder_path, collection_name, summarize_list):
                         with open(log_file_path, 'a') as log_file:
                             log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     if all_ok:
-        shutil.rmtree(folder_path)
+        # shutil.rmtree(folder_path)
     return all_ok
 
 
