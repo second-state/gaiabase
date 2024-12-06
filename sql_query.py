@@ -36,7 +36,7 @@ def check_subtask_status(task_id):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                SELECT file_name, subtask_status FROM `fileSubtask` WHERE task_id = %s;
+                SELECT file_name, subtask_status, word_count FROM `fileSubtask` WHERE task_id = %s;
             """, (task_id,))
 
         result = cursor.fetchall()
@@ -147,7 +147,7 @@ def create_subtask(task_id, file_name):
             conn.close()
 
 
-def update_subtask(task_id, file_name, status):
+def update_subtask(task_id, file_name, status, word_count=0):
     conn = create_connection()
     if conn is None:
         return
@@ -155,9 +155,9 @@ def update_subtask(task_id, file_name, status):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                UPDATE `fileSubtask` SET subtask_status = %s
+                UPDATE `fileSubtask` SET subtask_status = %s, word_count = %s
                 WHERE task_id = %s AND file_name = %s;
-            """, (status, task_id, file_name))
+            """, (status, word_count, task_id, file_name))
 
         conn.commit()
 

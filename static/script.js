@@ -36,17 +36,20 @@ function startRequest() {
             finishList = finishList.map(finish => {
                 const this_file_name = finish.save_file_name
                 let this_status = 0
+                let word_count = 0
                 for (let i = 0; i < data.data.length; i++) {
                     const item = data.data[i];
                     if (this_file_name === item[0]) {
                         this_status = item[1];
+                        word_count = item[2];
                         break;
                     }
                 }
                 return {
                     file: finish.file,
                     save_file_name: finish.save_file_name,
-                    status: this_status
+                    status: this_status,
+                    word_count: word_count
                 }
             })
             try {
@@ -125,12 +128,19 @@ function returnImgUrl(status) {
 const updateAllFile = () => {
     let allFinish = true;
     finishList.forEach((data) => {
-        const logo = document.getElementById(data.save_file_name);
+        const logo = document.getElementById("logo_" + data.save_file_name);
+        const word_count_div = document.getElementById("count_" + data.save_file_name);
         logo.src = returnImgUrl(data.status)
         // logo.id = data.file.name;
         logo.style.width = "1.5rem";
+        if (data.word_count) {
+            word_count_div.innerText = "word count: " + data.word_count
+        }
         if (data.status === 0) {
             allFinish = false
+        } else if (data.status === 1) {
+            const div = document.getElementById("input_" + data.save_file_name)
+            div.style.display = "block";
         }
     });
     if (allFinish && queryUrlStatus !== 0 && (queryUrl === "" || queryUrlStatus !== null)) {
@@ -158,20 +168,39 @@ const showAllFile = () => {
     fileListPlace.innerHTML = "";
     finishList.forEach((data) => {
         const div = document.createElement("div");
+        const word_count_div = document.createElement("div");
         const nameDiv = document.createElement("div");
         const logo = document.createElement("img");
         const li = document.createElement("li");
+        const input_div = document.createElement('div');
+        const span = document.createElement('span');
+        const textarea = document.createElement('textarea');
+        textarea.name = data.save_file_name;
+        textarea.id = data.save_file_name;
+        textarea.style.width = '100%';
+        textarea.style.height = '3rem';
+        textarea.style.padding = '0.4rem';
+        textarea.style.marginTop = '0.2rem';
+        span.innerText = "Summarizing " + data.file.name + " document:";
+        input_div.id = "input_" + data.save_file_name;
+        input_div.style.display = "none";
+        input_div.appendChild(span);
+        input_div.appendChild(textarea);
         logo.src = returnImgUrl(data.status)
-        logo.id = data.save_file_name;
+        word_count_div.id = "count_" + data.save_file_name;
+        word_count_div.style.marginLeft = "0.5rem";
+        logo.id = "logo_" + data.save_file_name;
         logo.style.width = "1.5rem";
         nameDiv.textContent = data.file.name;
         nameDiv.style.marginLeft = "0.5rem";
         div.appendChild(logo)
         div.appendChild(nameDiv)
+        div.appendChild(word_count_div)
         div.style.display = "flex";
         div.style.alignItems = "center";
-        fileListPlace.appendChild(li);
         li.appendChild(div);
+        fileListPlace.appendChild(li);
+        fileListPlace.appendChild(input_div);
     });
     fileList.forEach((file) => {
         const li = document.createElement("li");
@@ -207,17 +236,22 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
     for (const file of fileList) {
         formData.append("files[]", file);
     }
-    if(trans_id === "") {
+    if (trans_id === "") {
         const timestamp = Date.now();
         trans_id = collection_name + timestamp
     }
+
+    const splitLength = document.getElementById("splitLength");
+
     formData.append("trans_id", trans_id);
+    formData.append("split_length", splitLength.value);
 
     const response = await fetch("/upload", {
         method: "POST",
         body: formData,
     });
     document.getElementById("collectionName").disabled = true;
+    splitLength.disabled = true;
 
     const data = await response.json();
     const file_name_list = data['file_name_list']
@@ -257,12 +291,13 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     urlInput.parentNode.insertBefore(logo, urlInput);
 
     document.getElementById("collectionName").disabled = true;
+    document.getElementById("splitLength").disabled = true;
 
     cannotSubmit()
 
     queryUrl = urlInput.value
 
-    if(trans_id === "") {
+    if (trans_id === "") {
         const timestamp = Date.now();
         trans_id = collection_name + timestamp
     }
@@ -285,11 +320,11 @@ const checkAllQA = () => {
     Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
         const q = pair.querySelector(".q-input").value
         const a = pair.querySelector(".a-input").value
-        if(q && a){
+        if (q && a) {
             checkStatus = true
         }
     });
-    if(checkStatus) {
+    if (checkStatus) {
         canSubmit()
     }
     return checkStatus
@@ -321,7 +356,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
         const q = pair.querySelector(".q-input").value
         const a = pair.querySelector(".a-input").value
-        if(q && a) {
+        if (q && a) {
             qaPairs.push({
                 question: q,
                 answer: a
@@ -335,14 +370,31 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     logo.style.marginRight = "0.5rem";
     const result = document.getElementById("upload-result")
     result.innerHTML = ""
-    if(trans_id === "") {
+    if (trans_id === "") {
         const timestamp = Date.now();
         trans_id = collection_name + timestamp
     }
+    const fileSummarizeList = []
+    finishList.forEach(item => {
+        if (item.status === 1) {
+            const textarea = document.getElementById(item.save_file_name)
+            if (textarea && textarea.value) {
+                fileSummarizeList.push({
+                    name:item.save_file_name,
+                    value:textarea.value
+                })
+            }
+        }
+    })
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({trans_id: trans_id, collection_name: collection_name, qa_list: qaPairs}),
+        body: JSON.stringify({
+            trans_id: trans_id,
+            collection_name: collection_name,
+            qa_list: qaPairs,
+            summarize_list: fileSummarizeList
+        }),
     });
 
     const data = await response.json();

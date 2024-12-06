@@ -43,6 +43,7 @@ def create_dir(output_folder=None):
 
 def split_and_save(text, file_path, max_length=5000):
     parts = []
+    max_length = int(max_length)
     while len(text) > max_length:
         split_point = max(text.rfind(delim, 0, max_length) for delim in ['\n', '。', '!', '?', '!', '?', '.'])
         if split_point == -1:
@@ -65,7 +66,7 @@ def index():
     return render_template("index.html")
 
 
-def prase_pdf(input_file, output_folder):
+def prase_pdf(input_file, output_folder, split_length=5000):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_subtask(output_folder, file_name)
@@ -82,38 +83,38 @@ def prase_pdf(input_file, output_folder):
             documents = parser.load_data(f, extra_info=extra_info)
             for data in documents:
                 total_text += data.text
-            split_and_save(total_text, output_file)
+            split_and_save(total_text, output_file, split_length)
 
-        update_subtask(output_folder, file_name, 1)
+        update_subtask(output_folder, file_name, 1, len(total_text))
         print(f"[log] pdf处理完成: {output_file}")
     except Exception as e:
         update_subtask(output_folder, file_name, 2)
         print(f"[error] pdf处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def prase_doc(input_file, output_folder):
+def prase_doc(input_file, output_folder, split_length=5000):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_subtask(output_folder, file_name)
     try:
         content = textract.process(input_file).decode("utf-8")
-        split_and_save(content, output_file)
-        update_subtask(output_folder, file_name, 1)
+        split_and_save(content, output_file, split_length)
+        update_subtask(output_folder, file_name, 1, len(content))
         print(f"[log] doc文件处理完成: {output_file}")
     except Exception as e:
         update_subtask(output_folder, file_name, 2)
         print(f"[error] doc处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def prase_text(input_file, output_folder):
+def prase_text(input_file, output_folder, split_length=5000):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, os.path.basename(input_file))
     create_subtask(output_folder, file_name)
     try:
         with open(input_file, "r") as f:
             content = f.read()
-            split_and_save(content, output_file)
-        update_subtask(output_folder, file_name, 1)
+            split_and_save(content, output_file, split_length)
+        update_subtask(output_folder, file_name, 1, len(content))
         print(f"[log] text文件处理完成: {output_file}")
     except Exception as e:
         update_subtask(output_folder, file_name, 2)
@@ -144,6 +145,7 @@ def crawl_web(url, output_folder):
 def upload():
     files = request.files.getlist("files[]")
     output_folder = request.form.get("trans_id")
+    split_length = request.form.get("split_length")
 
     file_name_list = []
 
@@ -163,20 +165,20 @@ def upload():
         file_path = os.path.join(upload_folder, random_value)
         file.save(file_path)
         file_name_list.append({"name": filename, "rename": random_value})
-        log_file_path = os.path.join(output_folder, 'fileNameComparisonTable.txt')
+        log_file_path = os.path.join(output_folder, 'fileNameComparisonTable.log')
         with open(log_file_path, 'a') as log_file:
             log_file.write(f"{filename} -- {random_value}\n")
 
         if file_extension in ['doc', 'docx']:
-            thread = threading.Thread(target=prase_doc, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_doc, args=(file_path, output_folder, split_length))
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            thread = threading.Thread(target=prase_pdf, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_pdf, args=(file_path, output_folder, split_length))
             thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
-            thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_text, args=(file_path, output_folder, split_length))
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
@@ -202,12 +204,12 @@ def submit_url():
     return jsonify({"output_folder": output_folder})
 
 
-def send_req(folder_path, collection_name, content_list):
+def send_req(folder_path, collection_name, content_list, summarize_list):
     if not folder_path:
         create_dir()
     elif not os.path.exists(folder_path):
         create_dir(folder_path)
-    all_ok_file = send_file_req(folder_path, collection_name)
+    all_ok_file = send_file_req(folder_path, collection_name, summarize_list)
     all_ok_req = send_qa_req(collection_name, content_list)
     if all_ok_file and all_ok_req:
         update_task(folder_path, 1)
@@ -277,17 +279,27 @@ def send_qa_req(collection_name, content_list):
     return all_ok
 
 
-def send_file_req(folder_path, collection_name):
+def send_file_req(folder_path, collection_name, summarize_list):
     all_ok = True
     log_file_path = os.path.join(collection_name, 'response.log')
     if not os.path.exists(collection_name):
         os.makedirs(collection_name)
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
+        this_summarize = ""
+        try:
+            for obj in summarize_list:
+                if obj["name"] in filename:
+                    this_summarize = obj["value"]
+                    print(f"{filename}这个文件的总结是：${this_summarize}")
+                    break
+        except Exception as e:
+            print(f"没找到这个文件：{filename}")
         if filename.endswith('.txt') or filename.endswith('.md'):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
-                content_len = len(content)
+                content += this_summarize
+                content_len = len(content+"\n"+this_summarize)
                 payload = json.dumps({
                     "full_text": content
                 })
@@ -305,12 +317,12 @@ def send_file_req(folder_path, collection_name):
                             print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write(f"{collection_name} file embed:" + filename + "\nresponse:" + response.text + "\n")
+                            log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
                     except Exception as e:
                         print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write(f"{collection_name} file embed:" + filename + "\nerror:" + e + "\n")
+                            log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
                 else:
                     try:
                         url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
@@ -325,12 +337,12 @@ def send_file_req(folder_path, collection_name):
                             print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                             all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write(f"{collection_name} file summarize embed:" + filename + "\nresponse:" + response.text + "\n")
+                            log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
                     except Exception as e:
                         print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                         all_ok = False
                         with open(log_file_path, 'a') as log_file:
-                            log_file.write(f"{collection_name} file summarize embed:" + filename + "\nerror:" + e + "\n")
+                            log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     if all_ok:
         shutil.rmtree(folder_path)
     return all_ok
@@ -341,7 +353,8 @@ def submit_all_data():
     folder_path = request.json.get("trans_id")
     collection_name = request.json.get("collection_name")
     content_list = request.json.get("qa_list")
-    thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list))
+    summarize_list = request.json.get("summarize_list")
+    thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list, summarize_list))
     thread.start()
     return jsonify(success=True)
 
