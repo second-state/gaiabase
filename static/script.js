@@ -105,6 +105,10 @@ document.getElementById("collectionName").addEventListener("input", (e) => {
     }
 })
 
+document.getElementById("splitLength").addEventListener("input", (e) => {
+    updateAllFile()
+})
+
 // 停止定时请求
 function stopRequest() {
     clearInterval(intervalId);
@@ -136,11 +140,15 @@ const updateAllFile = () => {
         if (data.word_count) {
             word_count_div.innerText = "word count: " + data.word_count
         }
+        const div = document.getElementById("input_" + data.save_file_name)
         if (data.status === 0) {
             allFinish = false
         } else if (data.status === 1) {
-            const div = document.getElementById("input_" + data.save_file_name)
-            div.style.display = "block";
+            if(parseInt(data.word_count) <= document.getElementById("splitLength").value) {
+                div.style.display = "block";
+            }else {
+                div.style.display = "none";
+            }
         }
     });
     if (allFinish && queryUrlStatus !== 0 && (queryUrl === "" || queryUrlStatus !== null)) {
@@ -183,7 +191,11 @@ const showAllFile = () => {
         textarea.style.marginTop = '0.2rem';
         span.innerText = "Summarizing " + data.file.name + " document:";
         input_div.id = "input_" + data.save_file_name;
-        input_div.style.display = "none";
+        if(data.word_count && parseInt(data.word_count) <= document.getElementById("splitLength").value) {
+            input_div.style.display = "block";
+        }else {
+            input_div.style.display = "none";
+        }
         input_div.appendChild(span);
         input_div.appendChild(textarea);
         logo.src = returnImgUrl(data.status)
@@ -241,17 +253,13 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
         trans_id = collection_name + timestamp
     }
 
-    const splitLength = document.getElementById("splitLength");
-
     formData.append("trans_id", trans_id);
-    formData.append("split_length", splitLength.value);
 
     const response = await fetch("/upload", {
         method: "POST",
         body: formData,
     });
     document.getElementById("collectionName").disabled = true;
-    splitLength.disabled = true;
 
     const data = await response.json();
     const file_name_list = data['file_name_list']
@@ -291,7 +299,6 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     urlInput.parentNode.insertBefore(logo, urlInput);
 
     document.getElementById("collectionName").disabled = true;
-    document.getElementById("splitLength").disabled = true;
 
     cannotSubmit()
 
@@ -386,6 +393,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             }
         }
     })
+    const split_length = document.getElementById("splitLength").value
     const response = await fetch("/submit_all_data", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -393,7 +401,8 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             trans_id: trans_id,
             collection_name: collection_name,
             qa_list: qaPairs,
-            summarize_list: fileSummarizeList
+            summarize_list: fileSummarizeList,
+            split_length: split_length
         }),
     });
 
