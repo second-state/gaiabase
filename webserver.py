@@ -44,6 +44,7 @@ def create_dir(output_folder=None):
 def split_and_save(text, file_path, max_length=5000):
     parts = []
     max_length = int(max_length)
+    print(max_length)
     while len(text) > max_length:
         split_point = max(text.rfind(delim, 0, max_length) for delim in ['\n', '。', '!', '?', '!', '?', '.'])
         if split_point == -1:
@@ -182,7 +183,7 @@ def upload():
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
-            thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_text, args=(file_path, output_folder, split_length))
             thread.start()
             print(f"{filename} 是md")
         else:
