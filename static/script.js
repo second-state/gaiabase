@@ -3,6 +3,7 @@ const tabs = document.querySelectorAll(".sidebar button");
 const sections = document.querySelectorAll(".content > div");
 const submitAll = document.getElementById("submit-all");
 
+let urlList = []
 let fileList = []
 let finishList = []
 let collection_name = ""
@@ -22,7 +23,54 @@ tabs.forEach((tab, index) => {
     });
 });
 
-let intervalId;
+let fileIntervalId;
+let urlIntervalId;
+let allIntervalId;
+
+function startUrlRequest() {
+    urlIntervalId = setInterval(async () => {
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        };
+        const response = await fetch(`/sqlApi/checkCrawlUrlSubtaskStatus?task_id=${trans_id}`, requestOptions)
+        const data = await response.json()
+        if (data && data.data) {
+            try {
+                const result = {};
+                for (let i = 0; i < data.data.length; i++) {
+                    const item = data.data[i];
+                    const id = item[0]
+                    if (!result[id]) {
+                        result[id] = [];
+                    }
+                    result[id].push(item[2]);
+                    console.log("curl-" + item[1])
+                    document.getElementById("cUrl-" + item[1]).src = returnImgUrl(item[2])
+                }
+                let all_ok = true;
+                Object.keys(result).forEach(id => {
+                    const urlLogo = document.getElementById("url-" + id)
+                    const statuses = result[id];
+                    if (statuses.includes(0)) {
+                        urlLogo.src = returnImgUrl(0)
+                        all_ok = false;
+                    } else if (statuses.includes(2)) {
+                        urlLogo.src = returnImgUrl(2)
+                    } else {
+                        urlLogo.src = returnImgUrl(1)
+                    }
+                    if(all_ok) {
+                        canSubmit()
+                        clearInterval(urlIntervalId);
+                    }
+                });
+            } catch (e) {
+                console.log(e)
+            }
+        }
+    }, 2000);
+}
 
 function startRequest() {
     intervalId = setInterval(async () => {
@@ -286,21 +334,16 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
 // Submit URL
 document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     const urlInput = document.getElementById("urlInput");
-    const urlResult = document.getElementById("urlResult");
+    const submitUrlBtn = document.getElementById("submitUrlBtn");
+    const urlListPlace = document.getElementById("urlList");
 
-    const logo = document.getElementById("url-logo");
-
-    logo.src = returnImgUrl(0)
-    logo.style.width = "1.5rem";
-    logo.style.marginRight = "0.5rem";
-
-    urlInput.disabled = true;
-
-    urlInput.parentNode.insertBefore(logo, urlInput);
 
     document.getElementById("collectionName").disabled = true;
 
     cannotSubmit()
+
+    urlInput.disabled = true
+    submitUrlBtn.disabled = true
 
     queryUrl = urlInput.value
 
@@ -316,9 +359,48 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     });
 
     const data = await response.json();
-    trans_id = data['output_folder']
+    const url_id = data['id']
+    const mapUrlList = data['mapUrlList']
 
-    startRequest()
+    urlList.push({id: url_id, url: queryUrl, status: 0})
+    const li = document.createElement("li");
+    const logo = document.createElement("img");
+    const flexDiv = document.createElement("div");
+    const div = document.createElement("div");
+    logo.id = "url-" + url_id;
+    logo.src = returnImgUrl(0)
+    logo.style.width = "1.5rem";
+    logo.style.marginRight = "0.3rem";
+    flexDiv.style.display = "flex";
+    flexDiv.style.alignItems = "center";
+    div.textContent = queryUrl;
+    flexDiv.appendChild(logo)
+    flexDiv.appendChild(div)
+    li.appendChild(flexDiv)
+    const ul = document.createElement("ul");
+    ul.id = "ul-" + url_id
+    ul.style.paddingTop = "0.5rem"
+    mapUrlList.forEach((mapUrl)=>{
+        const liNext = document.createElement("li");
+        const cDiv = document.createElement("div");
+        const cLogo = document.createElement("img");
+        cLogo.id = "cUrl-" + mapUrl.id;
+        cLogo.src = returnImgUrl(0)
+        cLogo.style.width = "1rem";
+        cLogo.style.marginRight = "0.2rem";
+        cDiv.textContent = mapUrl.url;
+        liNext.style.display = "flex";
+        liNext.style.justifyContent = "left";
+        liNext.style.alignItems = "center";
+        liNext.appendChild(cLogo)
+        liNext.appendChild(cDiv)
+        ul.appendChild(liNext)
+    })
+    li.appendChild(ul)
+    urlListPlace.appendChild(li);
+    urlInput.disabled = false
+    submitUrlBtn.disabled = false
+    startUrlRequest()
 });
 
 const checkAllQA = () => {

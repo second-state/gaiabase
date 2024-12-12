@@ -4,7 +4,6 @@ import os
 import random
 import re
 import requests
-import shutil
 import string
 import textract
 import threading
@@ -13,7 +12,10 @@ from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
 from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string
 from llama_parse import LlamaParse
-from werkzeug.utils import secure_filename
+import urllib.request
+from http.cookiejar import CookieJar
+from bs4 import BeautifulSoup
+import html2text
 import logging
 from sql_query import *
 
@@ -56,10 +58,10 @@ def split_text(text, max_length=5000):
     return parts
 
 
-def save_file(text, file_path):
+def save_file(text, file_path, type="txt", id=1):
     dir_name, file_name = os.path.split(file_path)
     file_name_without_ext = os.path.splitext(file_name)[0]
-    this_file_path = os.path.join(dir_name, f"{file_name_without_ext}.txt")
+    this_file_path = os.path.join(dir_name, f"{file_name_without_ext}_{id:03d}.{type}")
     with open(this_file_path, 'w', encoding='utf-8') as file:
         file.write(text)
     print(f"[log] 文件已保存: {this_file_path}")
@@ -70,10 +72,10 @@ def index():
     return render_template("index.html")
 
 
-def prase_pdf(input_file, output_folder, split_length=5000):
+def prase_pdf(input_file, output_folder):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
-    create_subtask(output_folder, file_name)
+    create_file_subtask(output_folder, file_name)
     try:
         parser = LlamaParse(
             api_key=os.getenv("LLAMA_CLOUD_API_KEY"),
@@ -89,60 +91,123 @@ def prase_pdf(input_file, output_folder, split_length=5000):
                 total_text += data.text
             save_file(total_text, output_file)
 
-        update_subtask(output_folder, file_name, 1, len(total_text))
+        update_file_subtask(output_folder, file_name, 1, len(total_text))
         print(f"[log] pdf处理完成: {output_file}")
     except Exception as e:
-        update_subtask(output_folder, file_name, 2)
+        update_file_subtask(output_folder, file_name, 2)
         print(f"[error] pdf处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def prase_doc(input_file, output_folder, split_length=5000):
+def prase_doc(input_file, output_folder):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
-    create_subtask(output_folder, file_name)
+    create_file_subtask(output_folder, file_name)
     try:
         content = textract.process(input_file).decode("utf-8")
         save_file(content, output_file)
         update_subtask(output_folder, file_name, 1, len(content))
+        save_file(content, output_file)
+        update_file_subtask(output_folder, file_name, 1, len(content))
         print(f"[log] doc文件处理完成: {output_file}")
     except Exception as e:
-        update_subtask(output_folder, file_name, 2)
+        update_file_subtask(output_folder, file_name, 2)
         print(f"[error] doc处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def prase_text(input_file, output_folder, split_length=5000):
+def prase_text(input_file, output_folder):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, os.path.basename(input_file))
-    create_subtask(output_folder, file_name)
+    create_file_subtask(output_folder, file_name)
     try:
         with open(input_file, "r") as f:
             content = f.read()
             save_file(content, output_file)
         update_subtask(output_folder, file_name, 1, len(content))
+        save_file(content, output_file)
+        update_file_subtask(output_folder, file_name, 1, len(content))
         print(f"[log] text文件处理完成: {output_file}")
     except Exception as e:
-        update_subtask(output_folder, file_name, 2)
+        update_file_subtask(output_folder, file_name, 2)
         print(f"[error] txt处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def crawl_web(url, output_folder):
-    create_subtask(output_folder, url)
+# def prase_ttl(input_file, output_folder):
+#     file_name = os.path.basename(input_file)
+#     output_file = os.path.join(output_folder, os.path.basename(input_file))
+#     create_file_subtask(output_folder, file_name)
+#     try:
+#         # 创建一个 RDF 图对象
+#         g = rdflib.Graph()
+#
+#         # 读取 .ttl 文件
+#         g.parse(file_path, format='turtle')
+#
+#         # 查询所有的 skos:Concept
+#         query = """
+#         SELECT ?subject ?definition ?prefLabel WHERE {
+#             ?subject a <http://www.w3.org/2004/02/skos/core#Concept> ;
+#                      <http://www.w3.org/2004/02/skos/core#definition> ?comment ;
+#                      <http://www.w3.org/2004/02/skos/core#definition> ?broader ;
+#                      <http://www.w3.org/2004/02/skos/core#definition> ?definition ;
+#                      <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
+#         }
+#         """
+#
+#         # 执行查询
+#         results = g.query(query)
+#
+#         i = 1
+#
+#         # 输出查询结果
+#         for row in results:
+#             keys = row.keys()
+#             for key in keys:
+#                 if key == "broader":
+#                     save_file({"short text":,"full_text":}, output_file, "json", i)
+#                 else:
+#                     save_file({"short text":,"full_text":}, output_file, "json", i)
+#                 i += 1
+#
+#
+#         update_file_subtask(output_folder, file_name, 1)
+#         print(f"[log] text文件处理完成: {output_file}")
+#     except Exception as e:
+#         update_file_subtask(output_folder, file_name, 2)
+#         print(f"[error] txt处理失败! \n 文件名：{output_file} \n 原因： {e}")
+
+
+def crawl_web(url_list, output_folder, url_id):
     try:
-        crawl_status = FCApp.crawl_url(
-            url,
-            params={
-                'limit': 10000,
-                'scrapeOptions': {'formats': ['markdown']}
-            }
-        )
-        for data in crawl_status['data']:
-            sanitized_url = re.sub(r'[\/:*?"<>|]', '_', data['metadata']['url'])
-            output_file = os.path.join(output_folder, os.path.basename(sanitized_url) + ".md")
-            save_file(data['markdown'], output_file)
-        update_subtask(output_folder, url, 1)
+        all_ok = True
+        for urlObj in url_list:
+            url = urlObj["url"]
+            try:
+                req = urllib.request.Request(url, headers={'User-Agent': "Magic Browser"})
+                cj = CookieJar()
+                opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+                response = opener.open(req)
+                html = response.read().decode('utf8', errors='ignore')
+                response.close()
+                soup = BeautifulSoup(html, "lxml")
+                htmltext = soup.encode('utf-8').decode('utf-8', 'ignore')
+                h = html2text.HTML2Text()
+                h.ignore_images = True
+                plain_text = h.handle(htmltext)
+                sanitized_url = re.sub(r'[\/:*?"<>|]', '_', urlObj["url"])
+                output_file = os.path.join(output_folder, os.path.basename(sanitized_url) + ".md")
+                save_file(plain_text, output_file)
+                update_crawl_url_subtask(urlObj["id"], 1)
+            except Exception as e:
+                all_ok = False
+                update_crawl_url_subtask(urlObj["id"], 2)
+                print(f"[error] url处理失败! \n url：{url} \n 原因： {e}")
+        if all_ok:
+            update_url_subtask(url_id, 1)
+        else:
+            update_url_subtask(url_id, 2)
     except Exception as e:
-        update_subtask(output_folder, url, 2)
-        print(f"[error] url处理失败! \n url：{url} \n 原因： {e}")
+        update_url_subtask(url_id, 2)
+        print(f"[error] url处理失败! \n url：{url_id} \n 原因： {e}")
 
 
 @app.route("/upload", methods=["POST"])
@@ -188,6 +253,10 @@ def upload():
             thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
             thread.start()
             print(f"{filename} 是md")
+        # elif file_extension in ['ttl']:
+        #     thread = threading.Thread(target=prase_ttl, args=(file_path, output_folder))
+        #     thread.start()
+        #     print(f"{filename} 是md")
         else:
             print(f"{filename} 不是有效的文件格式")
 
@@ -202,9 +271,16 @@ def submit_url():
         output_folder = create_dir()
     elif not os.path.exists(output_folder):
         output_folder = create_dir(output_folder)
-    thread = threading.Thread(target=crawl_web, args=(url, output_folder))
+    url_id = create_url_subtask(output_folder, url)
+    map_url_list = FCApp.map_url(url)
+    all_links = []
+    for data in map_url_list['links']:
+        if data != url:
+            crawl_url_id = create_crawl_url_subtask(url_id, data)
+            all_links.append({"url": data, "id": crawl_url_id})
+    thread = threading.Thread(target=crawl_web, args=(all_links, output_folder, url_id))
     thread.start()
-    return jsonify({"output_folder": output_folder})
+    return jsonify({"id": url_id, "mapUrlList": all_links})
 
 
 def send_req(folder_path, collection_name, content_list, split_length, summarize_list):
@@ -357,6 +433,9 @@ def send_file_req(folder_path, collection_name, split_length, summarize_list):
                 else:
                     for part in parts:
                         all_ok = all_ok and query_embed(part, collection_name, filename, this_summarize)
+        # elif filename.endswith('.json'):
+
+
 
     return all_ok
 
@@ -420,6 +499,20 @@ def update_subtask_serve():
 def check_subtask_status_serve():
     task_id = request.args.get("task_id")
     data = check_subtask_status(task_id)
+    return jsonify({'status': 'success', 'data': data}), 200
+
+
+@app.route('/sqlApi/checkUrlSubtaskStatus')
+def check_url_subtask_status_serve():
+    task_id = request.args.get("task_id")
+    data = check_url_subtask_status(task_id)
+    return jsonify({'status': 'success', 'data': data}), 200
+
+
+@app.route('/sqlApi/checkCrawlUrlSubtaskStatus')
+def check_crawl_url_subtask_status_serve():
+    task_id = request.args.get("task_id")
+    data = check_crawl_url_subtask_status(task_id)
     return jsonify({'status': 'success', 'data': data}), 200
 
 

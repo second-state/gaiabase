@@ -60,6 +60,23 @@
             background: #f9f9f9;
             margin-bottom: 5px;
         }
+
+        .url-list li {
+            list-style: none;
+            padding: 5px;
+            background: #f9f9f9;
+            margin-bottom: 5px;
+        }
+
+        .url-list li ul li {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            font-size: 0.8rem;
+            margin-bottom: 0;
+            background: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -89,12 +106,14 @@
         <!-- Webs -->
         <div id="webs" class="hidden">
             <h3>Webs</h3>
-            <div style="display: flex;align-items: center;">
-                <img id="url-logo"/>
-                <input type="text" id="urlInput" placeholder="Enter URL">
-                <button id="submitUrlBtn">Submit</button>
+            <div>
+                <div style="display: flex;align-items: center;">
+                    <img id="url-logo"/>
+                    <input type="text" id="urlInput" placeholder="Enter URL">
+                    <button id="submitUrlBtn">Submit</button>
+                </div>
+                <ul id="urlList" class="url-list"></ul>
             </div>
-            <p id="urlResult"></p>
         </div>
         <!-- QA -->
         <div id="qa" class="hidden">
