@@ -147,13 +147,13 @@ def prase_ttl(input_file, output_folder):
         g.parse(input_file, format='turtle')
 
         query = """
-        SELECT ?subject ?prefLabel ?definition ?comment ?broader WHERE {
-            ?subject a <http://www.w3.org/2004/02/skos/core#Concept> ;
-                     <http://www.w3.org/2004/02/skos/core#definition> ?comment ;
-                     <http://www.w3.org/2004/02/skos/core#definition> ?broader ;
-                     <http://www.w3.org/2004/02/skos/core#definition> ?definition ;
-                     <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
-        }
+        SELECT ?subject ?definition ?prefLabel ?comment ?broader WHERE {
+        ?subject a <http://www.w3.org/2004/02/skos/core#Concept> ;
+                 <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
+                 OPTIONAL { ?subject skos:broader ?broader } .
+                 OPTIONAL { ?subject skos:definition ?definition } .
+                 OPTIONAL { ?subject rdfs:comment ?comment } .
+    }
         """
 
         results = g.query(query)
@@ -162,15 +162,18 @@ def prase_ttl(input_file, output_folder):
         text_list = []
 
         for raw in results:
+            print(raw.broader)
+            print(raw.comment)
+            print(raw.definition)
+            print(raw.prefLabel)
             if raw.broader:
                 broader = raw.broader
-                print(broader)
                 if "github.com" in broader:
                     broader = broader.replace('blob', 'raw')
                 response = requests.get(broader)
 
                 if response.status_code == 200:
-                    md_content = response.text
+                    md_content = format_str(response.text)
                     if raw.prefLabel:
                         broader_list.append({'short_text': format_str(raw.prefLabel), 'full_text': md_content})
                     if raw.definition:
