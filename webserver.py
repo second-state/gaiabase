@@ -59,10 +59,10 @@ def split_text(text, max_length=5000):
     return parts
 
 
-def save_file(text, file_path, type="txt", id=1):
+def save_file(text, file_path, type="txt"):
     dir_name, file_name = os.path.split(file_path)
     file_name_without_ext = os.path.splitext(file_name)[0]
-    this_file_path = os.path.join(dir_name, f"{file_name_without_ext}_{id:03d}.{type}")
+    this_file_path = os.path.join(dir_name, f"{file_name_without_ext}.{type}")
     with open(this_file_path, 'w', encoding='utf-8') as file:
         file.write(text)
     print(f"[log] 文件已保存: {this_file_path}")
@@ -189,12 +189,12 @@ def prase_ttl(input_file, output_folder, ttl_type):
             broader_name = first_name + "_broader.json"
             broader_output_file = os.path.join(output_folder, broader_name)
             print(f"[log] ttl文件处理完成: {broader_output_file}")
-            save_file(json.dumps(broader_list), broader_output_file)
+            save_file(json.dumps(broader_list), broader_output_file, "json")
         if len(text_list):
             text_name = first_name + "_text.json"
             text_output_file = os.path.join(output_folder, os.path.basename(text_name))
             print(f"[log] ttl文件处理完成: {text_output_file}")
-            save_file(json.dumps(text_list), text_output_file)
+            save_file(json.dumps(text_list), text_output_file, "json")
         update_file_subtask(output_folder, file_name, 1)
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
