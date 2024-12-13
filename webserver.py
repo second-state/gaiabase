@@ -133,7 +133,7 @@ def prase_text(input_file, output_folder):
 
 
 def format_str(text):
-    return text
+    return str(text)
 
 
 
@@ -188,12 +188,12 @@ def prase_ttl(input_file, output_folder):
             broader_name = first_name + "_broader.json"
             broader_output_file = os.path.join(output_folder, broader_name)
             print(f"[log] ttl文件处理完成: {broader_output_file}")
-            save_file(broader_list, broader_output_file)
+            save_file(json.dumps(broader_list), broader_output_file)
         if len(text_list):
             text_name = first_name + "_text.json"
             text_output_file = os.path.join(output_folder, os.path.basename(text_name))
             print(f"[log] ttl文件处理完成: {text_output_file}")
-            save_file(text_list, text_output_file)
+            save_file(json.dumps(text_list), text_output_file)
         update_file_subtask(output_folder, file_name, 1)
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
