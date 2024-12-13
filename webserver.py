@@ -137,7 +137,7 @@ def format_str(text):
 
 
 
-def prase_ttl(input_file, output_folder):
+def prase_ttl(input_file, output_folder, ttl_type):
     file_name = os.path.basename(input_file)
     first_name = os.path.splitext(file_name)[0]
     create_file_subtask(output_folder, file_name)
@@ -162,27 +162,29 @@ def prase_ttl(input_file, output_folder):
         text_list = []
 
         for raw in results:
-            if raw.broader:
-                broader = raw.broader
-                if "github.com" in broader:
-                    broader = broader.replace('blob', 'raw')
-                response = requests.get(broader)
+            if ttl_type == "md":
+                if raw.broader:
+                    broader = raw.broader
+                    if "github.com" in broader:
+                        broader = broader.replace('blob', 'raw')
+                    response = requests.get(broader)
 
-                if response.status_code == 200:
-                    md_content = format_str(response.text)
-                    if raw.prefLabel:
-                        broader_list.append({'short_text': format_str(raw.prefLabel), 'full_text': md_content})
-                    if raw.definition:
-                        broader_list.append({'short_text': format_str(raw.definition), 'full_text': md_content})
-                    if raw.comment:
-                        broader_list.append({'short_text': format_str(raw.comment), 'full_text': md_content})
-            combined_text = (format_str(raw.prefLabel) if raw.prefLabel is not None else "") + (format_str(raw.definition) if raw.definition is not None else "") + (format_str(raw.comment) if raw.comment is not None else "")
-            if raw.prefLabel:
-                text_list.append({'short_text': format_str(raw.prefLabel), 'full_text': combined_text})
-            if raw.definition:
-                text_list.append({'short_text': format_str(raw.definition), 'full_text': combined_text})
-            if raw.comment:
-                text_list.append({'short_text': format_str(raw.comment), 'full_text': combined_text})
+                    if response.status_code == 200:
+                        md_content = format_str(response.text)
+                        if raw.prefLabel:
+                            broader_list.append({'short_text': format_str(raw.prefLabel), 'full_text': md_content})
+                        if raw.definition:
+                            broader_list.append({'short_text': format_str(raw.definition), 'full_text': md_content})
+                        if raw.comment:
+                            broader_list.append({'short_text': format_str(raw.comment), 'full_text': md_content})
+            elif ttl_type == "text":
+                combined_text = (format_str(raw.prefLabel) if raw.prefLabel is not None else "") + (format_str(raw.definition) if raw.definition is not None else "") + (format_str(raw.comment) if raw.comment is not None else "")
+                if raw.prefLabel:
+                    text_list.append({'short_text': format_str(raw.prefLabel), 'full_text': combined_text})
+                if raw.definition:
+                    text_list.append({'short_text': format_str(raw.definition), 'full_text': combined_text})
+                if raw.comment:
+                    text_list.append({'short_text': format_str(raw.comment), 'full_text': combined_text})
         if len(broader_list):
             broader_name = first_name + "_broader.json"
             broader_output_file = os.path.join(output_folder, broader_name)
@@ -237,6 +239,7 @@ def crawl_web(url_list, output_folder, url_id):
 def upload():
     files = request.files.getlist("files[]")
     output_folder = request.form.get("trans_id")
+    ttl_type = request.form.get("ttl_type")
 
     file_name_list = []
 
@@ -277,7 +280,7 @@ def upload():
             thread.start()
             print(f"{filename} 是md")
         elif file_extension in ['ttl']:
-            thread = threading.Thread(target=prase_ttl, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_ttl, args=(file_path, output_folder, ttl_type))
             thread.start()
             print(f"{filename} 是ttl")
         else:
@@ -431,6 +434,56 @@ def query_embed(content, collection_name, filename, this_summarize):
     return all_ok
 
 
+def query_embed_json(content, collection_name, filename, this_summarize):
+    all_ok = True
+    log_file_path = os.path.join(collection_name, 'response.log')
+    json_list = json.loads(content)
+    for data in json_list:
+        content_len = len(content)
+        payload = json.dumps(data)
+        if content_len < 400:
+            try:
+                url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
+                headers = {
+                    'Content-Type': 'application/json'
+                }
+                response = requests.request("POST", url, headers=headers, data=payload)
+                this_status = response.status_code
+                if this_status == 200:
+                    print(f"[info] {collection_name} embed请求成功: {filename}")
+                else:
+                    print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
+                    all_ok = False
+                with open(log_file_path, 'a') as log_file:
+                    log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+            except Exception as e:
+                print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                all_ok = False
+                with open(log_file_path, 'a') as log_file:
+                    log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+        else:
+            try:
+                url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
+                headers = {
+                    'Content-Type': 'application/json'
+                }
+                response = requests.request("POST", url, headers=headers, data=payload)
+                this_status = response.status_code
+                if this_status == 200:
+                    print(f"[info] {collection_name} summarize embed请求成功: {filename}")
+                else:
+                    print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
+                    all_ok = False
+                with open(log_file_path, 'a') as log_file:
+                    log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+            except Exception as e:
+                print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+                all_ok = False
+                with open(log_file_path, 'a') as log_file:
+                    log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+    return all_ok
+
+
 def send_file_req(folder_path, collection_name, split_length, summarize_list):
     all_ok = True
     if not os.path.exists(collection_name):
@@ -456,8 +509,9 @@ def send_file_req(folder_path, collection_name, split_length, summarize_list):
                 else:
                     for part in parts:
                         all_ok = all_ok and query_embed(part, collection_name, filename, this_summarize)
-        # elif filename.endswith('.json'):
-
+        elif filename.endswith('.json'):
+            content = file.read()
+            all_ok = all_ok and query_embed_json(content, collection_name, filename, this_summarize)
 
 
     return all_ok
