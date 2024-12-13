@@ -191,7 +191,7 @@ const updateAllFile = () => {
         const div = document.getElementById("input_" + data.save_file_name)
         if (data.status === 0) {
             allFinish = false
-        } else if (data.status === 1) {
+        } else if (data.status === 1 &&  !data.file.name.endsWith(".ttl")) {
             if(parseInt(data.word_count) <= document.getElementById("splitLength").value) {
                 div.style.display = "block";
             }else {
@@ -309,6 +309,8 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
         body: formData,
     });
     document.getElementById("collectionName").disabled = true;
+    document.getElementById("ttl-text").disabled = true;
+    document.getElementById("ttl-md").disabled = true;
 
     const data = await response.json();
     const file_name_list = data['file_name_list']
@@ -340,6 +342,8 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
 
 
     document.getElementById("collectionName").disabled = true;
+    document.getElementById("ttl-text").disabled = true;
+    document.getElementById("ttl-md").disabled = true;
 
     cannotSubmit()
 

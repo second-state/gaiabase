@@ -85,10 +85,6 @@
     <input id="collectionName" style="font-size: 3vw;margin-left: 1rem;" type="text"/>
 </div>
 <div style="display:flex;align-items: center;padding: 2vw 4vw;font-size: 3vw;">
-    <div style="font-weight: bold;">split length:</div>
-    <input id="splitLength" style="font-size: 3vw;margin-left: 1rem;" value="5000" type="number"/>
-</div>
-<div style="display:flex;align-items: center;padding: 2vw 4vw;font-size: 3vw;">
     <div style="font-weight: bold;">ttl for:</div>
     <input id="ttl-text" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio" checked/><label for="ttl-text">text</label>
     <input id="ttl-md" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio"/><label for="ttl-md">md</label>
@@ -136,9 +132,13 @@
         <div id="upload-result"></div>
     </div>
 </div>
-<div style="display: flex;justify-content: center;align-items: center;">
+<div style="display: flex;justify-content: center;align-items: center;margin-top: 1rem;">
+    <div style="display:flex;align-items: center;padding-right: 4vw;font-size: 1.5vw;">
+        <div style="font-weight: bold;">split length:</div>
+        <input id="splitLength" style="font-size: 1.5vw;margin-left: 1rem;" value="5000" type="number"/>
+    </div>
     <img id="submit-all-logo"/>
-    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;margin-top: 1rem;">Submit All
+    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;">Submit All
         Data
     </button>
 </div>
