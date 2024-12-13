@@ -162,10 +162,6 @@ def prase_ttl(input_file, output_folder):
         text_list = []
 
         for raw in results:
-            print(raw.broader)
-            print(raw.comment)
-            print(raw.definition)
-            print(raw.prefLabel)
             if raw.broader:
                 broader = raw.broader
                 if "github.com" in broader:
