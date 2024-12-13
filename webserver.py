@@ -17,6 +17,7 @@ from http.cookiejar import CookieJar
 from bs4 import BeautifulSoup
 import html2text
 import logging
+import rdflib
 from sql_query import *
 
 load_dotenv()
@@ -131,49 +132,67 @@ def prase_text(input_file, output_folder):
         print(f"[error] txt处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-# def prase_ttl(input_file, output_folder):
-#     file_name = os.path.basename(input_file)
-#     output_file = os.path.join(output_folder, os.path.basename(input_file))
-#     create_file_subtask(output_folder, file_name)
-#     try:
-#         # 创建一个 RDF 图对象
-#         g = rdflib.Graph()
-#
-#         # 读取 .ttl 文件
-#         g.parse(file_path, format='turtle')
-#
-#         # 查询所有的 skos:Concept
-#         query = """
-#         SELECT ?subject ?definition ?prefLabel WHERE {
-#             ?subject a <http://www.w3.org/2004/02/skos/core#Concept> ;
-#                      <http://www.w3.org/2004/02/skos/core#definition> ?comment ;
-#                      <http://www.w3.org/2004/02/skos/core#definition> ?broader ;
-#                      <http://www.w3.org/2004/02/skos/core#definition> ?definition ;
-#                      <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
-#         }
-#         """
-#
-#         # 执行查询
-#         results = g.query(query)
-#
-#         i = 1
-#
-#         # 输出查询结果
-#         for row in results:
-#             keys = row.keys()
-#             for key in keys:
-#                 if key == "broader":
-#                     save_file({"short text":,"full_text":}, output_file, "json", i)
-#                 else:
-#                     save_file({"short text":,"full_text":}, output_file, "json", i)
-#                 i += 1
-#
-#
-#         update_file_subtask(output_folder, file_name, 1)
-#         print(f"[log] text文件处理完成: {output_file}")
-#     except Exception as e:
-#         update_file_subtask(output_folder, file_name, 2)
-#         print(f"[error] txt处理失败! \n 文件名：{output_file} \n 原因： {e}")
+def prase_ttl(input_file, output_folder):
+    file_name = os.path.basename(input_file)
+    first_name = os.path.splitext(file_name)[0]
+    create_file_subtask(output_folder, file_name)
+    try:
+        g = rdflib.Graph()
+
+        g.parse(input_file, format='turtle')
+
+        query = """
+        SELECT ?subject ?prefLabel ?definition ?comment ?broader WHERE {
+            ?subject a <http://www.w3.org/2004/02/skos/core#Concept> ;
+                     <http://www.w3.org/2004/02/skos/core#definition> ?comment ;
+                     <http://www.w3.org/2004/02/skos/core#definition> ?broader ;
+                     <http://www.w3.org/2004/02/skos/core#definition> ?definition ;
+                     <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
+        }
+        """
+
+        results = g.query(query)
+
+        broader_list = []
+        text_list = []
+
+        for raw in results:
+            if raw.broader:
+                broader = raw.broader
+                print(broader)
+                if "github.com" in broader:
+                    broader = broader.replace('blob', 'raw')
+                response = requests.get(broader)
+
+                if response.status_code == 200:
+                    md_content = response.text
+                    if raw.prefLabel:
+                        broader_list.append({'short_text': str(raw.prefLabel), 'full_text': md_content})
+                    if raw.definition:
+                        broader_list.append({'short_text': str(raw.definition), 'full_text': md_content})
+                    if raw.comment:
+                        broader_list.append({'short_text': str(raw.comment), 'full_text': md_content})
+            combined_text = (str(raw.prefLabel) if raw.prefLabel is not None else "") + (str(raw.definition) if raw.definition is not None else "") + (str(raw.comment) if raw.comment is not None else "")
+            if raw.prefLabel:
+                text_list.append({'short_text': str(raw.prefLabel), 'full_text': combined_text})
+            if raw.definition:
+                text_list.append({'short_text': str(raw.definition), 'full_text': combined_text})
+            if raw.comment:
+                text_list.append({'short_text': str(raw.comment), 'full_text': combined_text})
+        if len(broader_list):
+            broader_name = first_name + "_broader.json"
+            broader_output_file = os.path.join(output_folder, broader_name)
+            print(f"[log] ttl文件处理完成: {broader_output_file}")
+            save_file(broader_list, broader_output_file)
+        if len(text_list):
+            text_name = first_name + "_text.json"
+            text_output_file = os.path.join(output_folder, os.path.basename(text_name))
+            print(f"[log] ttl文件处理完成: {text_output_file}")
+            save_file(text_list, text_output_file)
+        update_file_subtask(output_folder, file_name, 1)
+    except Exception as e:
+        update_file_subtask(output_folder, file_name, 2)
+        print(f"[error] ttl处理失败! \n 文件名：{file_name} \n 原因： {e}")
 
 
 def crawl_web(url_list, output_folder, url_id):
@@ -253,10 +272,10 @@ def upload():
             thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
             thread.start()
             print(f"{filename} 是md")
-        # elif file_extension in ['ttl']:
-        #     thread = threading.Thread(target=prase_ttl, args=(file_path, output_folder))
-        #     thread.start()
-        #     print(f"{filename} 是md")
+        elif file_extension in ['ttl']:
+            thread = threading.Thread(target=prase_ttl, args=(file_path, output_folder))
+            thread.start()
+            print(f"{filename} 是ttl")
         else:
             print(f"{filename} 不是有效的文件格式")
 
