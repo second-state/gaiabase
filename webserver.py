@@ -132,6 +132,11 @@ def prase_text(input_file, output_folder):
         print(f"[error] txt处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
+def format_str(text):
+    return text
+
+
+
 def prase_ttl(input_file, output_folder):
     file_name = os.path.basename(input_file)
     first_name = os.path.splitext(file_name)[0]
@@ -167,18 +172,18 @@ def prase_ttl(input_file, output_folder):
                 if response.status_code == 200:
                     md_content = response.text
                     if raw.prefLabel:
-                        broader_list.append({'short_text': str(raw.prefLabel.encode('utf-8').decode('utf-8')), 'full_text': md_content})
+                        broader_list.append({'short_text': format_str(raw.prefLabel), 'full_text': md_content})
                     if raw.definition:
-                        broader_list.append({'short_text': str(raw.definition.encode('utf-8').decode('utf-8')), 'full_text': md_content})
+                        broader_list.append({'short_text': format_str(raw.definition), 'full_text': md_content})
                     if raw.comment:
-                        broader_list.append({'short_text': str(raw.comment.encode('utf-8').decode('utf-8')), 'full_text': md_content})
-            combined_text = (str(raw.prefLabel.encode('utf-8').decode('utf-8')) if raw.prefLabel is not None else "") + (str(raw.definition.encode('utf-8').decode('utf-8')) if raw.definition is not None else "") + (str(raw.comment.encode('utf-8').decode('utf-8')) if raw.comment is not None else "")
+                        broader_list.append({'short_text': format_str(raw.comment), 'full_text': md_content})
+            combined_text = (format_str(raw.prefLabel) if raw.prefLabel is not None else "") + (format_str(raw.definition) if raw.definition is not None else "") + (format_str(raw.comment) if raw.comment is not None else "")
             if raw.prefLabel:
-                text_list.append({'short_text': str(raw.prefLabel.encode('utf-8').decode('utf-8')), 'full_text': combined_text})
+                text_list.append({'short_text': format_str(raw.prefLabel), 'full_text': combined_text})
             if raw.definition:
-                text_list.append({'short_text': str(raw.definition.encode('utf-8').decode('utf-8')), 'full_text': combined_text})
+                text_list.append({'short_text': format_str(raw.definition), 'full_text': combined_text})
             if raw.comment:
-                text_list.append({'short_text': str(raw.comment.encode('utf-8').decode('utf-8')), 'full_text': combined_text})
+                text_list.append({'short_text': format_str(raw.comment), 'full_text': combined_text})
         if len(broader_list):
             broader_name = first_name + "_broader.json"
             broader_output_file = os.path.join(output_folder, broader_name)
