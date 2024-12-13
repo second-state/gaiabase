@@ -466,7 +466,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
     }
     const fileSummarizeList = []
     finishList.forEach(item => {
-        if (item.status === 1) {
+        if (item.status === 1 && item.file.name.endsWith(".ttl")) {
             const textarea = document.getElementById(item.save_file_name)
             if (textarea && textarea.value) {
                 fileSummarizeList.push({

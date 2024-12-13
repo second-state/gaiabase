@@ -510,8 +510,9 @@ def send_file_req(folder_path, collection_name, split_length, summarize_list):
                     for part in parts:
                         all_ok = all_ok and query_embed(part, collection_name, filename, this_summarize)
         elif filename.endswith('.json'):
-            content = file.read()
-            all_ok = all_ok and query_embed_json(content, collection_name, filename, this_summarize)
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+                all_ok = all_ok and query_embed_json(content, collection_name, filename, this_summarize)
 
 
     return all_ok
@@ -524,7 +525,6 @@ def submit_all_data():
     content_list = request.json.get("qa_list")
     summarize_list = request.json.get("summarize_list")
     split_length = request.json.get("split_length")
-    print(split_length)
     thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list, split_length, summarize_list))
     thread.start()
     return jsonify(success=True)
