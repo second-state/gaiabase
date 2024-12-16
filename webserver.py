@@ -148,11 +148,10 @@ def prase_ttl(input_file, output_folder, ttl_type):
 
         query = """
         SELECT ?subject ?definition ?prefLabel ?comment ?broader WHERE {
-        ?subject a <http://www.w3.org/2004/02/skos/core#Concept> ;
-                 <http://www.w3.org/2004/02/skos/core#prefLabel> ?prefLabel .
-                 OPTIONAL { ?subject skos:broader ?broader } .
-                 OPTIONAL { ?subject skos:definition ?definition } .
-                 OPTIONAL { ?subject rdfs:comment ?comment } .
+            ?subject skos:prefLabel ?prefLabel .
+            OPTIONAL { ?subject skos:broader ?broader } .
+            OPTIONAL { ?subject skos:definition ?definition } .
+            OPTIONAL { ?subject rdfs:comment ?comment } .
     }
         """
 
