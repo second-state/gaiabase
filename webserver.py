@@ -308,13 +308,14 @@ def submit_url():
     return jsonify({"id": url_id, "mapUrlList": all_links})
 
 
-def send_req(folder_path, collection_name, content_list, split_length, summarize_list):
+def send_req(folder_path, collection_name, content_list, embed_list, split_length, summarize_list):
     if not folder_path:
         create_dir()
     elif not os.path.exists(folder_path):
         create_dir(folder_path)
     all_ok_file = send_file_req(folder_path, collection_name, split_length, summarize_list)
     all_ok_req = send_qa_req(collection_name, content_list)
+    all_ok_req = send_embed_req(collection_name, embed_list)
     if all_ok_file and all_ok_req:
         update_task(folder_path, 1)
     else:
@@ -353,6 +354,39 @@ def send_qa_req(collection_name, content_list):
             all_ok = False
             with open(log_file_path, 'a') as log_file:
                 log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nerror:" + e + "\n")
+    return all_ok
+
+
+def send_embed_req(collection_name, embed_list):
+    all_ok = True
+    short_text_list = ["the question", "the answer"]
+    log_file_path = os.path.join(collection_name, 'response.log')
+    if not os.path.exists(collection_name):
+        os.makedirs(collection_name)
+    for embed_obj in embed_list:
+        try:
+            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            payload = json.dumps({
+                "short_text": embed_obj["question"],
+                "full_text": embed_obj["answer"]
+            })
+            response = requests.request("POST", url, headers=headers, data=payload)
+            this_status = response.status_code
+            if this_status == 200:
+                print(f"[info] {collection_name} Simple Embed embed请求成功")
+            else:
+                print(f"[error] {collection_name} Simple Embed embed请求失败：\n错误码：{this_status}")
+                all_ok = False
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f"{collection_name} Simple Embed embed:" + embed_obj["question"] + "\nresponse:" + response.text + "\n")
+        except Exception as e:
+            print(f"[error] {collection_name} Simple Embed embed请求失败：\n错误原因：{e}")
+            all_ok = False
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f"{collection_name} Simple Embed embed:" + embed_obj["question"] + "\nerror:" + e + "\n")
     return all_ok
 
 
@@ -473,9 +507,10 @@ def submit_all_data():
     folder_path = request.json.get("trans_id")
     collection_name = request.json.get("collection_name")
     content_list = request.json.get("qa_list")
+    embed_list = request.json.get("embed_list")
     summarize_list = request.json.get("summarize_list")
     split_length = request.json.get("split_length")
-    thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list, split_length, summarize_list))
+    thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list, embed_list, split_length, summarize_list))
     thread.start()
     return jsonify(success=True)
 

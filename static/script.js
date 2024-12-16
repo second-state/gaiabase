@@ -411,9 +411,17 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
 const checkAllQA = () => {
     let checkStatus = false
     const qaContainer = document.getElementById("qaContainer");
+    const embedContainer = document.getElementById("embedContainer");
     Array.from(qaContainer.querySelectorAll(".qa-pair")).forEach((pair) => {
         const q = pair.querySelector(".q-input").value
         const a = pair.querySelector(".a-input").value
+        if (q && a) {
+            checkStatus = true
+        }
+    });
+    Array.from(embedContainer.querySelectorAll(".embed-pair")).forEach((pair) => {
+        const q = pair.querySelector(".embed-q-input").value
+        const a = pair.querySelector(".embed-a-input").value
         if (q && a) {
             checkStatus = true
         }
@@ -440,9 +448,29 @@ document.getElementById("addQaBtn").addEventListener("click", () => {
     qaContainer.appendChild(div);
 });
 
+// Manage QA
+document.getElementById("addEmbedBtn").addEventListener("click", () => {
+    const qaContainer = document.getElementById("embedContainer");
+    const div = document.createElement("div");
+    div.classList.add("embed-pair");
+    div.innerHTML = `
+        <textarea class="embed-q-input" placeholder="short text"></textarea>
+        <textarea class="embed-a-input" placeholder="long text"></textarea>
+        <button class="removeEmbedQaBtn">Remove</button>
+    `;
+    div.querySelector(".embed-q-input").addEventListener("input", () => checkAllQA());
+    div.querySelector(".embed-a-input").addEventListener("input", () => checkAllQA());
+    div.querySelector(".removeEmbedQaBtn").addEventListener("click", () => div.remove());
+    qaContainer.appendChild(div);
+});
+
 const qaContainer = document.getElementById("qaContainer");
 qaContainer.querySelector(".q-input").addEventListener("input", () => checkAllQA());
 qaContainer.querySelector(".a-input").addEventListener("input", () => checkAllQA());
+
+const embedContainer = document.getElementById("embedContainer");
+embedContainer.querySelector(".embed-q-input").addEventListener("input", () => checkAllQA());
+embedContainer.querySelector(".embed-a-input").addEventListener("input", () => checkAllQA());
 
 document.getElementById("submit-all").addEventListener("click", async () => {
     const qaContainer = document.getElementById("qaContainer");
@@ -452,6 +480,18 @@ document.getElementById("submit-all").addEventListener("click", async () => {
         const a = pair.querySelector(".a-input").value
         if (q && a) {
             qaPairs.push({
+                question: q,
+                answer: a
+            })
+        }
+    });
+    const embedContainer = document.getElementById("embedContainer");
+    let embedPairs = []
+    Array.from(embedContainer.querySelectorAll(".embed-pair")).forEach((pair) => {
+        const q = pair.querySelector(".embed-q-input").value
+        const a = pair.querySelector(".embed-a-input").value
+        if (q && a) {
+            embedPairs.push({
                 question: q,
                 answer: a
             })
@@ -488,6 +528,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             trans_id: trans_id,
             collection_name: collection_name,
             qa_list: qaPairs,
+            embed_list: embedPairs,
             summarize_list: fileSummarizeList,
             split_length: split_length
         }),

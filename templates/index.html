@@ -77,6 +77,11 @@
             margin-bottom: 0;
             background: #f9f9f9;
         }
+
+        .embed-pair {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -94,6 +99,7 @@
         <button id="tab-uploads" class="active">Uploads</button>
         <button id="tab-webs">Webs</button>
         <button id="tab-qa">QA</button>
+        <button id="tab-embed">Simple Embed</button>
     </div>
     <div class="content">
         <!-- Uploads -->
@@ -127,6 +133,17 @@
                 </div>
             </div>
             <button id="addQaBtn">Add</button>
+        </div>
+        <div id="embed" class="hidden">
+            <h3>Simple Embed</h3>
+            <div id="embedContainer">
+                <div class="embed-pair">
+                    <textarea class="embed-q-input" placeholder="short text"></textarea>
+                    <textarea class="embed-a-input" placeholder="long text"></textarea>
+                    <button class="removeEmbedQaBtn">Remove</button>
+                </div>
+            </div>
+            <button id="addEmbedBtn">Add</button>
         </div>
         <div id="result"></div>
         <div id="upload-result"></div>
