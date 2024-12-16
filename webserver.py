@@ -329,57 +329,30 @@ def send_qa_req(collection_name, content_list):
         os.makedirs(collection_name)
     for content_obj in content_list:
         content = content_obj["question"] + " \n" + content_obj["answer"]
-        content_len = len(content)
-        if content_len < 400:
-            try:
-                for short_text in short_text_list:
-                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
-                    headers = {
-                        'Content-Type': 'application/json'
-                    }
-                    payload = json.dumps({
-                        "short_text": short_text,
-                        "full_text": content
-                    })
-                    response = requests.request("POST", url, headers=headers, data=payload)
-                    this_status = response.status_code
-                    if this_status == 200:
-                        print(f"[info] {collection_name} QA embed请求成功")
-                    else:
-                        print(f"[error] {collection_name} QA embed请求失败：\n错误码：{this_status}")
-                        all_ok = False
-                    with open(log_file_path, 'a') as log_file:
-                        log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
-            except Exception as e:
-                print(f"[error] {collection_name} QA embed请求失败：\n错误原因：{e}")
-                all_ok = False
+        try:
+            for short_text in short_text_list:
+                url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
+                headers = {
+                    'Content-Type': 'application/json'
+                }
+                payload = json.dumps({
+                    "short_text": short_text,
+                    "full_text": content
+                })
+                response = requests.request("POST", url, headers=headers, data=payload)
+                this_status = response.status_code
+                if this_status == 200:
+                    print(f"[info] {collection_name} QA embed请求成功")
+                else:
+                    print(f"[error] {collection_name} QA embed请求失败：\n错误码：{this_status}")
+                    all_ok = False
                 with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nerror:" + e + "\n")
-        else:
-            try:
-                for short_text in short_text_list:
-                    url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
-                    headers = {
-                        'Content-Type': 'application/json'
-                    }
-                    payload = json.dumps({
-                        "short_text": short_text,
-                        "full_text": content
-                    })
-                    response = requests.request("POST", url, headers=headers, data=payload)
-                    this_status = response.status_code
-                    if this_status == 200:
-                        print(f"[info] {collection_name} QA summarize embed请求成功")
-                    else:
-                        print(f"[error] {collection_name} QA summarize embed请求失败：\n错误码：{this_status}")
-                        all_ok = False
-                    with open(log_file_path, 'a') as log_file:
-                        log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
-            except Exception as e:
-                print(f"[error] {collection_name} QA summarize embed请求失败：\n错误原因：{e}")
-                all_ok = False
-                with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} QA summarize embed:" + content_obj["question"] + "\nerror:" + e + "\n")
+                    log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
+        except Exception as e:
+            print(f"[error] {collection_name} QA embed请求失败：\n错误原因：{e}")
+            all_ok = False
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nerror:" + e + "\n")
     return all_ok
 
 
@@ -438,48 +411,26 @@ def query_embed_json(content, collection_name, filename, this_summarize):
     log_file_path = os.path.join(collection_name, 'response.log')
     json_list = json.loads(content)
     for data in json_list:
-        content_len = len(content)
         payload = json.dumps(data)
-        if content_len < 400:
-            try:
-                url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
-                headers = {
-                    'Content-Type': 'application/json'
-                }
-                response = requests.request("POST", url, headers=headers, data=payload)
-                this_status = response.status_code
-                if this_status == 200:
-                    print(f"[info] {collection_name} embed请求成功: {filename}")
-                else:
-                    print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
-                    all_ok = False
-                with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
-            except Exception as e:
-                print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+        try:
+            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            this_status = response.status_code
+            if this_status == 200:
+                print(f"[info] {collection_name} embed请求成功: {filename}")
+            else:
+                print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                 all_ok = False
-                with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
-        else:
-            try:
-                url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
-                headers = {
-                    'Content-Type': 'application/json'
-                }
-                response = requests.request("POST", url, headers=headers, data=payload)
-                this_status = response.status_code
-                if this_status == 200:
-                    print(f"[info] {collection_name} summarize embed请求成功: {filename}")
-                else:
-                    print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
-                    all_ok = False
-                with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
-            except Exception as e:
-                print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
-                all_ok = False
-                with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+        except Exception as e:
+            print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+            all_ok = False
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     return all_ok
 
 
