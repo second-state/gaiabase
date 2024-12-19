@@ -27,7 +27,7 @@ let fileIntervalId;
 let urlIntervalId;
 let allIntervalId;
 
-const socket = io.connect('http://127.0.0.1:519');
+const socket = io.connect('/');
 
 // 监听文件处理完成
 socket.on('file_processed', data => {
