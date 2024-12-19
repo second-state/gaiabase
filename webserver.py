@@ -11,6 +11,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
 from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string
+from flask_socketio import SocketIO
 from llama_parse import LlamaParse
 import urllib.request
 from http.cookiejar import CookieJar
@@ -28,6 +29,7 @@ log.disabled = True
 FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 upload_folder = "uploads"
 
 nest_asyncio.apply()
@@ -73,7 +75,7 @@ def index():
     return render_template("index.html")
 
 
-def prase_pdf(input_file, output_folder):
+def prase_pdf(input_file, output_folder, old_name):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name)
@@ -91,31 +93,34 @@ def prase_pdf(input_file, output_folder):
             for data in documents:
                 total_text += data.text
             save_file(total_text, output_file)
-
-        update_file_subtask(output_folder, file_name, 1, len(total_text))
+        length = len(total_text)
+        update_file_subtask(output_folder, file_name, 1, length)
+        if length > 400:
+            query_summarize(total_text, file_name, old_name)
         print(f"[log] pdf处理完成: {output_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
         print(f"[error] pdf处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def prase_doc(input_file, output_folder):
+def prase_doc(input_file, output_folder, old_name):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name)
     try:
         content = textract.process(input_file).decode("utf-8")
         save_file(content, output_file)
-        update_subtask(output_folder, file_name, 1, len(content))
-        save_file(content, output_file)
-        update_file_subtask(output_folder, file_name, 1, len(content))
+        length = len(content)
+        update_file_subtask(output_folder, file_name, 1, length)
+        if length > 400:
+            query_summarize(content, file_name, old_name)
         print(f"[log] doc文件处理完成: {output_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
         print(f"[error] doc处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def prase_text(input_file, output_folder):
+def prase_text(input_file, output_folder, old_name):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, os.path.basename(input_file))
     create_file_subtask(output_folder, file_name)
@@ -123,9 +128,11 @@ def prase_text(input_file, output_folder):
         with open(input_file, "r") as f:
             content = f.read()
             save_file(content, output_file)
-        update_subtask(output_folder, file_name, 1, len(content))
         save_file(content, output_file)
-        update_file_subtask(output_folder, file_name, 1, len(content))
+        length = len(content)
+        update_file_subtask(output_folder, file_name, 1, length)
+        if length > 400:
+            query_summarize(content, file_name, old_name)
         print(f"[log] text文件处理完成: {output_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
@@ -234,6 +241,15 @@ def crawl_web(url_list, output_folder, url_id):
         print(f"[error] url处理失败! \n url：{url_id} \n 原因： {e}")
 
 
+clients = {}
+
+@socketio.on('connect')
+def handle_connect():
+    trans_id = request.args.get('trans_id')  # 前端通过 URL 参数传递唯一标识符
+    if trans_id:
+        clients[trans_id] = request.sid
+
+
 @app.route("/upload", methods=["POST"])
 def upload():
     files = request.files.getlist("files[]")
@@ -263,19 +279,19 @@ def upload():
             log_file.write(f"{filename} -- {random_value}\n")
 
         if file_extension in ['doc', 'docx']:
-            thread = threading.Thread(target=prase_doc, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_doc, args=(file_path, output_folder, filename))
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            thread = threading.Thread(target=prase_pdf, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_pdf, args=(file_path, output_folder, filename))
             thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
-            thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_text, args=(file_path, output_folder, filename))
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
-            thread = threading.Thread(target=prase_text, args=(file_path, output_folder))
+            thread = threading.Thread(target=prase_text, args=(file_path, output_folder, filename))
             thread.start()
             print(f"{filename} 是md")
         elif file_extension in ['ttl']:
@@ -390,53 +406,52 @@ def send_embed_req(collection_name, embed_list):
     return all_ok
 
 
+def query_summarize(content, file_name, old_name):
+    try:
+        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/gen_qa"
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        payload = json.dumps({
+            "full_text": content
+        })
+        response = requests.request("POST", url, headers=headers, data=payload)
+        this_status = response.status_code
+        if this_status == 200:
+            data = json.loads(response.text)
+            if data["status"]:
+                print(f"[info] summarize请求成功: {len(data)}")
+                socketio.emit('file_processed', {'qa_list': data, "file_name": file_name, "old_name": old_name})
+                return
+    except Exception as e:
+        print(f"[info] summarize请求失败: {e}")
+
+
 def query_embed(content, collection_name, filename, this_summarize):
     all_ok = True
     log_file_path = os.path.join(collection_name, 'response.log')
-    content_len = len(content)
     payload = json.dumps({
         "full_text": content
     })
-    if content_len < 400:
-        try:
-            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
-            headers = {
-                'Content-Type': 'application/json'
-            }
-            response = requests.request("POST", url, headers=headers, data=payload)
-            this_status = response.status_code
-            if this_status == 200:
-                print(f"[info] {collection_name} embed请求成功: {filename}")
-            else:
-                print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
-                all_ok = False
-            with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
-        except Exception as e:
-            print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+    try:
+        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        this_status = response.status_code
+        if this_status == 200:
+            print(f"[info] {collection_name} embed请求成功: {filename}")
+        else:
+            print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
             all_ok = False
-            with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
-    else:
-        try:
-            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/summarize_embed/{collection_name}"
-            headers = {
-                'Content-Type': 'application/json'
-            }
-            response = requests.request("POST", url, headers=headers, data=payload)
-            this_status = response.status_code
-            if this_status == 200:
-                print(f"[info] {collection_name} summarize embed请求成功: {filename}")
-            else:
-                print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
-                all_ok = False
-            with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
-        except Exception as e:
-            print(f"[error] {collection_name} summarize embed请求失败：\n文件名：{filename}\n错误原因：{e}")
-            all_ok = False
-            with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} file summarize embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+        with open(log_file_path, 'a') as log_file:
+            log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+    except Exception as e:
+        print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
+        all_ok = False
+        with open(log_file_path, 'a') as log_file:
+            log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     return all_ok
 
 
@@ -486,13 +501,9 @@ def send_file_req(folder_path, collection_name, split_length, summarize_list):
         if filename.endswith('.txt') or filename.endswith('.md'):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
-                parts = split_text(content, split_length)
-                if len(parts) == 1:
+                if len(content) <= 400:
                     content = content + "\n" + this_summarize
                     all_ok = all_ok and query_embed(content, collection_name, filename, this_summarize)
-                else:
-                    for part in parts:
-                        all_ok = all_ok and query_embed(part, collection_name, filename, this_summarize)
         elif filename.endswith('.json'):
             with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
@@ -500,6 +511,11 @@ def send_file_req(folder_path, collection_name, split_length, summarize_list):
 
 
     return all_ok
+
+
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected")
 
 
 @app.route("/submit_all_data", methods=["POST"])

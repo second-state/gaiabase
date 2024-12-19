@@ -27,6 +27,78 @@ let fileIntervalId;
 let urlIntervalId;
 let allIntervalId;
 
+const socket = io.connect('http://127.0.0.1:519');
+
+// 监听文件处理完成
+socket.on('file_processed', data => {
+    const thisQaPlace = document.getElementById(`qa_${data.file_name}`)
+    const thisQaList = document.createElement(`div`)
+    thisQaList.id = `qaList_${data.file_name}`
+    thisQaPlace.style.display = "block";
+    thisQaPlace.innerHTML = ""
+    const question = document.createElement('div');
+    const answer = document.createElement('div');
+    const skip = document.createElement('button');
+    const yes = document.createElement('button');
+    question.textContent = "Do you need to preview the generated QAs?"
+    thisQaPlace.appendChild(question)
+    answer.style.display = "flex";
+    skip.textContent = "Skip"
+    skip.onclick = () => {
+        thisQaPlace.style.display = "none";
+    }
+    yes.textContent = "Preview"
+    yes.onclick = () => {
+        thisQaList.style.display = "block";
+        document.getElementById("container").style.display = "none";
+        document.getElementById("submit-all-place").style.display = "none";
+    }
+    answer.appendChild(skip)
+    answer.appendChild(yes)
+    thisQaPlace.appendChild(answer)
+    const fileName = document.createElement('a');
+    fileName.textContent = "Source text: " + data.old_name;
+    fileName.href = `/files/${trans_id}/${data.file_name}`;
+    fileName.target = "_black";
+    const QAList = document.createElement('div');
+    QAList.id = "allQAList"
+    const saveButton = document.createElement('button');
+    saveButton.textContent = "save all QA"
+    saveButton.onclick = () => {
+        thisQaPlace.style.display = "none";
+        thisQaList.style.display = "none";
+        document.getElementById("container").style.display = "flex";
+        document.getElementById("submit-all-place").style.display = "flex";
+    }
+    Object.keys(data.qa_list).forEach(key=>{
+        if(key.startsWith("qa")) {
+            const splitData = data.qa_list[key].split(":\n")
+            const QA = document.createElement('div');
+            const Q = document.createElement('textarea');
+            const A = document.createElement('textarea');
+            QA.style.display = "flex";
+            QA.style.marginBottom = "0.5rem";
+            Q.style.flex = "1";
+            Q.rows = 3;
+            A.style.flex = "1";
+            A.rows = 3;
+            Q.className = "question"
+            Q.value = splitData[0]
+            A.className = "answer"
+            A.value = splitData[1]
+            QA.appendChild(Q)
+            QA.appendChild(A)
+            QAList.appendChild(QA)
+        }
+    })
+    thisQaList.appendChild(fileName)
+    thisQaList.appendChild(QAList)
+    thisQaList.appendChild(QAList)
+    thisQaList.appendChild(saveButton)
+    thisQaList.style.display = "none";
+    document.getElementById("allQAListPlace").appendChild(thisQaList)
+});
+
 function startUrlRequest() {
     urlIntervalId = setInterval(async () => {
         const requestOptions = {
@@ -60,7 +132,7 @@ function startUrlRequest() {
                     } else {
                         urlLogo.src = returnImgUrl(1)
                     }
-                    if(all_ok) {
+                    if (all_ok) {
                         canSubmit()
                         clearInterval(urlIntervalId);
                     }
@@ -73,7 +145,7 @@ function startUrlRequest() {
 }
 
 function startRequest() {
-    intervalId = setInterval(async () => {
+    fileIntervalId = setInterval(async () => {
         const requestOptions = {
             method: "GET",
             redirect: "follow"
@@ -118,7 +190,7 @@ function startRequest() {
 }
 
 function startAllRequest() {
-    intervalId = setInterval(async () => {
+    allIntervalId = setInterval(async () => {
         const requestOptions = {
             method: "GET",
             redirect: "follow"
@@ -132,7 +204,7 @@ function startAllRequest() {
             logo.style.width = "3rem";
             logo.style.marginRight = "0.5rem";
             if (thisStatus !== 0) {
-                clearInterval(intervalId);
+                clearInterval(allIntervalId);
             }
         }
 
@@ -159,10 +231,9 @@ document.getElementById("splitLength").addEventListener("input", (e) => {
 
 // 停止定时请求
 function stopRequest() {
-    clearInterval(intervalId);
+    clearInterval(fileIntervalId);
     const result = document.getElementById("upload-result")
     result.innerHTML = `You can see the results on <a target="_blank" href="/listFiles/${trans_id}">this page</a>`
-    console.log(`停止请求: ${intervalId}`);
 }
 
 function returnImgUrl(status) {
@@ -191,10 +262,26 @@ const updateAllFile = () => {
         const div = document.getElementById("input_" + data.save_file_name)
         if (data.status === 0) {
             allFinish = false
-        } else if (data.status === 1 &&  !data.file.name.endsWith(".ttl")) {
-            if(parseInt(data.word_count) <= document.getElementById("splitLength").value) {
+        } else if (data.status === 1 && !data.file.name.endsWith(".ttl")) {
+            if(parseInt(data.word_count) > 400) {
+                const thisQaPlace = document.getElementById(`qa_${data.save_file_name}`)
+                const qaPlace = document.createElement("div");
+                const qaText = document.createElement("div");
+                const qaLogo = document.createElement("img");
+                qaLogo.src = returnImgUrl(0)
+                qaLogo.style.width = "1.5rem";
+                qaLogo.style.marginRight = "0.4rem";
+                qaText.textContent = "waiting for summarize~"
+                qaPlace.appendChild(qaLogo)
+                qaPlace.appendChild(qaText)
+                qaPlace.style.display = "flex"
+                thisQaPlace.innerHTML = ""
+                thisQaPlace.appendChild(qaPlace)
+                thisQaPlace.style.display = "block";
+            }
+            if (parseInt(data.word_count) <= document.getElementById("splitLength").value) {
                 div.style.display = "block";
-            }else {
+            } else {
                 div.style.display = "none";
             }
         }
@@ -222,46 +309,6 @@ cannotSubmit()
 const showAllFile = () => {
     const fileListPlace = document.getElementById("fileList");
     fileListPlace.innerHTML = "";
-    finishList.forEach((data) => {
-        const div = document.createElement("div");
-        const word_count_div = document.createElement("div");
-        const nameDiv = document.createElement("div");
-        const logo = document.createElement("img");
-        const li = document.createElement("li");
-        const input_div = document.createElement('div');
-        const span = document.createElement('span');
-        const textarea = document.createElement('textarea');
-        textarea.name = data.save_file_name;
-        textarea.id = data.save_file_name;
-        textarea.style.width = '100%';
-        textarea.style.height = '3rem';
-        textarea.style.padding = '0.4rem';
-        textarea.style.marginTop = '0.2rem';
-        span.innerText = "Summarizing " + data.file.name + " document:";
-        input_div.id = "input_" + data.save_file_name;
-        if(data.word_count && parseInt(data.word_count) <= document.getElementById("splitLength").value) {
-            input_div.style.display = "block";
-        }else {
-            input_div.style.display = "none";
-        }
-        input_div.appendChild(span);
-        input_div.appendChild(textarea);
-        logo.src = returnImgUrl(data.status)
-        word_count_div.id = "count_" + data.save_file_name;
-        word_count_div.style.marginLeft = "0.5rem";
-        logo.id = "logo_" + data.save_file_name;
-        logo.style.width = "1.5rem";
-        nameDiv.textContent = data.file.name;
-        nameDiv.style.marginLeft = "0.5rem";
-        div.appendChild(logo)
-        div.appendChild(nameDiv)
-        div.appendChild(word_count_div)
-        div.style.display = "flex";
-        div.style.alignItems = "center";
-        li.appendChild(div);
-        fileListPlace.appendChild(li);
-        fileListPlace.appendChild(input_div);
-    });
     fileList.forEach((file) => {
         const li = document.createElement("li");
         li.textContent = file.name;
@@ -274,6 +321,52 @@ const showAllFile = () => {
         li.appendChild(removeBtn);
         fileListPlace.appendChild(li);
     });
+}
+
+
+const addFinishFile = (rename, fileName) => {
+    const fileListPlace = document.getElementById("finishFileList");
+    const div = document.createElement("div");
+    const word_count_div = document.createElement("div");
+    const nameDiv = document.createElement("a");
+    const logo = document.createElement("img");
+    const li = document.createElement("li");
+    const qa_div = document.createElement('div');
+    const input_div = document.createElement('div');
+    const span = document.createElement('span');
+    const textarea = document.createElement('textarea');
+    textarea.name = rename;
+    textarea.id = rename;
+    textarea.style.width = '100%';
+    textarea.style.height = '3rem';
+    textarea.style.padding = '0.4rem';
+    textarea.style.marginTop = '0.2rem';
+    span.innerText = "Summarizing " + fileName + " document:";
+    qa_div.id = "qa_" + rename;
+    qa_div.style.marginBottom = "0.5rem";
+    qa_div.style.display = "none";
+    input_div.id = "input_" + rename;
+    input_div.style.display = "none";
+    input_div.appendChild(span);
+    input_div.appendChild(textarea);
+    logo.src = returnImgUrl(0)
+    word_count_div.id = "count_" + rename;
+    word_count_div.style.marginLeft = "0.5rem";
+    logo.id = "logo_" + rename;
+    logo.style.width = "1.5rem";
+    nameDiv.textContent = fileName;
+    nameDiv.href = `/files/${trans_id}/${rename}`;
+    nameDiv.target = "_black";
+    nameDiv.style.marginLeft = "0.5rem";
+    div.appendChild(logo)
+    div.appendChild(nameDiv)
+    div.appendChild(word_count_div)
+    div.style.display = "flex";
+    div.style.alignItems = "center";
+    li.appendChild(div);
+    fileListPlace.appendChild(li);
+    fileListPlace.appendChild(qa_div);
+    fileListPlace.appendChild(input_div);
 }
 
 
@@ -327,10 +420,10 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
                 save_file_name: renameValue,
                 file: file
             })
+            addFinishFile(renameValue, fileName)
         }
     })
     fileList = []
-    showAllFile()
     startRequest()
 });
 
@@ -385,7 +478,7 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     const ul = document.createElement("ul");
     ul.id = "ul-" + url_id
     ul.style.paddingTop = "0.5rem"
-    mapUrlList.forEach((mapUrl)=>{
+    mapUrlList.forEach((mapUrl) => {
         const liNext = document.createElement("li");
         const cDiv = document.createElement("div");
         const cLogo = document.createElement("img");
@@ -497,6 +590,17 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             })
         }
     });
+    const allQAList = document.getElementById("allQAList");
+    Array.from(allQAList.querySelectorAll("div")).forEach((pair) => {
+        const q = pair.querySelector(".question").value
+        const a = pair.querySelector(".answer").value
+        if (q && a) {
+            embedPairs.push({
+                question: q,
+                answer: a
+            })
+        }
+    });
     document.getElementById("submit-all").disabled = true;
     const logo = document.getElementById("submit-all-logo")
     logo.src = returnImgUrl(0)
@@ -514,8 +618,8 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             const textarea = document.getElementById(item.save_file_name)
             if (textarea && textarea.value) {
                 fileSummarizeList.push({
-                    name:item.save_file_name,
-                    value:textarea.value
+                    name: item.save_file_name,
+                    value: textarea.value
                 })
             }
         }
