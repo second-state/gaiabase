@@ -268,16 +268,17 @@ const updateAllFile = () => {
                 const qaPlace = document.createElement("div");
                 const qaText = document.createElement("div");
                 const qaLogo = document.createElement("img");
-                qaLogo.src = returnImgUrl(0)
-                qaLogo.style.width = "1.5rem";
-                qaLogo.style.marginRight = "0.4rem";
-                qaText.textContent = "waiting for summarize~"
-                qaPlace.appendChild(qaLogo)
-                qaPlace.appendChild(qaText)
-                qaPlace.style.display = "flex"
-                thisQaPlace.innerHTML = ""
-                thisQaPlace.appendChild(qaPlace)
-                thisQaPlace.style.display = "block";
+                if(thisQaPlace.innerHTML === "") {
+                    qaLogo.src = returnImgUrl(0)
+                    qaLogo.style.width = "1.5rem";
+                    qaLogo.style.marginRight = "0.4rem";
+                    qaText.textContent = "waiting for summarize~"
+                    qaPlace.appendChild(qaLogo)
+                    qaPlace.appendChild(qaText)
+                    qaPlace.style.display = "flex"
+                    thisQaPlace.appendChild(qaPlace)
+                    thisQaPlace.style.display = "block";
+                }
             }
             if (parseInt(data.word_count) <= document.getElementById("splitLength").value) {
                 div.style.display = "block";
