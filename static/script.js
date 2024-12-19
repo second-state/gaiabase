@@ -61,7 +61,6 @@ socket.on('file_processed', data => {
     fileName.href = `/files/${trans_id}/${data.file_name}`;
     fileName.target = "_black";
     const QAList = document.createElement('div');
-    QAList.id = "allQAList"
     const saveButton = document.createElement('button');
     saveButton.textContent = "save all QA"
     saveButton.onclick = () => {
@@ -77,6 +76,7 @@ socket.on('file_processed', data => {
             const Q = document.createElement('textarea');
             const A = document.createElement('textarea');
             QA.style.display = "flex";
+            QA.className = "QAPair";
             QA.style.marginBottom = "0.5rem";
             Q.style.flex = "1";
             Q.rows = 3;
@@ -591,8 +591,8 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             })
         }
     });
-    const allQAList = document.getElementById("allQAList");
-    Array.from(allQAList.querySelectorAll("div")).forEach((pair) => {
+    const allQAListPlace = document.getElementById("allQAListPlace");
+    Array.from(allQAListPlace.querySelectorAll(".QAPair")).forEach((pair) => {
         const q = pair.querySelector(".question").value
         const a = pair.querySelector(".answer").value
         if (q && a) {
