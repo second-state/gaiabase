@@ -32,6 +32,9 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 upload_folder = "uploads"
 
+max_concurrent_requests = 5
+semaphore = threading.Semaphore(max_concurrent_requests)
+
 nest_asyncio.apply()
 
 
@@ -128,10 +131,10 @@ def prase_text(input_file, output_folder, old_name):
         with open(input_file, "r") as f:
             content = f.read()
             save_file(content, output_file)
-        save_file(content, output_file)
         length = len(content)
         update_file_subtask(output_folder, file_name, 1, length)
         if length > 400:
+            print(f"[log] 开始summarize: {output_file}")
             query_summarize(content, file_name, old_name)
         print(f"[log] text文件处理完成: {output_file}")
     except Exception as e:
@@ -407,24 +410,29 @@ def send_embed_req(collection_name, embed_list):
 
 
 def query_summarize(content, file_name, old_name):
-    try:
-        url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/gen_qa"
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        payload = json.dumps({
-            "full_text": content
-        })
-        response = requests.request("POST", url, headers=headers, data=payload)
-        this_status = response.status_code
-        if this_status == 200:
-            data = json.loads(response.text)
-            if data["status"]:
-                print(f"[info] summarize请求成功: {len(data)}")
-                socketio.emit('file_processed', {'qa_list': data, "file_name": file_name, "old_name": old_name})
-                return
-    except Exception as e:
-        print(f"[info] summarize请求失败: {e}")
+    with semaphore:
+        try:
+            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/gen_qa"
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            payload = json.dumps({
+                "full_text": content
+            })
+            response = requests.request("POST", url, headers=headers, data=payload)
+            this_status = response.status_code
+            if this_status == 200:
+                data = json.loads(response.text)
+                if data["status"]:
+                    print(f"[info] {file_name} summarize请求成功: {len(data)}")
+                    socketio.emit('file_processed', {'qa_list': data, "file_name": file_name, "old_name": old_name})
+                    return
+                else:
+                    print(f"[info] {file_name} summarize请求失败: 状态码: {this_status} return: {data}")
+            else:
+                print(f"[info] {file_name} summarize请求失败: 状态码:{this_status}")
+        except Exception as e:
+            print(f"[info] {file_name} summarize请求失败: {e}")
 
 
 def query_embed(content, collection_name, filename, this_summarize):
