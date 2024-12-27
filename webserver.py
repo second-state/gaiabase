@@ -28,7 +28,7 @@ FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-max_concurrent_requests = 5
+max_concurrent_requests = 10
 semaphore = threading.Semaphore(max_concurrent_requests)
 upload_folder = "uploads"
 
