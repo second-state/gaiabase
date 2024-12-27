@@ -8,7 +8,7 @@ import requests
 
 from sql_query import *
 from file_utils import save_file
-from webserver import query_summarize
+from query_function import query_summarize
 
 
 def format_str(text):
