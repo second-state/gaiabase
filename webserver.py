@@ -35,34 +35,6 @@ upload_folder = "uploads"
 nest_asyncio.apply()
 
 
-def query_summarize(content, output_file, old_name):
-    with semaphore:
-        file_name = os.path.basename(output_file)
-        try:
-            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/gen_qa"
-            headers = {
-                'Content-Type': 'application/json'
-            }
-            payload = json.dumps({
-                "full_text": content
-            })
-            response = requests.request("POST", url, headers=headers, data=payload)
-            this_status = response.status_code
-            if this_status == 200:
-                data = json.loads(response.text)
-                if data["status"]:
-                    print(f"[info] {file_name} summarize请求成功: {len(data)}")
-                    socketio.emit('file_processed', {'qa_list': data, "file_name": file_name, "old_name": old_name})
-                    save_file(response.text, output_file, "summarize", True)
-                    return data
-                else:
-                    print(f"[info] {file_name} summarize请求失败: 状态码: {this_status} return: {data}")
-            else:
-                print(f"[info] {file_name} summarize请求失败: 状态码:{this_status}")
-        except Exception as e:
-            print(f"[info] {file_name} summarize请求失败: {e}")
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -110,19 +82,19 @@ def upload():
             log_file.write(f"{filename} -- {random_value}\n")
 
         if file_extension in ['doc', 'docx']:
-            thread = threading.Thread(target=process_doc, args=(file_path, output_folder, filename))
+            thread = threading.Thread(target=process_doc, args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            thread = threading.Thread(target=process_pdf, args=(file_path, output_folder, filename))
+            thread = threading.Thread(target=process_pdf, args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
-            thread = threading.Thread(target=process_text, args=(file_path, output_folder, filename))
+            thread = threading.Thread(target=process_text, args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
-            thread = threading.Thread(target=process_text, args=(file_path, output_folder, filename))
+            thread = threading.Thread(target=process_text, args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是md")
         elif file_extension in ['ttl']:
@@ -253,7 +225,9 @@ def check_crawl_url_subtask_status_serve():
 @app.route('/sqlApi/checkTaskStatus')
 def check_task_status_serve():
     task_id = request.args.get("task_id")
+    print(task_id)
     data = check_task_status(task_id)
+    print(data)
     return jsonify({'status': 'success', 'data': data}), 200
 
 

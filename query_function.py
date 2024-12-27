@@ -12,6 +12,34 @@ from file_utils import *
 from sql_query import *
 
 
+def query_summarize(content, output_file, old_name, semaphore, socketio):
+    with semaphore:
+        file_name = os.path.basename(output_file)
+        try:
+            url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/gen_qa"
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            payload = json.dumps({
+                "full_text": content
+            })
+            response = requests.request("POST", url, headers=headers, data=payload)
+            this_status = response.status_code
+            if this_status == 200:
+                data = json.loads(response.text)
+                if data["status"]:
+                    print(f"[info] {file_name} summarize请求成功: {len(data)}")
+                    socketio.emit('file_processed', {'qa_list': data, "file_name": file_name, "old_name": old_name})
+                    save_file(response.text, output_file, "summarize", True)
+                    return data
+                else:
+                    print(f"[info] {file_name} summarize请求失败: 状态码: {this_status} return: {data}")
+            else:
+                print(f"[info] {file_name} summarize请求失败: 状态码:{this_status}")
+        except Exception as e:
+            print(f"[info] {file_name} summarize请求失败: {e}")
+
+
 def crawl_web(url_list, output_folder, url_id):
     try:
         all_ok = True

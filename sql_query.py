@@ -10,23 +10,27 @@ mysql_username = os.getenv("MYSQL_USERNAME")
 mysql_password = os.getenv("MYSQL_PASSWORD")
 mysql_database_name = os.getenv("MYSQL_DATABASE_NAME")
 
+POOL_SIZE = 5  # 连接池的大小
+
+
+connection_pool =  mariadb.ConnectionPool(
+    pool_name="mypool",
+    pool_size=POOL_SIZE,
+    user=mysql_username,
+    password=mysql_password,
+    host=MYSQL_HOST,
+    database=mysql_database_name
+)
 
 def create_connection():
-    """创建并返回数据库连接"""
     try:
-        conn = mariadb.connect(
-            host=MYSQL_HOST,
-            user=mysql_username,
-            password=mysql_password,
-            database=mysql_database_name,
-        )
-        if conn.cursor():
+        conn = connection_pool.get_connection()
+        if conn:
             conn.autocommit = False
             return conn
     except Error as e:
         print(f"Error: '{e}'")
         return None
-
 
 def check_subtask_status(task_id):
     conn = create_connection()

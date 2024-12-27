@@ -15,7 +15,7 @@ def format_str(text):
     return str(text)
 
 
-def process_pdf(input_file, output_folder, old_name):
+def process_pdf(input_file, output_folder, old_name, semaphore, socketio):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
@@ -36,7 +36,7 @@ def process_pdf(input_file, output_folder, old_name):
         length = len(total_text)
         update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
-            data = query_summarize(total_text, output_file, old_name)
+            data = query_summarize(total_text, output_file, old_name, semaphore, socketio)
             if data:
                 update_file_subtask(output_folder, file_name, None, 1)
             else:
@@ -47,7 +47,7 @@ def process_pdf(input_file, output_folder, old_name):
         print(f"[error] pdf处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def process_doc(input_file, output_folder, old_name):
+def process_doc(input_file, output_folder, old_name, semaphore, socketio):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
@@ -57,7 +57,7 @@ def process_doc(input_file, output_folder, old_name):
         length = len(content)
         update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
-            data = query_summarize(content, output_file, old_name)
+            data = query_summarize(content, output_file, old_name, semaphore, socketio)
             if data:
                 update_file_subtask(output_folder, file_name, None, 1)
             else:
@@ -68,7 +68,7 @@ def process_doc(input_file, output_folder, old_name):
         print(f"[error] doc处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def process_text(input_file, output_folder, old_name):
+def process_text(input_file, output_folder, old_name, semaphore, socketio):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, os.path.basename(input_file))
     create_file_subtask(output_folder, file_name, old_name)
@@ -79,7 +79,7 @@ def process_text(input_file, output_folder, old_name):
             length = len(content)
             update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
-            data = query_summarize(content, output_file, old_name)
+            data = query_summarize(content, output_file, old_name, semaphore, socketio)
             if data:
                 update_file_subtask(output_folder, file_name, None, 1)
             else:
