@@ -643,7 +643,7 @@ document.getElementById("submit-all").addEventListener("click", async () => {
 
     const submitText = document.getElementById("submit-text")
     submitText.style.display = "block";
-    submitText.innerHTML = `You can exit this page at any time and we will continue to complete the embed work for you<br/>see details: <a target="_blank" href="/embed/${trans_id}">this page</a>`
+    submitText.innerHTML = `You can exit this page at any time and we will continue to complete the embed work for you<br/>see details: <a target="_blank" href="/embed?task_id=${trans_id}">this page</a>`
 
     startAllRequest();
 });
