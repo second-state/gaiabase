@@ -591,17 +591,17 @@ document.getElementById("submit-all").addEventListener("click", async () => {
             })
         }
     });
-    const allQAListPlace = document.getElementById("allQAListPlace");
-    Array.from(allQAListPlace.querySelectorAll(".QAPair")).forEach((pair) => {
-        const q = pair.querySelector(".question").value
-        const a = pair.querySelector(".answer").value
-        if (q && a) {
-            embedPairs.push({
-                question: q,
-                answer: a
-            })
-        }
-    });
+    // const allQAListPlace = document.getElementById("allQAListPlace");
+    // Array.from(allQAListPlace.querySelectorAll(".QAPair")).forEach((pair) => {
+    //     const q = pair.querySelector(".question").value
+    //     const a = pair.querySelector(".answer").value
+    //     if (q && a) {
+    //         embedPairs.push({
+    //             question: q,
+    //             answer: a
+    //         })
+    //     }
+    // });
     document.getElementById("submit-all").disabled = true;
     const logo = document.getElementById("submit-all-logo")
     logo.src = returnImgUrl(0)
@@ -641,7 +641,9 @@ document.getElementById("submit-all").addEventListener("click", async () => {
 
     const data = await response.json();
 
-    document.getElementById("submit-text").style.display = "block";
+    const submitText = document.getElementById("submit-text")
+    submitText.style.display = "block";
+    submitText.innerHTML = `You can exit this page at any time and we will continue to complete the embed work for you<br/>see details: <a target="_blank" href="/embed/${trans_id}">this page</a>`
 
     startAllRequest();
 });

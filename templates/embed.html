@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>embed info</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+        }
+        th {
+            text-align: left;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        colgroup col:first-child {
+            width: 70%;
+        }
+        colgroup col:not(:first-child) {
+            width: 10%;
+        }
+        tbody tr td:not(:first-child) {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div>Files</div>
+<table>
+    <colgroup>
+        <col>
+        <col>
+        <col>
+        <col>
+    </colgroup>
+    <thead>
+    <tr>
+        <th>Filename</th>
+        <th>Process</th>
+        <th>Summarize</th>
+        <th>Embed</th>
+    </tr>
+    </thead>
+    <tbody id="fileList">
+    </tbody>
+</table>
+<div>Url</div>
+<div id="UrlList"></div>
+<div>QA</div>
+<div id="QAList"></div>
+<div>Simple Embed</div>
+<div id="simpleEmbedList"></div>
+</body>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const taskId = urlParams.get('task_id');
+
+  function returnImgUrl(status) {
+      status = parseInt(status)
+      if (status === 1) {
+          return "img/success.svg"
+      } else if (status === 2) {
+          return "img/error.svg"
+      } else {
+          return "img/loading.svg"
+      }
+  }
+
+  const requestOptions = {
+      method: "GET",
+      redirect: "follow"
+  };
+
+  const getFileListStatus = async () => {
+      const response = await fetch(`/sqlApi/checkAllFileSubtaskStatus?task_id=${taskId}`, requestOptions)
+      let data = await response.json()
+      data = data.data
+      console.log(data)
+      const fileList = document.getElementById("fileList")
+      data.forEach(item=>{
+          const thisTr = document.createElement("tr");
+          const fileNameTd = document.createElement("td");
+          const processTd = document.createElement("td");
+          const processImg = document.createElement("img");
+          const summarizeTd = document.createElement("td");
+          const summarizeImg = document.createElement("img");
+          const embedTd = document.createElement("td");
+          const embedImg = document.createElement("img");
+          processImg.id = "process_logo_" + item[0]
+          summarizeImg.id = "summarize_logo_" + item[0]
+          embedImg.id = "embed_logo_" + item[0]
+          thisTr.id = item[0]
+          fileNameTd.innerText = item[1]
+          processImg.src = returnImgUrl(item[2])
+          processImg.style.width = "14px"
+          if(item[3]){
+              summarizeImg.src = returnImgUrl(item[3])
+              summarizeImg.style.width = "14px"
+          }
+          embedImg.src = returnImgUrl(item[4])
+          embedImg.style.width = "14px"
+          thisTr.appendChild(fileNameTd)
+          processTd.appendChild(processImg)
+          summarizeTd.appendChild(summarizeImg)
+          embedTd.appendChild(embedImg)
+          thisTr.appendChild(processTd)
+          thisTr.appendChild(summarizeTd)
+          thisTr.appendChild(embedTd)
+          fileList.appendChild(thisTr)
+      })
+      pollFileSubtaskStatus()
+  }
+
+  async function pollFileSubtaskStatus() {
+      const interval = 5000;
+
+      const intervalId = setInterval(async () => {
+          try {
+              const response = await fetch(`/sqlApi/checkFileEmbedStatus?task_id=${taskId}`, requestOptions);
+              let data = await response.json();
+              data = data.data;
+
+              let haveLoading = false
+
+              data.forEach(item=>{
+                  const embed_logo = document.getElementById("embed_logo_" + item[0])
+                  embed_logo.src = returnImgUrl(item[1])
+                  if(item[1]===0){
+                      haveLoading = true;
+                  }
+              })
+
+              if (!haveLoading) {
+                  console.log('所有子任务已完成');
+                  clearInterval(intervalId);
+              }
+          } catch (error) {
+              console.error('请求失败', error);
+          }
+      }, interval);
+  }
+
+  getFileListStatus()
+</script>
+</html>
