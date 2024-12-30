@@ -1,3 +1,5 @@
+const urlParams = new URLSearchParams(window.location.search);
+
 // Switch Tabs
 const tabs = document.querySelectorAll(".sidebar button");
 const sections = document.querySelectorAll(".content > div");
@@ -7,10 +9,54 @@ let urlList = []
 let fileList = []
 let finishList = []
 let collection_name = ""
-let trans_id = ""
+let trans_id = urlParams.get('task_id') || ""
 let queryUrl = ""
 let queryUrlStatus = null
 let click_tab = 1
+
+const queryAllTaskData = async () => {
+    if (trans_id) {
+        collection_name = trans_id.slice(0, -13);
+        document.getElementById("collectionName").value = collection_name
+        document.getElementById("collectionName").disabled = true;
+        document.getElementById("ttl-text").disabled = true;
+        document.getElementById("ttl-md").disabled = true;
+        const c = document.getElementById("container")
+        c.style.pointerEvents = "auto";
+        c.style.opacity = "1";
+        c.style.userSelect = "auto";
+        const requestOptions = {
+            method: "GET",
+            redirect: "follow"
+        };
+        const response = await fetch(`/sqlApi/checkAllFileSubtaskStatus?task_id=${trans_id}`, requestOptions)
+        let data = await response.json()
+        data = data.data
+        data.forEach(item=>{
+            addFinishFile(item[0],item[1])
+            finishList.push({
+                file: {name:item[1]},
+                save_file_name: item[0],
+                status: item[2],
+                word_count: item[5]
+            })
+            if(item[3] === 1) {
+                console.log(`/files/${trans_id}/${item[0]}.summarize`)
+                fetch(`/files/${trans_id}/${item[0]}.summarize`, requestOptions).then(async response => {
+                    let data = await response.text()
+                    const jsonData = JSON.parse(data)
+                    setQAData({'qa_list': jsonData, "file_name": item[0], "old_name": item[1]})
+                })
+            }else if(item[3] === 2) {
+                setQAFailed(item[0])
+            }
+        })
+        updateAllFile()
+        // console.log(finishList)
+    }
+}
+
+queryAllTaskData()
 
 tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
@@ -31,6 +77,14 @@ const socket = io.connect('/');
 
 // 监听文件处理完成
 socket.on('file_processed', data => {
+    if(Object.keys(data.qa_list).length > 0 && data.qa_list["status"]===true) {
+        setQAData(data)
+    }else {
+        setQAFailed(data.file_name)
+    }
+});
+
+const setQAData = (data) => {
     const thisQaPlace = document.getElementById(`qa_${data.file_name}`)
     const thisQaList = document.createElement(`div`)
     thisQaList.id = `qaList_${data.file_name}`
@@ -97,7 +151,21 @@ socket.on('file_processed', data => {
     thisQaList.appendChild(saveButton)
     thisQaList.style.display = "none";
     document.getElementById("allQAListPlace").appendChild(thisQaList)
-});
+}
+
+const setQAFailed = (file_name) => {
+    const thisQaPlace = document.getElementById(`qa_${file_name}`)
+    thisQaPlace.style.display = "flex";
+    thisQaPlace.innerHTML = ""
+    const question = document.createElement('div');
+    const qaLogo = document.createElement("img");
+    qaLogo.src = returnImgUrl(2)
+    qaLogo.style.width = "1.5rem";
+    qaLogo.style.marginRight = "0.4rem";
+    question.textContent = "Summarize failed!"
+    thisQaPlace.appendChild(qaLogo)
+    thisQaPlace.appendChild(question)
+}
 
 function startUrlRequest() {
     urlIntervalId = setInterval(async () => {

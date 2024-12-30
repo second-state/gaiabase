@@ -28,7 +28,7 @@ FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-max_concurrent_requests = 10
+max_concurrent_requests = 2
 semaphore = threading.Semaphore(max_concurrent_requests)
 upload_folder = "uploads"
 
@@ -40,17 +40,16 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/task")
+def task():
+    task_id = request.args.get('task_id')
+    return render_template("index.html", task_id=task_id)
+
+
 @app.route("/embed")
 def embed():
     task_id = request.args.get('task_id')
     return render_template("embed.html", task_id=task_id)
-
-
-@socketio.on('connect')
-def handle_connect():
-    trans_id = request.args.get('trans_id')  # 前端通过 URL 参数传递唯一标识符
-    if trans_id:
-        clients[trans_id] = request.sid
 
 
 @app.route("/upload", methods=["POST"])
@@ -225,9 +224,7 @@ def check_crawl_url_subtask_status_serve():
 @app.route('/sqlApi/checkTaskStatus')
 def check_task_status_serve():
     task_id = request.args.get("task_id")
-    print(task_id)
     data = check_task_status(task_id)
-    print(data)
     return jsonify({'status': 'success', 'data': data}), 200
 
 
