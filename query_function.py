@@ -33,10 +33,13 @@ def query_summarize(content, output_file, old_name, semaphore, socketio):
                     save_file(response.text, output_file, "summarize", True)
                     return data
                 else:
+                    socketio.emit('file_processed', {'qa_list': {}, "file_name": file_name, "old_name": old_name})
                     print(f"[info] {file_name} summarize请求失败: 状态码: {this_status} return: {data}")
             else:
+                socketio.emit('file_processed', {'qa_list': {}, "file_name": file_name, "old_name": old_name})
                 print(f"[info] {file_name} summarize请求失败: 状态码:{this_status}")
         except Exception as e:
+            socketio.emit('file_processed', {'qa_list': {}, "file_name": file_name, "old_name": old_name})
             print(f"[info] {file_name} summarize请求失败: {e}")
 
 
