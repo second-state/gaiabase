@@ -117,7 +117,27 @@ const setQAData = (data) => {
     const QAList = document.createElement('div');
     const saveButton = document.createElement('button');
     saveButton.textContent = "save all QA"
-    saveButton.onclick = () => {
+    saveButton.onclick = async () => {
+        let qaObject = {};
+        const qaList = document.querySelectorAll(`#${data.file_name} .QAPair`);
+        qaList.forEach((qaDiv, index) => {
+            // 获取每个QAPair div中的question和answer的value
+            const question = qaDiv.querySelector('.question textarea').value;
+            const answer = qaDiv.querySelector('.answer textarea').value;
+
+            // 将结果格式化并保存到对象中
+            qaObject[`qa_${index}`] = `${question}\n${answer}`;
+        });
+
+        console.log(JSON.stringify(qaObject, null, 2));
+        const response = await fetch("/updateSummarize", {
+            method: "POST",
+            body: {
+                taskId: trans_id,
+                fileName: data.file_name,
+                data:JSON.stringify(qaObject)
+            },
+        });
         thisQaPlace.style.display = "none";
         thisQaList.style.display = "none";
         document.getElementById("container").style.display = "flex";

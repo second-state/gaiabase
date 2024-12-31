@@ -52,6 +52,17 @@ def embed():
     return render_template("embed.html", task_id=task_id)
 
 
+@app.route("/updateSummarize", methods=["POST"])
+def update_summarize():
+    url = request.json.get("url")
+    output_folder = request.json.get("trans_id")
+    task_id = request.json.get("taskId")
+    file_name = request.json.get("fileName")
+    data = request.json.get("data")
+    output_file = os.path.join(task_id, file_name)
+    save_file(data, output_file, "summarize", True)
+
+
 @app.route("/upload", methods=["POST"])
 def upload():
     files = request.files.getlist("files[]")
