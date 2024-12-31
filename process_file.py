@@ -70,12 +70,13 @@ def process_doc(input_file, output_folder, old_name, semaphore, socketio):
 
 def process_text(input_file, output_folder, old_name, semaphore, socketio):
     file_name = os.path.basename(input_file)
+    file_name_without_ext, file_extension = os.path.splitext(file_name)
     output_file = os.path.join(output_folder, os.path.basename(input_file))
     create_file_subtask(output_folder, file_name, old_name)
     try:
         with open(input_file, "r") as f:
             content = f.read()
-            save_file(content, output_file)
+            save_file(content, output_file, file_extension)
             length = len(content)
             update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
