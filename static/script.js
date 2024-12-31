@@ -32,22 +32,22 @@ const queryAllTaskData = async () => {
         const response = await fetch(`/sqlApi/checkAllFileSubtaskStatus?task_id=${trans_id}`, requestOptions)
         let data = await response.json()
         data = data.data
-        data.forEach(item=>{
-            addFinishFile(item[0],item[1])
+        data.forEach(item => {
+            addFinishFile(item[0], item[1])
             finishList.push({
-                file: {name:item[1]},
+                file: {name: item[1]},
                 save_file_name: item[0],
                 status: item[2],
                 word_count: item[5]
             })
-            if(item[3] === 1) {
+            if (item[3] === 1) {
                 console.log(`/files/${trans_id}/${item[0]}.summarize`)
                 fetch(`/files/${trans_id}/${item[0]}.summarize`, requestOptions).then(async response => {
                     let data = await response.text()
                     const jsonData = JSON.parse(data)
                     setQAData({'qa_list': jsonData, "file_name": item[0], "old_name": item[1]})
                 })
-            }else if(item[3] === 2) {
+            } else if (item[3] === 2) {
                 setQAFailed(item[0])
             }
         })
@@ -77,9 +77,9 @@ const socket = io.connect('/');
 
 // 监听文件处理完成
 socket.on('file_processed', data => {
-    if(Object.keys(data.qa_list).length > 0 && data.qa_list["status"]===true) {
+    if (Object.keys(data.qa_list).length > 0 && data.qa_list["status"] === true) {
         setQAData(data)
-    }else {
+    } else {
         setQAFailed(data.file_name)
     }
 });
@@ -119,32 +119,33 @@ const setQAData = (data) => {
     saveButton.textContent = "save all QA"
     saveButton.onclick = async () => {
         let qaObject = {};
-        const qaList = document.querySelectorAll(`#${data.file_name} .QAPair`);
+        const qaList = thisQaList.querySelectorAll(`.QAPair`);
         qaList.forEach((qaDiv, index) => {
-            // 获取每个QAPair div中的question和answer的value
-            const question = qaDiv.querySelector('.question textarea').value;
-            const answer = qaDiv.querySelector('.answer textarea').value;
+            console.log(qaDiv)
+            const question = qaDiv.querySelector('.question').value;
+            const answer = qaDiv.querySelector('.answer').value;
 
-            // 将结果格式化并保存到对象中
-            qaObject[`qa_${index}`] = `${question}\n${answer}`;
+            qaObject[`qa_${index}`] = `${question}:\n${answer}`;
         });
 
-        console.log(JSON.stringify(qaObject, null, 2));
-        const response = await fetch("/updateSummarize", {
+        await fetch("/updateSummarize", {
             method: "POST",
-            body: {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
                 taskId: trans_id,
                 fileName: data.file_name,
-                data:JSON.stringify(qaObject)
-            },
+                data: JSON.stringify(qaObject),
+            }),
         });
-        thisQaPlace.style.display = "none";
+        // thisQaPlace.style.display = "none";
         thisQaList.style.display = "none";
         document.getElementById("container").style.display = "flex";
         document.getElementById("submit-all-place").style.display = "flex";
     }
-    Object.keys(data.qa_list).forEach(key=>{
-        if(key.startsWith("qa")) {
+    Object.keys(data.qa_list).forEach(key => {
+        if (key.startsWith("qa")) {
             const splitData = data.qa_list[key].split(":\n")
             const QA = document.createElement('div');
             const Q = document.createElement('textarea');
@@ -351,12 +352,12 @@ const updateAllFile = () => {
         if (data.status === 0) {
             allFinish = false
         } else if (data.status === 1 && !data.file.name.endsWith(".ttl")) {
-            if(parseInt(data.word_count) > 400) {
+            if (parseInt(data.word_count) > 400) {
                 const thisQaPlace = document.getElementById(`qa_${data.save_file_name}`)
                 const qaPlace = document.createElement("div");
                 const qaText = document.createElement("div");
                 const qaLogo = document.createElement("img");
-                if(thisQaPlace.innerHTML === "") {
+                if (thisQaPlace.innerHTML === "") {
                     qaLogo.src = returnImgUrl(0)
                     qaLogo.style.width = "1.5rem";
                     qaLogo.style.marginRight = "0.4rem";

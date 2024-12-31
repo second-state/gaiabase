@@ -54,13 +54,12 @@ def embed():
 
 @app.route("/updateSummarize", methods=["POST"])
 def update_summarize():
-    url = request.json.get("url")
-    output_folder = request.json.get("trans_id")
     task_id = request.json.get("taskId")
     file_name = request.json.get("fileName")
     data = request.json.get("data")
     output_file = os.path.join(task_id, file_name)
     save_file(data, output_file, "summarize", True)
+    return jsonify(success=True)
 
 
 @app.route("/upload", methods=["POST"])
