@@ -226,9 +226,11 @@ def query_embed_summarize(content, collection_name, filename, this_summarize, fu
     for key, value in json_list.items():
         if key != "status":
             payload = json.dumps({
-                "short_text": key + " \n " + value,
+                "short_text": value,
                 "full_text": full_article
             })
+            print("payload")
+            print(payload)
             try:
                 url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
                 headers = {
@@ -253,6 +255,7 @@ def query_embed_summarize(content, collection_name, filename, this_summarize, fu
 
 def embed_file(filename, folder_path, collection_name, this_summarize):
     file_path = os.path.join(folder_path, filename)
+    this_status = True
     if filename.endswith('.txt') or filename.endswith('.md'):
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
@@ -277,7 +280,11 @@ def embed_file(filename, folder_path, collection_name, this_summarize):
             truly_file_name = filename.rstrip(".summarize")
             truly_file_path = os.path.join(folder_path, truly_file_name)
             with open(truly_file_path, 'r', encoding='utf-8') as truly_file:
-                truly_content = file.read()
+                truly_content = truly_file.read()
+                print("truly_file_path")
+                print(truly_file_path)
+                print("truly_content")
+                print(truly_content)
                 this_status = query_embed_summarize(content, collection_name, filename, this_summarize, truly_content)
                 if this_status:
                     update_file_subtask(folder_path, truly_file_name, None, None, 1)

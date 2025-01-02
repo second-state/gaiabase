@@ -76,7 +76,7 @@ def process_text(input_file, output_folder, old_name, semaphore, socketio):
     try:
         with open(input_file, "r") as f:
             content = f.read()
-            save_file(content, output_file, file_extension)
+            save_file(content, output_file, file_extension.lstrip('.'))
             length = len(content)
             update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
