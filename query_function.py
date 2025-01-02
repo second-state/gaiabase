@@ -98,9 +98,13 @@ def send_qa_req(collection_name, content_list):
     if not os.path.exists(collection_name):
         os.makedirs(collection_name)
     for content_obj in content_list:
-        content = content_obj["question"] + " \n" + content_obj["answer"]
+        content = content_obj["question"] + " \n " + content_obj["answer"]
         try:
-            for short_text in short_text_list:
+            for short_text_type in short_text_list:
+                if short_text_type == "the question":
+                    short_text = content_obj["question"]
+                else:
+                    short_text = content_obj["answer"]
                 url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
                 headers = {
                     'Content-Type': 'application/json'
@@ -128,7 +132,6 @@ def send_qa_req(collection_name, content_list):
 
 def send_embed_req(collection_name, embed_list):
     all_ok = True
-    short_text_list = ["the question", "the answer"]
     log_file_path = os.path.join(collection_name, 'response.log')
     if not os.path.exists(collection_name):
         os.makedirs(collection_name)
@@ -216,15 +219,15 @@ def query_embed_json(content, collection_name, filename, this_summarize):
     return all_ok
 
 
-def query_embed_summarize(content, collection_name, filename, this_summarize):
+def query_embed_summarize(content, collection_name, filename, this_summarize, full_article):
     all_ok = True
     log_file_path = os.path.join(collection_name, 'response.log')
     json_list = json.loads(content)
     for key, value in json_list.items():
         if key != "status":
             payload = json.dumps({
-                "short_text": key,
-                "full_text": value
+                "short_text": key + " \n " + value,
+                "full_text": full_article
             })
             try:
                 url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
@@ -248,12 +251,47 @@ def query_embed_summarize(content, collection_name, filename, this_summarize):
     return all_ok
 
 
+def embed_file(filename, folder_path, collection_name, this_summarize):
+    file_path = os.path.join(folder_path, filename)
+    if filename.endswith('.txt') or filename.endswith('.md'):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            if len(content) <= 400:
+                content = content + "\n" + this_summarize
+                this_status = query_embed(content, collection_name, filename, this_summarize)
+                if this_status:
+                    update_file_subtask(folder_path, filename, None, None, 1)
+                else:
+                    update_file_subtask(folder_path, filename, None, None, 2)
+    elif filename.endswith('.json'):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            this_status = query_embed_json(content, collection_name, filename, this_summarize)
+            if this_status:
+                update_file_subtask(folder_path, filename, None, None, 1)
+            else:
+                update_file_subtask(folder_path, filename, None, None, 2)
+    elif filename.endswith('.summarize'):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+            truly_file_name = filename.rstrip(".summarize")
+            truly_file_path = os.path.join(folder_path, truly_file_name)
+            with open(truly_file_path, 'r', encoding='utf-8') as truly_file:
+                truly_content = file.read()
+                this_status = query_embed_summarize(content, collection_name, filename, this_summarize, truly_content)
+                if this_status:
+                    update_file_subtask(folder_path, truly_file_name, None, None, 1)
+                else:
+                    update_file_subtask(folder_path, truly_file_name, None, None, 2)
+
+    return this_status
+
+
 def send_file_req(folder_path, collection_name, split_length, summarize_list):
     all_ok = True
     if not os.path.exists(collection_name):
         os.makedirs(collection_name)
     for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
         this_summarize = ""
         try:
             for obj in summarize_list:
@@ -263,34 +301,7 @@ def send_file_req(folder_path, collection_name, split_length, summarize_list):
                     break
         except Exception as e:
             print(f"没找到这个文件：{filename}")
-        if filename.endswith('.txt') or filename.endswith('.md'):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-                if len(content) <= 400:
-                    content = content + "\n" + this_summarize
-                    this_status = query_embed(content, collection_name, filename, this_summarize)
-                    all_ok = all_ok and this_status
-                    if this_status:
-                        update_file_subtask(folder_path, filename, None, None, 1)
-                    else:
-                        update_file_subtask(folder_path, filename, None, None, 2)
-        elif filename.endswith('.json'):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-                this_status = query_embed_json(content, collection_name, filename, this_summarize)
-                all_ok = all_ok and this_status
-                if this_status:
-                    update_file_subtask(folder_path, filename, None, None, 1)
-                else:
-                    update_file_subtask(folder_path, filename, None, None, 2)
-        elif filename.endswith('.summarize'):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-                this_status = query_embed_summarize(content, collection_name, filename, this_summarize)
-                all_ok = all_ok and this_status
-                if this_status:
-                    update_file_subtask(folder_path, filename.rstrip(".summarize"), None, None, 1)
-                else:
-                    update_file_subtask(folder_path, filename.rstrip(".summarize"), None, None, 2)
+        this_status = embed_file(filename, folder_path, collection_name, this_summarize)
+        all_ok = all_ok and this_status
 
     return all_ok

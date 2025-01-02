@@ -62,6 +62,47 @@ def update_summarize():
     return jsonify(success=True)
 
 
+def summarize_file(task_id, item):
+    update_file_subtask(task_id, item[0], None, 0)
+    output_file = os.path.join(task_id, item[0])
+    with open(output_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+    summarize_data = query_summarize(content, output_file, item[1], semaphore, socketio)
+    if summarize_data:
+        update_file_subtask(task_id, item[0], None, 1)
+    else:
+        update_file_subtask(task_id, item[0], None, 2)
+
+
+@app.route("/reSummarize")
+def re_summarize():
+    task_id = request.args.get("task_id")
+    data = check_all_file_subtask_status(task_id)
+    for item in data:
+        if item[3] == 2:
+            thread = threading.Thread(target=summarize_file, args=(task_id, item))
+            thread.start()
+    return jsonify(success=True)
+
+
+@app.route("/reEmbed")
+def re_embed():
+    task_id = request.args.get("task_id")
+    data = check_all_file_subtask_status(task_id)
+    for item in data:
+        if item[4] == 2:
+            update_file_subtask(task_id, item[0], None, None, 0)
+            if item[5] < 400 or item[0].endswith('.ttl'):
+                to_embed_file_name = item[0]
+            else:
+                to_embed_file_name = item[0] + ".summarize"
+            thread = threading.Thread(target=embed_file,
+                                      args=(to_embed_file_name, task_id, task_id[:-13], ""))
+            thread.start()
+
+    return jsonify(success=True)
+
+
 @app.route("/upload", methods=["POST"])
 def upload():
     files = request.files.getlist("files[]")
@@ -91,19 +132,23 @@ def upload():
             log_file.write(f"{filename} -- {random_value}\n")
 
         if file_extension in ['doc', 'docx']:
-            thread = threading.Thread(target=process_doc, args=(file_path, output_folder, filename, semaphore, socketio))
+            thread = threading.Thread(target=process_doc,
+                                      args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            thread = threading.Thread(target=process_pdf, args=(file_path, output_folder, filename, semaphore, socketio))
+            thread = threading.Thread(target=process_pdf,
+                                      args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
-            thread = threading.Thread(target=process_text, args=(file_path, output_folder, filename, semaphore, socketio))
+            thread = threading.Thread(target=process_text,
+                                      args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
-            thread = threading.Thread(target=process_text, args=(file_path, output_folder, filename, semaphore, socketio))
+            thread = threading.Thread(target=process_text,
+                                      args=(file_path, output_folder, filename, semaphore, socketio))
             thread.start()
             print(f"{filename} 是md")
         elif file_extension in ['ttl']:
@@ -149,7 +194,8 @@ def submit_all_data():
     embed_list = request.json.get("embed_list")
     summarize_list = request.json.get("summarize_list")
     split_length = request.json.get("split_length")
-    thread = threading.Thread(target=send_req, args=(folder_path, collection_name, content_list, embed_list, split_length, summarize_list))
+    thread = threading.Thread(target=send_req, args=(
+    folder_path, collection_name, content_list, embed_list, split_length, summarize_list))
     thread.start()
     return jsonify(success=True)
 
