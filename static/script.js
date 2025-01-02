@@ -486,6 +486,8 @@ document.getElementById("uploadBtn").addEventListener("click", async (e) => {
 
     formData.append("trans_id", trans_id);
     formData.append("ttl_type", document.getElementById("ttl-text").checked ? "text" : "md");
+    formData.append("question_prompt", document.getElementById("QuestionPrompt").value);
+    formData.append("answer_prompt", document.getElementById("AnswerPrompt").value);
 
     const response = await fetch("/upload", {
         method: "POST",

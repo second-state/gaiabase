@@ -12,7 +12,7 @@ from file_utils import *
 from sql_query import *
 
 
-def query_summarize(content, output_file, old_name, semaphore, socketio):
+def query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt):
     with semaphore:
         file_name = os.path.basename(output_file)
         try:
@@ -21,8 +21,11 @@ def query_summarize(content, output_file, old_name, semaphore, socketio):
                 'Content-Type': 'application/json'
             }
             payload = json.dumps({
+                "question_prompt": question_prompt,
+                "answer_prompt": answer_prompt,
                 "full_text": content
             })
+            print(payload)
             response = requests.request("POST", url, headers=headers, data=payload)
             this_status = response.status_code
             if this_status == 200:
@@ -229,8 +232,6 @@ def query_embed_summarize(content, collection_name, filename, this_summarize, fu
                 "short_text": value,
                 "full_text": full_article
             })
-            print("payload")
-            print(payload)
             try:
                 url = f"https://code.flows.network/webhook/pCP3LcLmJiaYDgA4vGfl/embed/{collection_name}"
                 headers = {
@@ -281,10 +282,6 @@ def embed_file(filename, folder_path, collection_name, this_summarize):
             truly_file_path = os.path.join(folder_path, truly_file_name)
             with open(truly_file_path, 'r', encoding='utf-8') as truly_file:
                 truly_content = truly_file.read()
-                print("truly_file_path")
-                print(truly_file_path)
-                print("truly_content")
-                print(truly_content)
                 this_status = query_embed_summarize(content, collection_name, filename, this_summarize, truly_content)
                 if this_status:
                     update_file_subtask(folder_path, truly_file_name, None, None, 1)

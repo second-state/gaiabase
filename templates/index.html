@@ -86,14 +86,21 @@
     </style>
 </head>
 <body>
-<div style="display:flex;align-items: center;padding: 4vw;font-size: 3vw;">
+<div style="display:flex;align-items: center;padding: 2vw 4vw 1vw;font-size: 3vw;">
     <div style="font-weight: bold;">Collection name:</div>
     <input id="collectionName" style="font-size: 3vw;margin-left: 1rem;" type="text"/>
 </div>
-<div style="display:flex;align-items: center;padding: 2vw 4vw;font-size: 3vw;">
+<div style="display:flex;align-items: center;padding: 1vw 4vw 2vw;font-size: 3vw;">
     <div style="font-weight: bold;">ttl for:</div>
-    <input id="ttl-text" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio" checked/><label for="ttl-text">text</label>
+    <input id="ttl-text" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio" checked/><label
+        for="ttl-text">text</label>
     <input id="ttl-md" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio"/><label for="ttl-md">md</label>
+</div>
+<div style="padding: 0 4vw 2vw;font-size: 1vw;">
+    <div style="font-weight: bold;">Question prompt:</div>
+    <textarea id="QuestionPrompt" style="font-size: 1vw;width: 100%" rows="3"></textarea>
+    <div style="font-weight: bold;">Answer prompt:</div>
+    <textarea id="AnswerPrompt" style="font-size: 1vw;width: 100%" rows="3"></textarea>
 </div>
 <div id="container" class="container" style="pointer-events: none;opacity: 0.5;user-select: none;">
     <div class="sidebar">
@@ -107,7 +114,8 @@
         <div id="uploads">
             <h3>Uploads</h3>
             <button id="uploadFile">Upload Files</button>
-            <input style="display: none;" type="file" id="fileInput" accept=".md, .txt, .pdf, .doc, .docx, .ttl" multiple>
+            <input style="display: none;" type="file" id="fileInput" accept=".md, .txt, .pdf, .doc, .docx, .ttl"
+                   multiple>
             <button id="uploadBtn">Submit</button>
             <ul id="finishFileList" class="file-list"></ul>
             <ul id="fileList" class="file-list"></ul>

@@ -15,7 +15,7 @@ def format_str(text):
     return str(text)
 
 
-def process_pdf(input_file, output_folder, old_name, semaphore, socketio):
+def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
@@ -36,7 +36,7 @@ def process_pdf(input_file, output_folder, old_name, semaphore, socketio):
         length = len(total_text)
         update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
-            data = query_summarize(total_text, output_file, old_name, semaphore, socketio)
+            data = query_summarize(total_text, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
             if data:
                 update_file_subtask(output_folder, file_name, None, 1)
             else:
@@ -47,7 +47,7 @@ def process_pdf(input_file, output_folder, old_name, semaphore, socketio):
         print(f"[error] pdf处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def process_doc(input_file, output_folder, old_name, semaphore, socketio):
+def process_doc(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
@@ -57,7 +57,7 @@ def process_doc(input_file, output_folder, old_name, semaphore, socketio):
         length = len(content)
         update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
-            data = query_summarize(content, output_file, old_name, semaphore, socketio)
+            data = query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
             if data:
                 update_file_subtask(output_folder, file_name, None, 1)
             else:
@@ -68,7 +68,7 @@ def process_doc(input_file, output_folder, old_name, semaphore, socketio):
         print(f"[error] doc处理失败! \n 文件名：{output_file} \n 原因： {e}")
 
 
-def process_text(input_file, output_folder, old_name, semaphore, socketio):
+def process_text(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
     file_name = os.path.basename(input_file)
     file_name_without_ext, file_extension = os.path.splitext(file_name)
     output_file = os.path.join(output_folder, os.path.basename(input_file))
@@ -80,7 +80,7 @@ def process_text(input_file, output_folder, old_name, semaphore, socketio):
             length = len(content)
             update_file_subtask(output_folder, file_name, 1, None, None, length)
         if length > 400:
-            data = query_summarize(content, output_file, old_name, semaphore, socketio)
+            data = query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
             if data:
                 update_file_subtask(output_folder, file_name, None, 1)
             else:

@@ -108,6 +108,8 @@ def upload():
     files = request.files.getlist("files[]")
     output_folder = request.form.get("trans_id")
     ttl_type = request.form.get("ttl_type")
+    question_prompt = request.form.get("question_prompt")
+    answer_prompt = request.form.get("answer_prompt")
 
     file_name_list = []
 
@@ -133,22 +135,22 @@ def upload():
 
         if file_extension in ['doc', 'docx']:
             thread = threading.Thread(target=process_doc,
-                                      args=(file_path, output_folder, filename, semaphore, socketio))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
             thread = threading.Thread(target=process_pdf,
-                                      args=(file_path, output_folder, filename, semaphore, socketio))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
             thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
             thread = threading.Thread(target=process_text,
-                                      args=(file_path, output_folder, filename, semaphore, socketio))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
             thread = threading.Thread(target=process_text,
-                                      args=(file_path, output_folder, filename, semaphore, socketio))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
             thread.start()
             print(f"{filename} 是md")
         elif file_extension in ['ttl']:
