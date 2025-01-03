@@ -1,12 +1,11 @@
+import html2text
+import json
 import os
 import re
-import threading
 import requests
-import json
 import urllib.request
-from http.cookiejar import CookieJar
 from bs4 import BeautifulSoup
-import html2text
+from http.cookiejar import CookieJar
 
 from file_utils import *
 from sql_query import *
@@ -20,11 +19,14 @@ def query_summarize(content, output_file, old_name, semaphore, socketio, questio
             headers = {
                 'Content-Type': 'application/json'
             }
-            payload = json.dumps({
-                "question_prompt": question_prompt,
-                "answer_prompt": answer_prompt,
+            data = {
                 "full_text": content
-            })
+            }
+            if question_prompt:
+                data["question_prompt"] = question_prompt
+            if answer_prompt:
+                data["answer_prompt"] = answer_prompt
+            payload = json.dumps(data)
             print(payload)
             response = requests.request("POST", url, headers=headers, data=payload)
             this_status = response.status_code
@@ -124,7 +126,8 @@ def send_qa_req(collection_name, content_list):
                     print(f"[error] {collection_name} QA embed请求失败：\n错误码：{this_status}")
                     all_ok = False
                 with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
+                    log_file.write(
+                        f"{collection_name} QA embed:" + content_obj["question"] + "\nresponse:" + response.text + "\n")
         except Exception as e:
             print(f"[error] {collection_name} QA embed请求失败：\n错误原因：{e}")
             all_ok = False
@@ -156,14 +159,14 @@ def send_embed_req(collection_name, embed_list):
                 print(f"[error] {collection_name} Simple Embed embed请求失败：\n错误码：{this_status}")
                 all_ok = False
             with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} Simple Embed embed:" + embed_obj["question"] + "\nresponse:" + response.text + "\n")
+                log_file.write(f"{collection_name} Simple Embed embed:" + embed_obj[
+                    "question"] + "\nresponse:" + response.text + "\n")
         except Exception as e:
             print(f"[error] {collection_name} Simple Embed embed请求失败：\n错误原因：{e}")
             all_ok = False
             with open(log_file_path, 'a') as log_file:
                 log_file.write(f"{collection_name} Simple Embed embed:" + embed_obj["question"] + "\nerror:" + e + "\n")
     return all_ok
-
 
 
 def query_embed(content, collection_name, filename, this_summarize):
@@ -185,12 +188,14 @@ def query_embed(content, collection_name, filename, this_summarize):
             print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
             all_ok = False
         with open(log_file_path, 'a') as log_file:
-            log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+            log_file.write(
+                f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
     except Exception as e:
         print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
         all_ok = False
         with open(log_file_path, 'a') as log_file:
-            log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+            log_file.write(
+                f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     return all_ok
 
 
@@ -213,12 +218,14 @@ def query_embed_json(content, collection_name, filename, this_summarize):
                 print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                 all_ok = False
             with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+                log_file.write(
+                    f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
         except Exception as e:
             print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
             all_ok = False
             with open(log_file_path, 'a') as log_file:
-                log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+                log_file.write(
+                    f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     return all_ok
 
 
@@ -245,12 +252,14 @@ def query_embed_summarize(content, collection_name, filename, this_summarize, fu
                     print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误码：{this_status}")
                     all_ok = False
                 with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
+                    log_file.write(
+                        f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nresponse:" + response.text + "\n")
             except Exception as e:
                 print(f"[error] {collection_name} embed请求失败：\n文件名：{filename}\n错误原因：{e}")
                 all_ok = False
                 with open(log_file_path, 'a') as log_file:
-                    log_file.write(f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
+                    log_file.write(
+                        f"{collection_name} file embed:" + filename + f"\nsummarize:{this_summarize}" + "\nerror:" + e + "\n")
     return all_ok
 
 
