@@ -89,6 +89,7 @@ def re_summarize():
 def re_embed():
     task_id = request.args.get("task_id")
     data = check_all_file_subtask_status(task_id)
+    update_task(task_id, 0)
     for item in data:
         if item[4] == 2:
             update_file_subtask(task_id, item[0], None, None, 0)
@@ -256,6 +257,14 @@ def check_file_subtask_status():
     task_id = request.args.get("task_id")
     data = check_all_file_subtask_status(task_id)
     return jsonify({'status': 'success', 'data': data}), 200
+
+
+@app.route('/sqlApi/checkFileSummarizeStatus')
+def check_file_summarize_status():
+    task_id = request.args.get("task_id")
+    data = check_file_summarize_subtask_status(task_id)
+    return jsonify({'status': 'success', 'data': data}), 200
+
 
 
 @app.route('/sqlApi/checkFileEmbedStatus')

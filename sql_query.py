@@ -104,6 +104,30 @@ def check_file_embed_subtask_status(task_id):
             conn.close()
 
 
+def check_file_summarize_subtask_status(task_id):
+    conn = create_connection()
+    if conn is None:
+        return
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                SELECT file_name, summarize_status, word_count FROM `fileSubtask` WHERE task_id = %s;
+            """, (task_id,))
+
+        result = cursor.fetchall()
+
+        return result
+
+    except Error as e:
+        print(f"Check subtask failed and rolled back. Error: {e}")
+        conn.rollback()
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
 def check_url_subtask_status(task_id):
     conn = create_connection()
     if conn is None:

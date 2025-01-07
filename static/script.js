@@ -175,6 +175,7 @@ const setQAData = (data) => {
 }
 
 const setQAFailed = (file_name) => {
+    document.getElementById("reSummarizeButton").style.display = "block";
     const thisQaPlace = document.getElementById(`qa_${file_name}`)
     thisQaPlace.style.display = "flex";
     thisQaPlace.innerHTML = ""
@@ -289,6 +290,9 @@ function startAllRequest() {
         if (data && data.data) {
             const logo = document.getElementById("submit-all-logo")
             const thisStatus = parseInt(data.data[0])
+            if(data.data[0] === 2){
+                document.getElementById("reEmbedButton").style.display = "block";
+            }
             logo.src = returnImgUrl(thisStatus)
             logo.style.width = "3rem";
             logo.style.marginRight = "0.5rem";
@@ -738,3 +742,23 @@ document.getElementById("submit-all").addEventListener("click", async () => {
 
     startAllRequest();
 });
+
+document.getElementById("reSummarizeButton").addEventListener("click", async () => {
+    const requestOptions = {
+        method: "GET",
+        redirect: "follow"
+    };
+    const response = await fetch(`/reSummarize?task_id=${trans_id}`, requestOptions)
+    const data = await response.json()
+})
+
+document.getElementById("reEmbedButton").addEventListener("click", async () => {
+    const requestOptions = {
+        method: "GET",
+        redirect: "follow"
+    };
+    const response = await fetch(`/reEmbed?task_id=${trans_id}`, requestOptions)
+    const data = await response.json()
+
+    startAllRequest();
+})

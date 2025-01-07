@@ -90,17 +90,21 @@
     <div style="font-weight: bold;">Collection name:</div>
     <input id="collectionName" style="font-size: 3vw;margin-left: 1rem;" type="text"/>
 </div>
-<div style="display:flex;align-items: center;padding: 1vw 4vw 2vw;font-size: 3vw;">
+<div style="display:flex;align-items: center;padding: 1vw 4vw 2vw;font-size: 1vw;">
     <div style="font-weight: bold;">ttl for:</div>
-    <input id="ttl-text" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio" checked/><label
+    <input id="ttl-text" style="font-size: 1vw;margin-left: 1rem;" name="ttl" type="radio" checked/><label
         for="ttl-text">text</label>
-    <input id="ttl-md" style="font-size: 3vw;margin-left: 1rem;" name="ttl" type="radio"/><label for="ttl-md">md</label>
+    <input id="ttl-md" style="font-size: 1vw;margin-left: 1rem;" name="ttl" type="radio"/><label for="ttl-md">md</label>
 </div>
-<div style="padding: 0 4vw 2vw;font-size: 1vw;">
+<div style="padding: 0vw 4vw 1vw;font-size: 1vw;">
     <div style="font-weight: bold;">Question prompt:</div>
     <textarea id="QuestionPrompt" style="font-size: 1vw;width: 100%" rows="3">Respond with a list of 10 questions. The text in the user message must contain specific answers to each question. Each question must be on its own line. Just list the questions without any introductory text or numbers.</textarea>
     <div style="font-weight: bold;">Answer prompt:</div>
     <textarea id="AnswerPrompt" style="font-size: 1vw;width: 100%" rows="3">Give a comprehensive and well-reasoned answer to the user question strictly based on the context below.</textarea>
+</div>
+<div style="display:flex;align-items: center;padding: 1vw 4vw 2vw;font-size: 1vw;">
+    <div style="font-weight: bold;">split length:</div>
+    <input id="splitLength" style="font-size: 1.5vw;margin-left: 1rem;" value="100000" type="number"/>
 </div>
 <div id="container" class="container" style="pointer-events: none;opacity: 0.5;user-select: none;">
     <div class="sidebar">
@@ -161,14 +165,10 @@
 </div>
 <div id="allQAListPlace" style="margin: 0 2rem;"></div>
 <div id="submit-all-place" style="display: flex;justify-content: center;align-items: center;margin-top: 1rem;">
-    <div style="display:flex;align-items: center;padding-right: 4vw;font-size: 1.5vw;">
-        <div style="font-weight: bold;">split length:</div>
-        <input id="splitLength" style="font-size: 1.5vw;margin-left: 1rem;" value="100000" type="number"/>
-    </div>
     <img id="submit-all-logo"/>
-    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;">Submit All
-        Data
-    </button>
+    <button id="submit-all" style="padding: 1rem 2rem;font-size: 1rem;font-weight: 600;">Submit All Data</button>
+    <button id="reSummarizeButton" style="display: none;padding: 1rem 2rem;font-size: 1rem;font-weight: 600;">reSummarize</button>
+    <button id="reEmbedButton" style="display: none;padding: 1rem 2rem;font-size: 1rem;font-weight: 600;">reEmbed</button>
 </div>
 <div style="display: none;text-align: center;margin-top: 1rem;" id="submit-text"></div>
 <script src="/static/script.js"></script>

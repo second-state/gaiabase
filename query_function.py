@@ -11,7 +11,7 @@ from file_utils import *
 from sql_query import *
 
 
-def query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt):
+def query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt=None, answer_prompt=None, number=""):
     with semaphore:
         file_name = os.path.basename(output_file)
         try:
@@ -35,7 +35,7 @@ def query_summarize(content, output_file, old_name, semaphore, socketio, questio
                 if data["status"]:
                     print(f"[info] {file_name} summarize请求成功: {len(data)}")
                     socketio.emit('file_processed', {'qa_list': data, "file_name": file_name, "old_name": old_name})
-                    save_file(response.text, output_file, "summarize", True)
+                    save_file(response.text, output_file + number, "summarize", True)
                     return data
                 else:
                     socketio.emit('file_processed', {'qa_list': {}, "file_name": file_name, "old_name": old_name})
