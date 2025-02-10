@@ -549,7 +549,7 @@ document.getElementById("submitUrlBtn").addEventListener("click", async () => {
     const response = await fetch("/submit_url", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({url: queryUrl, trans_id: trans_id}),
+        body: JSON.stringify({url: queryUrl, trans_id: trans_id, question_prompt:document.getElementById("QuestionPrompt").value, answer_prompt: document.getElementById("AnswerPrompt").value}),
     });
 
     const data = await response.json();

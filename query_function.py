@@ -48,7 +48,7 @@ def query_summarize(content, output_file, old_name, semaphore, socketio, questio
             print(f"[info] {file_name} summarize请求失败: {e}")
 
 
-def crawl_web(url_list, output_folder, url_id):
+def crawl_web(url_list, output_folder, url_id, semaphore, socketio, question_prompt, answer_prompt):
     try:
         all_ok = True
         for urlObj in url_list:
@@ -67,8 +67,15 @@ def crawl_web(url_list, output_folder, url_id):
                 plain_text = h.handle(htmltext)
                 sanitized_url = re.sub(r'[\/:*?"<>|]', '_', urlObj["url"])
                 output_file = os.path.join(output_folder, os.path.basename(sanitized_url) + ".md")
-                save_file(plain_text, output_file)
-                update_crawl_url_subtask(urlObj["id"], 1)
+                if length > 400:
+                    data = query_summarize(plain_text, output_file, sanitized_url, semaphore, socketio, question_prompt, answer_prompt)
+                    if data:
+                        update_crawl_url_subtask(urlObj["id"], 1)
+                    else:
+                        update_crawl_url_subtask(urlObj["id"], 2)
+                else:
+                    save_file(plain_text, os.path.basename(sanitized_url), "md", True)
+                    update_crawl_url_subtask(urlObj["id"], 1)
             except Exception as e:
                 all_ok = False
                 update_crawl_url_subtask(urlObj["id"], 2)

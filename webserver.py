@@ -168,6 +168,8 @@ def upload():
 def submit_url():
     url = request.json.get("url")
     output_folder = request.json.get("trans_id")
+    question_prompt = request.json.get("question_prompt")
+    answer_prompt = request.json.get("answer_prompt")
     if not output_folder:
         output_folder = create_dir()
     elif not os.path.exists(output_folder):
@@ -179,7 +181,7 @@ def submit_url():
         if data != url:
             crawl_url_id = create_crawl_url_subtask(url_id, data)
             all_links.append({"url": data, "id": crawl_url_id})
-    thread = threading.Thread(target=crawl_web, args=(all_links, output_folder, url_id))
+    thread = threading.Thread(target=crawl_web, args=(all_links, output_folder, url_id, semaphore, socketio, question_prompt, answer_prompt))
     thread.start()
     return jsonify({"id": url_id, "mapUrlList": all_links})
 
