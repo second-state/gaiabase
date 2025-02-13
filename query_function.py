@@ -295,8 +295,13 @@ def embed_file(filename, folder_path, collection_name, this_summarize):
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
             truly_file_name = filename.rstrip(".summarize")
-            truly_file_path = os.path.join(folder_path, truly_file_name)
-            with open(truly_file_path, 'r', encoding='utf-8') as truly_file:
+            file_extension = os.path.splitext(truly_file_name)[1].lower()
+            if file_extension == ".pdf":
+                content_file_name = truly_file_name.replace(".pdf", ".md")
+            elif file_extension in [".doc", ".docx"]:
+                content_file_name = truly_file_name.replace(file_extension, ".txt")
+            content_file_path = os.path.join(folder_path, content_file_name)
+            with open(content_file_path, 'r', encoding='utf-8') as truly_file:
                 truly_content = truly_file.read()
                 this_status = query_embed_summarize(content, collection_name, filename, this_summarize, truly_content)
                 if this_status:
