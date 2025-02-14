@@ -301,7 +301,7 @@ def embed_file(filename, folder_path, collection_name, this_summarize):
             elif file_extension in [".doc", ".docx"]:
                 content_file_name = truly_file_name.replace(file_extension, ".txt")
             else:
-                content_file_name = truly_file_name + ".txt"
+                content_file_name = truly_file_name
             content_file_path = os.path.join(folder_path, content_file_name)
             with open(content_file_path, 'r', encoding='utf-8') as truly_file:
                 truly_content = truly_file.read()
