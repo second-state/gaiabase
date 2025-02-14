@@ -85,6 +85,16 @@ def re_summarize():
     return jsonify(success=True)
 
 
+@app.route("/reSummarizeFile", methods=["POST"])
+def re_summarize_file():
+    task_id = request.json.get("taskId")
+    file_name = request.json.get("fileName")
+    old_name = request.json.get("oldName")
+    thread = threading.Thread(target=summarize_file, args=(task_id, [file_name, old_name]))
+    thread.start()
+    return jsonify(success=True)
+
+
 @app.route("/reEmbed")
 def re_embed():
     task_id = request.args.get("task_id")

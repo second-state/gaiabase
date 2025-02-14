@@ -92,22 +92,22 @@ const setQAData = (data) => {
     thisQaPlace.innerHTML = ""
     const question = document.createElement('div');
     const answer = document.createElement('div');
-    const skip = document.createElement('button');
+    // const skip = document.createElement('button');
     const yes = document.createElement('button');
     question.textContent = "Do you need to preview the generated QAs?"
     thisQaPlace.appendChild(question)
     answer.style.display = "flex";
-    skip.textContent = "Skip"
-    skip.onclick = () => {
-        thisQaPlace.style.display = "none";
-    }
+    // skip.textContent = "Skip"
+    // skip.onclick = () => {
+    //     thisQaPlace.style.display = "none";
+    // }
     yes.textContent = "Preview"
     yes.onclick = () => {
         thisQaList.style.display = "block";
         document.getElementById("container").style.display = "none";
         document.getElementById("submit-all-place").style.display = "none";
     }
-    answer.appendChild(skip)
+    // answer.appendChild(skip)
     answer.appendChild(yes)
     thisQaPlace.appendChild(answer)
     const fileName = document.createElement('a');
@@ -144,6 +144,36 @@ const setQAData = (data) => {
         document.getElementById("container").style.display = "flex";
         document.getElementById("submit-all-place").style.display = "flex";
     }
+    const regenerateButton = document.createElement('button');
+    regenerateButton.textContent = "regenerate QA"
+    regenerateButton.onclick = async () => {
+        setQALoading(data.file_name, data.old_name)
+        // let qaObject = {};
+        // const qaList = thisQaList.querySelectorAll(`.QAPair`);
+        // qaList.forEach((qaDiv, index) => {
+        //     console.log(qaDiv)
+        //     const question = qaDiv.querySelector('.question').value;
+        //     const answer = qaDiv.querySelector('.answer').value;
+        //
+        //     qaObject[`qa_${index}`] = `${question}:\n${answer}`;
+        // });
+        //
+        await fetch("/reSummarizeFile", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                taskId: trans_id,
+                fileName: data.file_name,
+                oldName: data.old_name
+            }),
+        });
+        // // thisQaPlace.style.display = "none";
+        thisQaList.style.display = "none";
+        document.getElementById("container").style.display = "flex";
+        document.getElementById("submit-all-place").style.display = "flex";
+    }
     Object.keys(data.qa_list).forEach(key => {
         if (key.startsWith("qa")) {
             const splitData = data.qa_list[key].split(":\n")
@@ -170,8 +200,23 @@ const setQAData = (data) => {
     thisQaList.appendChild(QAList)
     thisQaList.appendChild(QAList)
     thisQaList.appendChild(saveButton)
+    thisQaList.appendChild(regenerateButton)
     thisQaList.style.display = "none";
     document.getElementById("allQAListPlace").appendChild(thisQaList)
+}
+
+const setQALoading = (file_name, old_name) => {
+    const thisQaPlace = document.getElementById(`qa_${file_name}`)
+    thisQaPlace.style.display = "flex";
+    thisQaPlace.innerHTML = ""
+    const question = document.createElement('div');
+    const qaLogo = document.createElement("img");
+    qaLogo.src = returnImgUrl(0)
+    qaLogo.style.width = "1.5rem";
+    qaLogo.style.marginRight = "0.4rem";
+    question.textContent = "Summarizing " + old_name + " document:";
+    thisQaPlace.appendChild(qaLogo)
+    thisQaPlace.appendChild(question)
 }
 
 const setQAFailed = (file_name) => {
