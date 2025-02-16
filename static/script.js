@@ -48,7 +48,7 @@ const queryAllTaskData = async () => {
                     setQAData({'qa_list': jsonData, "file_name": item[0], "old_name": item[1]})
                 })
             } else if (item[3] === 2) {
-                setQAFailed(item[0])
+                setQAFailed(item[0], item[1])
             }
         })
         updateAllFile()
@@ -80,7 +80,7 @@ socket.on('file_processed', data => {
     if (Object.keys(data.qa_list).length > 0 && data.qa_list["status"] === true) {
         setQAData(data)
     } else {
-        setQAFailed(data.file_name)
+        setQAFailed(data.file_name, data.old_name)
     }
 });
 
@@ -147,7 +147,7 @@ const setQAData = (data) => {
     const regenerateButton = document.createElement('button');
     regenerateButton.textContent = "regenerate QA"
     regenerateButton.onclick = async () => {
-        setQALoading(data.file_name, data.old_name)
+        setQALoading(data.file_name)
         // let qaObject = {};
         // const qaList = thisQaList.querySelectorAll(`.QAPair`);
         // qaList.forEach((qaDiv, index) => {
@@ -205,7 +205,7 @@ const setQAData = (data) => {
     document.getElementById("allQAListPlace").appendChild(thisQaList)
 }
 
-const setQALoading = (file_name, old_name) => {
+const setQALoading = (file_name) => {
     const thisQaPlace = document.getElementById(`qa_${file_name}`)
     thisQaPlace.style.display = "flex";
     thisQaPlace.innerHTML = ""
@@ -214,17 +214,19 @@ const setQALoading = (file_name, old_name) => {
     qaLogo.src = returnImgUrl(0)
     qaLogo.style.width = "1.5rem";
     qaLogo.style.marginRight = "0.4rem";
-    question.textContent = "Summarizing " + old_name + " document:";
+    question.textContent = "waiting for generating QA~";
     thisQaPlace.appendChild(qaLogo)
     thisQaPlace.appendChild(question)
 }
 
-const setQAFailed = (file_name) => {
-    document.getElementById("reSummarizeButton").style.display = "block";
+const setQAFailed = (file_name, old_name) => {
+    // document.getElementById("reSummarizeButton").style.display = "block";
     const thisQaPlace = document.getElementById(`qa_${file_name}`)
     thisQaPlace.style.display = "flex";
+    thisQaPlace.style.alignItems = "center";
     thisQaPlace.innerHTML = ""
     const question = document.createElement('div');
+    const answer = document.createElement('div');
     const qaLogo = document.createElement("img");
     qaLogo.src = returnImgUrl(2)
     qaLogo.style.width = "1.5rem";
@@ -232,6 +234,39 @@ const setQAFailed = (file_name) => {
     question.textContent = "Summarize failed!"
     thisQaPlace.appendChild(qaLogo)
     thisQaPlace.appendChild(question)
+    answer.style.display = "flex";
+    const regenerateButton = document.createElement('button');
+    regenerateButton.textContent = "regenerate QA"
+    regenerateButton.style.marginLeft = "1rem"
+    regenerateButton.onclick = async () => {
+        setQALoading(file_name)
+        // let qaObject = {};
+        // const qaList = thisQaList.querySelectorAll(`.QAPair`);
+        // qaList.forEach((qaDiv, index) => {
+        //     console.log(qaDiv)
+        //     const question = qaDiv.querySelector('.question').value;
+        //     const answer = qaDiv.querySelector('.answer').value;
+        //
+        //     qaObject[`qa_${index}`] = `${question}:\n${answer}`;
+        // });
+        //
+        await fetch("/reSummarizeFile", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                taskId: trans_id,
+                fileName: file_name,
+                oldName: old_name
+            }),
+        });
+        // // thisQaPlace.style.display = "none";
+        document.getElementById("container").style.display = "flex";
+        document.getElementById("submit-all-place").style.display = "flex";
+    }
+    answer.appendChild(regenerateButton)
+    thisQaPlace.appendChild(answer)
 }
 
 function startUrlRequest() {
@@ -397,7 +432,7 @@ const updateAllFile = () => {
         if (data.word_count) {
             word_count_div.innerText = "word count: " + data.word_count
         }
-        const div = document.getElementById("input_" + data.save_file_name)
+        // const div = document.getElementById("input_" + data.save_file_name)
         if (data.status === 0) {
             allFinish = false
         } else if (data.status === 1 && !data.file.name.endsWith(".ttl")) {
@@ -410,7 +445,7 @@ const updateAllFile = () => {
                     qaLogo.src = returnImgUrl(0)
                     qaLogo.style.width = "1.5rem";
                     qaLogo.style.marginRight = "0.4rem";
-                    qaText.textContent = "waiting for summarize~"
+                    qaText.textContent = "waiting for generating QA~"
                     qaPlace.appendChild(qaLogo)
                     qaPlace.appendChild(qaText)
                     qaPlace.style.display = "flex"
@@ -418,11 +453,11 @@ const updateAllFile = () => {
                     thisQaPlace.style.display = "block";
                 }
             }
-            if (parseInt(data.word_count) <= document.getElementById("splitLength").value) {
-                div.style.display = "block";
-            } else {
-                div.style.display = "none";
-            }
+            // if (parseInt(data.word_count) <= document.getElementById("splitLength").value) {
+            //     div.style.display = "block";
+            // } else {
+            //     div.style.display = "none";
+            // }
         }
     });
     if (allFinish && queryUrlStatus !== 0 && (queryUrl === "" || queryUrlStatus !== null)) {
