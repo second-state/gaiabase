@@ -10,12 +10,17 @@ import nest_asyncio
 from sql_query import *
 from file_utils import save_file
 from query_function import query_summarize
+from celery import Celery
+
+
+celery_app = Celery('process-tasks', broker='redis://localhost:6379/0')
 
 
 def format_str(text):
     return str(text)
 
 
+@celery_app.task
 def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
     nest_asyncio.apply()
     file_name = os.path.basename(input_file)
