@@ -15,9 +15,27 @@ def format_str(text):
     return str(text)
 
 
-def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
+def save_and_summarize_file(total_text, file_name, input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length, file_extension="txt"):
+    length = len(total_text)
+    if length > 400:
+        file_name_list = os.path.splitext(os.path.basename(input_file))
+        check_status = True
+        for i in range(0, len(total_text), split_length):
+            output_file = os.path.join(output_folder, file_name_list[0] + f"_{i}" + file_name_list[1])
+            save_file(total_text[i:i + split_length], output_file, file_extension)
+            data = query_summarize(total_text[i:i + split_length], output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
+            if not data:
+                check_status = False
+        if check_status:
+            update_file_subtask(output_folder, file_name, None, 1)
+        else:
+            update_file_subtask(output_folder, file_name, None, 2)
+    else:
+        output_file = os.path.join(output_folder, file_name)
+        save_file(total_text, output_file)
+
+def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length):
     file_name = os.path.basename(input_file)
-    output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
     try:
         parser = LlamaParse(
@@ -32,63 +50,37 @@ def process_pdf(input_file, output_folder, old_name, semaphore, socketio, questi
             documents = parser.load_data(f, extra_info=extra_info)
             for data in documents:
                 total_text += data.text
-            save_file(total_text, output_file)
-        length = len(total_text)
-        update_file_subtask(output_folder, file_name, 1, None, None, length)
-        if length > 400:
-            data = query_summarize(total_text, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
-            if data:
-                update_file_subtask(output_folder, file_name, None, 1)
-            else:
-                update_file_subtask(output_folder, file_name, None, 2)
-        print(f"[log] pdf处理完成: {output_file}")
+        save_and_summarize_file(total_text, file_name, input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length)
+        print(f"[log] pdf处理完成: {input_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
-        print(f"[error] pdf处理失败! \n 文件名：{output_file} \n 原因： {e}")
+        print(f"[error] pdf处理失败! \n 文件名：{input_file} \n 原因： {e}")
 
 
-def process_doc(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
+def process_doc(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length):
     file_name = os.path.basename(input_file)
-    output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
     try:
         content = textract.process(input_file).decode("utf-8")
-        save_file(content, output_file)
-        length = len(content)
-        update_file_subtask(output_folder, file_name, 1, None, None, length)
-        if length > 400:
-            data = query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
-            if data:
-                update_file_subtask(output_folder, file_name, None, 1)
-            else:
-                update_file_subtask(output_folder, file_name, None, 2)
-        print(f"[log] doc文件处理完成: {output_file}")
+        save_and_summarize_file(content, file_name, input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length)
+        print(f"[log] doc文件处理完成: {input_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
-        print(f"[error] doc处理失败! \n 文件名：{output_file} \n 原因： {e}")
+        print(f"[error] doc处理失败! \n 文件名：{input_file} \n 原因： {e}")
 
 
-def process_text(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
+def process_text(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length):
     file_name = os.path.basename(input_file)
     file_name_without_ext, file_extension = os.path.splitext(file_name)
-    output_file = os.path.join(output_folder, os.path.basename(input_file))
     create_file_subtask(output_folder, file_name, old_name)
     try:
         with open(input_file, "r") as f:
             content = f.read()
-            save_file(content, output_file, file_extension.lstrip('.'))
-            length = len(content)
-            update_file_subtask(output_folder, file_name, 1, None, None, length)
-        if length > 400:
-            data = query_summarize(content, output_file, old_name, semaphore, socketio, question_prompt, answer_prompt)
-            if data:
-                update_file_subtask(output_folder, file_name, None, 1)
-            else:
-                update_file_subtask(output_folder, file_name, None, 2)
-        print(f"[log] text文件处理完成: {output_file}")
+            save_and_summarize_file(content, file_name, input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length, file_extension.lstrip('.'))
+        print(f"[log] text文件处理完成: {input_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)
-        print(f"[error] txt处理失败! \n 文件名：{output_file} \n 原因： {e}")
+        print(f"[error] txt处理失败! \n 文件名：{input_file} \n 原因： {e}")
 
 
 def process_ttl(input_file, output_folder, ttl_type, old_name):

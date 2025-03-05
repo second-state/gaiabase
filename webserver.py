@@ -121,6 +121,7 @@ def upload():
     ttl_type = request.form.get("ttl_type")
     question_prompt = request.form.get("question_prompt")
     answer_prompt = request.form.get("answer_prompt")
+    split_length = request.form.get("split_length")
 
     file_name_list = []
 
@@ -146,22 +147,22 @@ def upload():
 
         if file_extension in ['doc', 'docx']:
             thread = threading.Thread(target=process_doc,
-                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt, split_length))
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
             thread = threading.Thread(target=process_pdf,
-                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt, split_length))
             thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
             thread = threading.Thread(target=process_text,
-                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt, split_length))
             thread.start()
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
             thread = threading.Thread(target=process_text,
-                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt, split_length))
             thread.start()
             print(f"{filename} 是md")
         elif file_extension in ['ttl']:
