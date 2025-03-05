@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
 from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string
 from flask_socketio import SocketIO
+from multiprocessing import Pool
 
 from sql_query import *
 from file_utils import *
@@ -150,9 +151,8 @@ def upload():
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            thread = threading.Thread(target=process_pdf,
-                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
-            thread.start()
+            with Pool(processes=1) as pool:
+                pool.apply_async(process_pdf, args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
             thread = threading.Thread(target=process_text,
