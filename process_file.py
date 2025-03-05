@@ -13,7 +13,7 @@ from query_function import query_summarize
 from celery import Celery
 
 
-celery_app = Celery('process-tasks', broker='redis://localhost:6379/0')
+celery_app = Celery('process-tasks', broker='pyamqp://guest@localhost//', backend='rpc://')
 
 
 def format_str(text):
