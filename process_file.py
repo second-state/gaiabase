@@ -6,6 +6,7 @@ import textract
 import json
 import requests
 import nest_asyncio
+import asyncio
 
 nest_asyncio.apply()
 
@@ -18,20 +19,18 @@ def format_str(text):
     return str(text)
 
 
-def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
-    import asyncio
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+async def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)
     try:
-        parser = LlamaParse(
+        parser = await LlamaParse.aparse(
             api_key=os.getenv("LLAMA_CLOUD_API_KEY"),
             result_type="markdown",
             num_workers=8,
             verbose=True
         )
+        parser = asyncio.run(parser)
         total_text = ""
         extra_info = {"file_name": file_name}
         with open(input_file, "rb") as f:
