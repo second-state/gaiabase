@@ -121,7 +121,7 @@ def upload():
     ttl_type = request.form.get("ttl_type")
     question_prompt = request.form.get("question_prompt")
     answer_prompt = request.form.get("answer_prompt")
-    split_length = request.form.get("split_length")
+    split_length = int(request.form.get("split_length", 100000))
 
     file_name_list = []
 
