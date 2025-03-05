@@ -150,7 +150,9 @@ def upload():
             thread.start()
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            process_pdf.delay(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt)
+            thread = threading.Thread(target=process_pdf,
+                                      args=(file_path, output_folder, filename, semaphore, socketio, question_prompt, answer_prompt))
+            thread.start()
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
             thread = threading.Thread(target=process_text,
