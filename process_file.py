@@ -5,6 +5,7 @@ import rdflib
 import textract
 import json
 import requests
+import nest_asyncio
 
 from sql_query import *
 from file_utils import save_file
@@ -16,6 +17,7 @@ def format_str(text):
 
 
 def process_pdf(input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt):
+    nest_asyncio.apply()
     file_name = os.path.basename(input_file)
     output_file = os.path.join(output_folder, file_name)
     create_file_subtask(output_folder, file_name, old_name)

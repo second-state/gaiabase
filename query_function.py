@@ -241,7 +241,7 @@ def query_embed_summarize(content, collection_name, filename, this_summarize, fu
     log_file_path = os.path.join(collection_name, 'response.log')
     json_list = json.loads(content)
     for key, value in json_list.items():
-        if key != "status":
+        if key.startswith("qa_"):
             for i in range(2):
                 if i == 0:
                     payload = json.dumps({
