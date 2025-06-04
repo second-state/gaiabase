@@ -24,6 +24,7 @@ from flask_socketio import SocketIO
 
 from sql_query import *
 from file_utils import *
+from save_tidb import save_txt_to_tidb
 from gen_embed import gen_embed
 from process_file_task import *
 from query_function import *
@@ -49,6 +50,7 @@ q_process_doc = Queue('step1_process_doc', connection=redis_conn)
 q_process_pdf = Queue('step1_process_pdf', connection=redis_conn)
 q_process_txt = Queue('step1_process_txt', connection=redis_conn)
 q_gen_embed = Queue('step3_gen_embed', connection=redis_conn)
+q_save_tidb = Queue('step3_save_tidb', connection=redis_conn)
 
 nest_asyncio.apply()
 
@@ -367,8 +369,13 @@ def run_all_embed():
     task_info = get_task_info(uuid)
     user_config = task_info[3] if task_info else None
     decrypt_user_config = decrypt_data(user_config)
-    folder_path = os.path.join(uuid, "qa_files")
-    for root, dirs, files in os.walk(folder_path):
+    process_folder_path = os.path.join(uuid, "processed_files")
+    for root, dirs, files in os.walk(process_folder_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"])
+    qa_folder_path = os.path.join(uuid, "qa_files")
+    for root, dirs, files in os.walk(qa_folder_path):
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
