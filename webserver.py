@@ -12,7 +12,7 @@ import random
 import string
 import threading
 
-from rq import Queue
+from rq import Queue, Retry
 from redis import Redis
 from pathlib import Path
 
@@ -181,16 +181,16 @@ def save_all_file(files, uuid):
         update_subtask(uuid, None, 1)
         process_file_path = os.path.join(uuid, "processed_files")
         if file_extension in ['doc', 'docx']:
-            q_process_doc.enqueue(task_doc, save_file_path, process_file_path, subtask_id)
+            q_process_doc.enqueue(task_doc, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
-            q_process_pdf.enqueue(task_pdf, save_file_path, process_file_path, subtask_id)
+            q_process_pdf.enqueue(task_pdf, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
-            q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id)
+            q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
-            q_process_txt.enqueue(task_md, save_file_path, process_file_path, subtask_id)
+            q_process_txt.enqueue(task_md, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是md")
         else:
             print(f"{filename} 不是有效的文件格式")
@@ -221,7 +221,7 @@ def crawl_all_url(host_url_list, uuid):
     print(host_url_list)
     for host_url in host_url_list:
         process_file_path = os.path.join(uuid, "processed_files")
-        q_save_url.enqueue(crawl_url, host_url, process_file_path)
+        q_save_url.enqueue(crawl_url, host_url, process_file_path, retry=Retry(max=3))
 
 
 def save_all_text(text_list, uuid):
@@ -232,7 +232,7 @@ def save_all_text(text_list, uuid):
         subtask_id = create_subtask(uuid, "Text Input", "text_input.txt", 3)
         with open(save_file_path, "w", encoding="utf-8") as f:
             f.write(total_text)
-        q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id)
+        q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
 
 
 @app.route("/api/processingAllData", methods=["POST"])
@@ -381,7 +381,7 @@ def run_all_embed():
                                                 decrypt_user_config["embedding-api-key"],
                                                 decrypt_user_config["qdrant-url"],
                                                 decrypt_user_config["qdrant-api-key"],
-                                                decrypt_user_config["qdrant-collection"])
+                                                decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
 

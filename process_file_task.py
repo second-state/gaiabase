@@ -3,7 +3,7 @@ import os
 import json
 import shutil
 import textract
-from rq import Queue
+from rq import Queue, Retry
 from redis import Redis
 from pathlib import Path
 from firecrawl import FirecrawlApp
@@ -57,7 +57,7 @@ def task_doc(file_path, process_file_path, subtask_id):
         with open(full_path, 'w', encoding='utf-8') as file:
             file.write(content)
         update_subtask(subtask_id, 2,0)
-        q_qa.enqueue(task_qa, full_path, subtask_id)
+        q_qa.enqueue(task_qa, full_path, subtask_id, retry=Retry(max=3))
         print(f"[log] doc文件处理完成: {full_path}")
         return full_path
     except Exception as e:
@@ -86,7 +86,7 @@ def task_pdf(file_path, process_file_path, subtask_id):
         with open(output_path, "w", encoding="utf-8") as f_out:
             f_out.write(total_text)
         update_subtask(subtask_id, 2,0)
-        q_qa.enqueue(task_qa, output_path, subtask_id)
+        q_qa.enqueue(task_qa, output_path, subtask_id, retry=Retry(max=3))
         print(f"[log] pdf处理完成: {file_path}")
         return output_path
     except Exception as e:
@@ -98,7 +98,7 @@ def crawl_url(host_url, process_file_path):
     try:
         map_url_list = FCApp.map_url(host_url)
         for url in map_url_list.links:
-            q_save_url.enqueue(task_url, url, process_file_path)
+            q_save_url.enqueue(task_url, url, process_file_path, retry=Retry(max=3))
         print(f"[log] 爬取url完成: {host_url} -> {len(map_url_list.links)} urls")
         return map_url_list
     except Exception as e:
@@ -127,7 +127,7 @@ def task_url(url, process_file_path):
             f.write(plain_text)
             print(f"[log] 解析url处理完成: {url} -> {output_path}")
         update_subtask(subtask_id, 2,0)
-        q_qa.enqueue(task_qa, output_path, subtask_id)
+        q_qa.enqueue(task_qa, output_path, subtask_id, retry=Retry(max=3))
         return output_path
     except Exception as e:
         update_subtask(subtask_id, 1,-1)
@@ -143,7 +143,7 @@ def task_txt(src_path, dest_dir, subtask_id):
         dest_path = dest_dir / f"{Path(src_path).name}.txt"
         shutil.copy2(src_path, dest_path)
         update_subtask(subtask_id, 2,0)
-        q_qa.enqueue(task_qa, dest_path, subtask_id)
+        q_qa.enqueue(task_qa, dest_path, subtask_id, retry=Retry(max=3))
         print(f"[log] 文本文件已复制到: {dest_path}")
         return dest_path
     except Exception as e:
