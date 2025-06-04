@@ -75,12 +75,14 @@ def gen_pair(user_input, subtask_id, question_prompt, answer_prompt, base_url="h
                     content = response_data["choices"][0]["message"]["content"]
                     print(content)
                     if content:
+                        if content.startswith("```json") and content.endswith("```"):
+                            content = content[7:-3].strip()
                         data = json.loads(content)
                         qa_pairs = data.get("qa_pairs", [])
                         print([(qa["question"], qa["answer"]) for qa in qa_pairs])
                         all_qa_pairs.extend([(qa["question"], qa["answer"]) for qa in qa_pairs])
                 except Exception as e:
                     print(f"Failed to create chat for chunk {idx}: {e}")
-                    continue
+                    raise e
 
             return all_qa_pairs if all_qa_pairs else None
