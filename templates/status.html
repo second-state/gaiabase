@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedding Status</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(20, 20, 30, 0.95);
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .header-info {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            background: rgba(20, 20, 30, 0.95);
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        .progress-line-active {
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            height: 2px;
+            background: #667eea;
+            width: 60%;
+            z-index: 1;
+            transition: width 0.5s ease;
+        }
+
+        .progress-step {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.completed {
+            background: #667eea;
+            border-color: #667eea;
+            color: #fff;
+        }
+
+        .progress-step.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: #fff;
+        }
+
+        .progress-label {
+            position: absolute;
+            top: 50px;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .progress-step.active .progress-label,
+        .progress-step.completed .progress-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Overall Progress Section */
+        .overall-progress {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .progress-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 25px;
+        }
+
+        .progress-item {
+            margin-bottom: 20px;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .progress-label-text {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .progress-percentage {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill.animated {
+            animation: progressPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-value.primary {
+            color: #667eea;
+        }
+
+        .stat-value.success {
+            color: #2ed573;
+        }
+
+        .stat-value.warning {
+            color: #fee140;
+        }
+
+        .stat-value.error {
+            color: #ff6b6b;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Status Table */
+        .status-section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .filter-tab.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .status-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-table td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .doc-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .doc-icon {
+            font-size: 1.2rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .status-badge.processing {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .status-badge.waiting {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .status-badge.error {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .action-btn:last-child {
+            margin-right: 0;
+        }
+
+        /* Activity Log */
+        .activity-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: rgba(255, 255, 255, 0.5);
+            min-width: 60px;
+        }
+
+        .log-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .log-icon.success {
+            color: #2ed573;
+        }
+
+        .log-icon.processing {
+            color: #667eea;
+        }
+
+        .log-icon.error {
+            color: #ff6b6b;
+        }
+
+        .log-message {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Activity Log */
+        .activity-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: rgba(255, 255, 255, 0.5);
+            min-width: 60px;
+        }
+
+        .log-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .log-icon.success {
+            color: #2ed573;
+        }
+
+        .log-icon.processing {
+            color: #667eea;
+        }
+
+        .log-icon.error {
+            color: #ff6b6b;
+        }
+
+        .log-message {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Error Section */
+        .error-section {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .error-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .error-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .error-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .error-doc {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .error-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Completion Actions */
+        .completion-actions {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .completion-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2ed573;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .completion-summary {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .completion-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .progress-wrapper {
+                display: none;
+            }
+
+            .status-table {
+                font-size: 0.85rem;
+            }
+
+            .status-table th,
+            .status-table td {
+                padding: 10px;
+            }
+
+            .filter-tabs {
+                display: none;
+            }
+
+            .completion-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div class="header">
+    <div class="header-content">
+        <h1>Embedding Status</h1>
+        <div class="header-info">
+            <span id="currentTime">Last updated: Just now</span>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="progress-wrapper">
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="progress-line"></div>
+            <div class="progress-line-active"></div>
+
+            <div class="progress-step completed">
+                <span>✓</span>
+                <span class="progress-label">Upload</span>
+            </div>
+            <div class="progress-step completed">
+                <span>✓</span>
+                <span class="progress-label">Review</span>
+            </div>
+            <div class="progress-step active">
+                <span>3</span>
+                <span class="progress-label">Embedding</span>
+            </div>
+            <div class="progress-step">
+                <span>4</span>
+                <span class="progress-label">Complete</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-container">
+    <!-- Overall Progress -->
+    <div class="overall-progress">
+        <h2 class="progress-title">Embedding & Database Import Progress</h2>
+
+        <div class="progress-item">
+            <div class="progress-header">
+                <span class="progress-label-text">Creating Embeddings</span>
+                <span class="progress-percentage">75% (30/40)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill animated" style="width: 75%"></div>
+            </div>
+        </div>
+
+        <div class="progress-item">
+            <div class="progress-header">
+                <span class="progress-label-text">Importing to TiDB</span>
+                <span class="progress-percentage">50% (20/40)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill animated" style="width: 50%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value primary">40</div>
+            <div class="stat-label">Total Documents</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value success">20</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value warning">18</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value error">2</div>
+            <div class="stat-label">Failed</div>
+        </div>
+    </div>
+
+    <!-- Error Section (if any) -->
+    <div class="error-section" id="errorSection" style="display: none;">
+        <div class="error-header">
+            <span>⚠️</span>
+            <span>Errors & Warnings</span>
+        </div>
+        <div class="error-item">
+            <div class="error-doc">Manual.pdf</div>
+            <div class="error-message">Error: Document size exceeds limit (150k tokens)</div>
+            <div class="error-actions">
+                <button class="action-btn" onclick="retryDocument('manual.pdf')">Retry</button>
+                <button class="action-btn" onclick="skipDocument('manual.pdf')">Skip</button>
+                <button class="action-btn" onclick="viewDetails('manual.pdf')">View Details</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Table -->
+    <div class="status-section">
+        <div class="section-header">
+            <h2 class="section-title">Document Status</h2>
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="filterStatus('all')">All</button>
+                <button class="filter-tab" onclick="filterStatus('completed')">Completed</button>
+                <button class="filter-tab" onclick="filterStatus('processing')">Processing</button>
+                <button class="filter-tab" onclick="filterStatus('failed')">Failed</button>
+            </div>
+        </div>
+
+        <table class="status-table">
+            <thead>
+            <tr>
+                <th>Document</th>
+                <th>Embedding</th>
+                <th>TiDB Import</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="statusTableBody">
+            <!-- Table rows will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Completion Actions (hidden by default) -->
+    <div class="completion-actions" id="completionActions" style="display: none;">
+        <div class="completion-title">
+            <span>✅</span>
+            <span>Processing Complete!</span>
+        </div>
+        <div class="completion-summary">
+            Successfully processed 38/40 documents<br>
+            2 documents failed (see errors above)<br>
+            Total processing time: 5 min 32 sec<br>
+            Database: TiDB Vector Store
+        </div>
+        <div class="completion-buttons">
+            <button class="btn" onclick="viewFailedDocs()">View Failed Documents</button>
+            <button class="btn btn-secondary" onclick="processNewBatch()">Process New Batch</button>
+            <button class="btn" onclick="goToSearch()">Go to Search Interface</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+
+    // 获取 id 参数
+    const uuid = params.get("id");
+
+    // Sample data
+    const documents = [
+        { id: 1, name: 'Document1.pdf', type: 'file', embedding: 'completed', tidb: 'completed', status: 'done' },
+        { id: 2, name: 'Article.txt', type: 'file', embedding: 'completed', tidb: 'completed', status: 'done' },
+        { id: 3, name: 'Report.doc', type: 'file', embedding: 'processing', tidb: 'waiting', status: 'processing' },
+        { id: 4, name: 'example.com', type: 'url', embedding: 'queued', tidb: 'waiting', status: 'queued' },
+        { id: 5, name: 'Manual.pdf', type: 'file', embedding: 'failed', tidb: 'none', status: 'error' },
+        { id: 6, name: 'Research.txt', type: 'file', embedding: 'processing', tidb: 'waiting', status: 'processing' },
+    ];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        renderStatusTable();
+        startAutoRefresh();
+        checkForErrors();
+        updateProgressBars();
+    });
+
+    // Render status table
+    function renderStatusTable() {
+        const tbody = document.getElementById('statusTableBody');
+        tbody.innerHTML = '';
+
+        documents.forEach(doc => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                    <td>
+                        <div class="doc-name">
+                            <span class="doc-icon">${doc.type === 'file' ? '📄' : '🌐'}</span>
+                            <span>${doc.name}</span>
+                        </div>
+                    </td>
+                    <td>${getStatusBadge(doc.embedding)}</td>
+                    <td>${getStatusBadge(doc.tidb)}</td>
+                    <td>${getOverallStatus(doc.status)}</td>
+                    <td>${getActions(doc)}</td>
+                `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // Get status badge HTML
+    function getStatusBadge(status) {
+        const badges = {
+            'completed': '<span class="status-badge success">✅ Completed</span>',
+            'processing': '<span class="status-badge processing"><span class="loading-spinner"></span> Processing</span>',
+            'waiting': '<span class="status-badge waiting">⏳ Waiting</span>',
+            'queued': '<span class="status-badge waiting">⏳ Queued</span>',
+            'failed': '<span class="status-badge error">❌ Failed</span>',
+            'none': '<span class="status-badge waiting">-</span>'
+        };
+        return badges[status] || '-';
+    }
+
+    // Get overall status
+    function getOverallStatus(status) {
+        const statuses = {
+            'done': '<span style="color: #2ed573;">Done</span>',
+            'processing': '<span style="color: #667eea;">In Progress</span>',
+            'queued': '<span style="color: rgba(255, 255, 255, 0.6);">Queued</span>',
+            'error': '<span style="color: #ff6b6b;">Error</span>'
+        };
+        return statuses[status] || '-';
+    }
+
+    // Get actions HTML
+    function getActions(doc) {
+        if (doc.status === 'error') {
+            return `
+                    <button class="action-btn" onclick="retryDocument('${doc.name}')">Retry</button>
+                    <button class="action-btn" onclick="viewDetails('${doc.name}')">Details</button>
+                `;
+        } else if (doc.status === 'processing') {
+            return '<span style="color: rgba(255, 255, 255, 0.5);">Processing...</span>';
+        }
+        return '-';
+    }
+
+    // Check for errors
+    function checkForErrors() {
+        const hasErrors = documents.some(doc => doc.status === 'error');
+        if (hasErrors) {
+            document.getElementById('errorSection').style.display = 'block';
+        }
+    }
+
+    // Update progress bars
+    function updateProgressBars() {
+        // Simulate progress updates
+        setInterval(() => {
+            const embeddingProgress = document.querySelector('.progress-fill');
+            const currentWidth = parseInt(embeddingProgress.style.width);
+            if (currentWidth < 100) {
+                embeddingProgress.style.width = (currentWidth + 1) + '%';
+                document.querySelectorAll('.progress-percentage')[0].textContent =
+                    `${currentWidth + 1}% (${Math.floor((currentWidth + 1) * 0.4)}/40)`;
+            }
+        }, 500);
+    }
+
+    // Filter status
+    function filterStatus(status) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // In real implementation, filter the table rows
+        console.log('Filtering by:', status);
+    }
+
+    // Action handlers
+    function retryDocument(docName) {
+        showNotification(`Retrying ${docName}...`, 'info');
+        // Implement retry logic
+    }
+
+    function skipDocument(docName) {
+        showNotification(`Skipped ${docName}`, 'info');
+        // Implement skip logic
+    }
+
+    function viewDetails(docName) {
+        showNotification(`Viewing details for ${docName}`, 'info');
+        // Implement view details logic
+    }
+
+    function viewFailedDocs() {
+        filterStatus('failed');
+    }
+
+    function processNewBatch() {
+        window.location.href = '/upload';
+    }
+
+    function goToSearch() {
+        window.location.href = '/search';
+    }
+
+    // Auto refresh
+    function startAutoRefresh() {
+        setInterval(() => {
+            document.getElementById('currentTime').textContent =
+                `Last updated: ${new Date().toLocaleTimeString()}`;
+            // In real implementation, fetch new data
+        }, 5000);
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: #fff;
+                font-weight: 500;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+
+        if (type === 'success') {
+            notification.style.background = 'rgba(46, 213, 115, 0.9)';
+        } else if (type === 'error') {
+            notification.style.background = 'rgba(255, 107, 107, 0.9)';
+        } else {
+            notification.style.background = 'rgba(102, 126, 234, 0.9)';
+        }
+
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animations
+    const style = document.createElement('style');
+    style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+    document.head.appendChild(style);
+
+    // Simulate completion after some time
+    setTimeout(() => {
+        // Check if all documents are processed
+        const allProcessed = documents.filter(d => d.status === 'done' || d.status === 'error').length === documents.length;
+        if (allProcessed) {
+            document.getElementById('completionActions').style.display = 'block';
+            // Update progress to complete
+            document.querySelector('.progress-step:nth-child(4)').classList.add('completed');
+            document.querySelector('.progress-line-active').style.width = '90%';
+        }
+    }, 10000);
+</script>
+</body>
+</html>

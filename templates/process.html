@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Processing & Embedding</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-container {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        .settings-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(102, 126, 234, 0.5);
+            color: #fff;
+            transform: translateY(-50%) rotate(45deg);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .settings-tooltip {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: rgba(40, 40, 50, 0.95);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-icon:hover .settings-tooltip {
+            opacity: 1;
+        }
+
+        /* Tab Navigation */
+        .tab-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .tab-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(102, 126, 234, 0.5);
+            border-radius: 15px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: rgba(102, 126, 234, 0.8);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.02);
+        }
+
+        .upload-icon-large {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        input[type="text"], input[type="url"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .file-size {
+            color: #888;
+        }
+
+        .file-chars {
+            color: #b0b0b0;
+        }
+
+        .file-chars.warning {
+            color: #fee140;
+        }
+
+        .file-chars.danger {
+            color: #ff6b6b;
+        }
+
+        .processing-indicator {
+            display: inline-block;
+            margin-left: 5px;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+        }
+
+        .processing-indicator.qa {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 10px 30px rgba(52, 211, 153, 0.4);
+        }
+
+        .add-to-queue-btn {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .process-btn {
+            display: block;
+            margin: 40px auto 0;
+            padding: 15px 50px;
+            font-size: 1.1rem;
+        }
+
+        .char-counter {
+            font-size: 0.85rem;
+            color: #888;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .char-counter.warning {
+            color: #fee140;
+        }
+
+        .char-counter.danger {
+            color: #ff6b6b;
+        }
+
+        .info-tooltip {
+            display: inline-block;
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            cursor: help;
+            position: relative;
+        }
+
+        .info-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(40, 40, 50, 0.95);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 300px;
+            white-space: normal;
+        }
+
+        /* Processing Queue Summary */
+        .queue-summary {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .queue-summary h3 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .queue-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .queue-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #e0e0e0;
+        }
+
+        .queue-stat-icon {
+            font-size: 1.2rem;
+        }
+
+        .queue-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .empty-queue {
+            color: #888;
+            font-style: italic;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(40, 40, 50, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 15px 30px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .status-bar.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .tab-container {
+                padding: 5px;
+            }
+
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .queue-stats {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-container">
+        <h1>Document Processing & Embedding</h1>
+        <a href="#" class="settings-icon" onclick="goToSettings(event)" title="Configure services">
+            ⚙️
+            <span class="settings-tooltip">Configure services</span>
+        </a>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('upload')">
+            <span class="tab-icon">📁</span>
+            File Upload
+        </button>
+        <button class="tab-btn" onclick="switchTab('url')">
+            <span class="tab-icon">🔗</span>
+            URL Extract
+        </button>
+        <button class="tab-btn" onclick="switchTab('text')">
+            <span class="tab-icon">📝</span>
+            Text Input
+        </button>
+        <button class="tab-btn" onclick="switchTab('qa')">
+            <span class="tab-icon">❓</span>
+            Q&A Input
+        </button>
+    </div>
+
+    <!-- File Upload Tab -->
+    <div id="upload-tab" class="tab-content active">
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">📁</div>
+                <h2>Upload Documents</h2>
+            </div>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon-large">📤</div>
+                <p style="font-size: 1.2rem; margin-bottom: 10px;">Drag and drop files here or click to browse</p>
+                <p style="font-size: 0.9rem; color: #888;">Supported formats: TXT, PDF, DOC, DOCX</p>
+                <input type="file" id="fileInput" multiple accept=".txt,.pdf,.doc,.docx">
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <button class="btn btn-success add-to-queue-btn" onclick="addFilesToQueue()" id="addFilesBtn" style="display: none;">
+                Add Files to Processing Queue
+            </button>
+        </div>
+    </div>
+
+    <!-- URL Extract Tab -->
+    <div id="url-tab" class="tab-content">
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🔗</div>
+                <h2>Extract Content from URLs</h2>
+            </div>
+            <div class="form-group">
+                <label for="urlInput">Enter URL to extract content</label>
+                <input type="url" id="urlInput" placeholder="https://example.com/article">
+            </div>
+            <button class="btn" onclick="addUrl()">Add URL</button>
+            <div class="file-list" id="urlList" style="margin-top: 20px;"></div>
+            <button class="btn btn-success add-to-queue-btn" onclick="addUrlsToQueue()" id="addUrlsBtn" style="display: none;">
+                Add URLs to Processing Queue
+            </button>
+        </div>
+    </div>
+
+    <!-- Text Input Tab -->
+    <div id="text-tab" class="tab-content">
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">📝</div>
+                <h2>Paste Text Content</h2>
+            </div>
+            <div class="form-group">
+                <label for="textInput">
+                    Long Text
+                    <span class="info-tooltip" data-tooltip="Content exceeding the character limit will be automatically processed into Q&A pairs">?</span>
+                </label>
+                <textarea id="textInput" placeholder="Paste your long article or content here..." rows="10"></textarea>
+                <div class="char-counter" id="textCharCounter">0 characters</div>
+            </div>
+            <div class="form-group">
+                <label for="textSummary">Short Text (optional)</label>
+                <input type="text" id="textSummary" placeholder="Add a brief summary or short description">
+            </div>
+            <button class="btn btn-success add-to-queue-btn" onclick="addTextToQueue()">
+                Add Text to Processing Queue
+            </button>
+        </div>
+    </div>
+
+    <!-- Q&A Input Tab -->
+    <div id="qa-tab" class="tab-content">
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">❓</div>
+                <h2>Pre-prepared Q&A Pairs</h2>
+            </div>
+            <div class="form-group">
+                <label for="qaFormat">Input Format</label>
+                <select id="qaFormat" onchange="updateQAPlaceholder()">
+                    <option value="structured">Structured (Q: ... A: ...)</option>
+                    <option value="json">JSON Format</option>
+                    <option value="custom">Custom Delimiter</option>
+                </select>
+            </div>
+            <div class="form-group" id="customDelimiterGroup" style="display: none;">
+                <label for="customDelimiter">Custom Delimiter</label>
+                <input type="text" id="customDelimiter" placeholder="e.g., | or ;;;" value="|">
+            </div>
+            <div class="form-group">
+                <label for="qaInput">
+                    Paste Q&A pairs
+                    <span class="info-tooltip" data-tooltip="Format depends on selected input format above">?</span>
+                </label>
+                <textarea id="qaInput" placeholder="Q: What is machine learning?&#10;A: Machine learning is...&#10;&#10;Q: How does it work?&#10;A: It works by..." rows="12"></textarea>
+                <div class="char-counter" id="qaCharCounter">0 characters</div>
+            </div>
+            <button class="btn btn-success add-to-queue-btn" onclick="addQAToQueue()">
+                Add Q&A to Processing Queue
+            </button>
+        </div>
+    </div>
+
+    <!-- Processing Queue Summary -->
+    <div class="queue-summary" id="queueSummary">
+        <h3>
+            <span>📊</span>
+            Processing Queue Summary
+        </h3>
+        <div id="queueContent">
+            <p class="empty-queue">No data sources added yet</p>
+        </div>
+    </div>
+
+    <!-- Embedding Settings Section -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-icon" style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);">⚙️</div>
+            <h2>Embedding Settings</h2>
+        </div>
+        <div class="form-group">
+            <label for="splitLength">
+                Split Length
+                <span class="info-tooltip" data-tooltip="Maximum character length before splitting content. Large documents exceeding this limit will be processed into smaller chunks or Q&A pairs">?</span>
+            </label>
+            <input type="number" id="splitLength" value="1000000" min="10000" max="10000000">
+        </div>
+        <div class="form-group">
+            <label for="questionPrompt">
+                Prompt for Generating Questions
+                <span class="info-tooltip" data-tooltip="This prompt will be used to generate questions from your content">?</span>
+            </label>
+            <textarea id="questionPrompt" placeholder="Example: Based on the following content, generate relevant questions that test understanding of the key concepts, main ideas, and important details. Make the questions clear and specific." rows="4">Respond with a list of 10 questions. The text in the user message must contain specific answers to each question. Each question must be on its own line. Just list the questions without any introductory text or numbers.</textarea>
+        </div>
+        <div class="form-group">
+            <label for="answerPrompt">
+                Prompt for Generating Answers
+                <span class="info-tooltip" data-tooltip="This prompt will be used to generate comprehensive answers to the questions">?</span>
+            </label>
+            <textarea id="answerPrompt" placeholder="Example: Provide detailed and accurate answers to the questions based on the content. Include relevant examples and explanations where appropriate. Keep answers comprehensive but concise." rows="4">Give a comprehensive and well-reasoned answer to the user question strictly based on the context below.</textarea>
+        </div>
+    </div>
+
+    <!-- Process Button -->
+    <button class="btn process-btn" onclick="processDocuments()" id="processBtn" disabled>Process & Create Embeddings</button>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar">
+        <div class="spinner"></div>
+        <span id="statusText">Processing documents...</span>
+    </div>
+</div>
+
+<script>
+    // Global variables for temporary storage
+    let uploadedFiles = [];
+    let fileCharCounts = new Map();
+    let urls = [];
+    let currentTab = 'upload';
+
+    const pageSessionId = crypto.randomUUID();
+
+    // Processing queue to store all data sources
+    let processingQueue = {
+        files: [],
+        urls: [],
+        texts: [],
+        qas: []
+    };
+
+    // Tab switching
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.closest('.tab-btn').classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+
+        currentTab = tabName;
+    }
+
+    // File upload handling
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        Array.from(files).forEach(file => {
+            if (isValidFileType(file)) {
+                uploadedFiles.push(file);
+                displayFile(file);
+                readFileContent(file);
+            } else {
+                showNotification(`Invalid file type: ${file.name}`, 'error');
+            }
+        });
+        updateAddFilesButton();
+    }
+
+    async function readFileContent(file) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const content = e.target.result;
+            const charCount = content.length;
+            fileCharCounts.set(file.name, charCount);
+            updateFileDisplay(file.name, charCount);
+        };
+
+        reader.onerror = function () {
+            console.error('Error reading file:', file.name);
+            fileCharCounts.set(file.name, -1);
+            updateFileDisplay(file.name, -1);
+        };
+
+        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+            reader.readAsText(file);
+        } else {
+            const formdata = new FormData();
+            formdata.append("files[]", file);
+            const response = await fetch("/api/getFileCount", {
+                method: 'POST',
+                body: formdata
+            })
+            const fileInfo = await response.json();
+            updateFileDisplay(fileInfo["files"][0]["file_name"], fileInfo["files"][0]["file_size"]);
+        }
+    }
+
+    function updateFileDisplay(fileName, charCount) {
+        const fileItems = document.querySelectorAll('.file-item');
+        fileItems.forEach(item => {
+            if (item.querySelector('.file-name').textContent === fileName) {
+                const splitLength = parseInt(document.getElementById('splitLength').value);
+                const fileCharsElement = item.querySelector('.file-chars');
+
+                if (charCount === -1) {
+                    fileCharsElement.textContent = 'Error reading file';
+                    fileCharsElement.className = 'file-chars danger';
+                } else {
+                    fileCharsElement.textContent = `${charCount.toLocaleString()} characters`;
+
+                    if (charCount > splitLength) {
+                        fileCharsElement.className = 'file-chars danger';
+                        if (!item.querySelector('.processing-indicator')) {
+                            const indicator = document.createElement('span');
+                            indicator.className = 'processing-indicator qa';
+                            indicator.textContent = 'Q&A';
+                            fileCharsElement.appendChild(indicator);
+                        }
+                    } else if (charCount > splitLength * 0.8) {
+                        fileCharsElement.className = 'file-chars warning';
+                    } else {
+                        fileCharsElement.className = 'file-chars';
+                    }
+                }
+            }
+        });
+    }
+
+    function isValidFileType(file) {
+        const validTypes = ['text/plain', 'application/pdf', 'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        return validTypes.includes(file.type) ||
+            file.name.match(/\.(txt|pdf|doc|docx)$/i);
+    }
+
+    function displayFile(file) {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+                <div class="file-info">
+                    <span style="font-size: 24px;">${getFileIcon(file.type)}</span>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">
+                            <span class="file-size">${formatFileSize(file.size)}</span>
+                            <span class="file-chars">Counting...</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="remove-btn" onclick="removeFile('${file.name}')">Remove</button>
+            `;
+        fileList.appendChild(fileItem);
+    }
+
+    function getFileIcon(type) {
+        if (type.includes('pdf')) return '📄';
+        if (type.includes('word')) return '📃';
+        return '📋';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function removeFile(fileName) {
+        uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+        fileCharCounts.delete(fileName);
+        updateFileList();
+        updateAddFilesButton();
+    }
+
+    function updateFileList() {
+        fileList.innerHTML = '';
+        uploadedFiles.forEach(file => {
+            displayFile(file);
+            if (fileCharCounts.has(file.name)) {
+                updateFileDisplay(file.name, fileCharCounts.get(file.name));
+            } else {
+                readFileContent(file);
+            }
+        });
+    }
+
+    function updateAddFilesButton() {
+        const btn = document.getElementById('addFilesBtn');
+        btn.style.display = uploadedFiles.length > 0 ? 'block' : 'none';
+    }
+
+    // URL handling
+    function addUrl() {
+        const urlInput = document.getElementById('urlInput');
+        const url = urlInput.value.trim();
+
+        if (url && isValidUrl(url)) {
+            urls.push(url);
+            displayUrl(url);
+            urlInput.value = '';
+            updateAddUrlsButton();
+        } else {
+            showNotification('Please enter a valid URL', 'error');
+        }
+    }
+
+    function isValidUrl(string) {
+        try {
+            new URL(string);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function displayUrl(url) {
+        const urlList = document.getElementById('urlList');
+        const urlItem = document.createElement('div');
+        urlItem.className = 'file-item';
+        urlItem.innerHTML = `
+                <div class="file-info">
+                    <span>🌐</span>
+                    <span>${url}</span>
+                </div>
+                <button class="remove-btn" onclick="removeUrl('${url}')">Remove</button>
+            `;
+        urlList.appendChild(urlItem);
+    }
+
+    function removeUrl(url) {
+        urls = urls.filter(u => u !== url);
+        updateUrlList();
+        updateAddUrlsButton();
+    }
+
+    function updateUrlList() {
+        const urlList = document.getElementById('urlList');
+        urlList.innerHTML = '';
+        urls.forEach(url => displayUrl(url));
+    }
+
+    function updateAddUrlsButton() {
+        const btn = document.getElementById('addUrlsBtn');
+        btn.style.display = urls.length > 0 ? 'block' : 'none';
+    }
+
+    // Character counting
+    const textInput = document.getElementById('textInput');
+    const textCharCounter = document.getElementById('textCharCounter');
+    const qaInput = document.getElementById('qaInput');
+    const qaCharCounter = document.getElementById('qaCharCounter');
+
+    function updateCharCounter(input, counter, showWarning = true) {
+        const charCount = input.value.length;
+        counter.textContent = `${charCount} characters`;
+
+        if (showWarning) {
+            const splitLength = parseInt(document.getElementById('splitLength').value);
+
+            if (charCount > splitLength) {
+                counter.classList.add('danger');
+                counter.textContent += ` (Will be processed as Q&A)`;
+            } else if (charCount > splitLength * 0.8) {
+                counter.classList.add('warning');
+                counter.classList.remove('danger');
+            } else {
+                counter.classList.remove('warning', 'danger');
+            }
+        }
+    }
+
+    textInput.addEventListener('input', () => updateCharCounter(textInput, textCharCounter));
+    qaInput.addEventListener('input', () => updateCharCounter(qaInput, qaCharCounter, false));
+
+    // Q&A Format handling
+    function updateQAPlaceholder() {
+        const format = document.getElementById('qaFormat').value;
+        const qaInput = document.getElementById('qaInput');
+        const customDelimiterGroup = document.getElementById('customDelimiterGroup');
+
+        switch(format) {
+            case 'structured':
+                qaInput.placeholder = 'Q: What is machine learning?\nA: Machine learning is...\n\nQ: How does it work?\nA: It works by...';
+                customDelimiterGroup.style.display = 'none';
+                break;
+            case 'json':
+                qaInput.placeholder = '[\n  {\n    "question": "What is machine learning?",\n    "answer": "Machine learning is..."\n  },\n  {\n    "question": "How does it work?",\n    "answer": "It works by..."\n  }\n]';
+                customDelimiterGroup.style.display = 'none';
+                break;
+            case 'custom':
+                qaInput.placeholder = 'What is machine learning? | Machine learning is...\nHow does it work? | It works by...';
+                customDelimiterGroup.style.display = 'block';
+                break;
+        }
+    }
+
+    // Add to queue functions
+    function addFilesToQueue() {
+        if (uploadedFiles.length === 0) return;
+
+        // Add files to queue
+        uploadedFiles.forEach(file => {
+            processingQueue.files.push({
+                file: file,
+                charCount: fileCharCounts.get(file.name) || 0
+            });
+        });
+
+        // Clear temporary storage
+        uploadedFiles = [];
+        fileCharCounts.clear();
+        fileList.innerHTML = '';
+        updateAddFilesButton();
+
+        // Update summary
+        updateQueueSummary();
+        showNotification(`${processingQueue.files.length} file(s) added to processing queue`, 'success');
+    }
+
+    function addUrlsToQueue() {
+        if (urls.length === 0) return;
+
+        // Add URLs to queue
+        processingQueue.urls.push(...urls);
+
+        // Clear temporary storage
+        urls = [];
+        document.getElementById('urlList').innerHTML = '';
+        updateAddUrlsButton();
+
+        // Update summary
+        updateQueueSummary();
+        showNotification(`${processingQueue.urls.length} URL(s) added to processing queue`, 'success');
+    }
+
+    function addTextToQueue() {
+        const longText = textInput.value.trim();
+        const shortText = document.getElementById('textSummary').value.trim();
+
+        if (!longText && !shortText) {
+            showNotification('Please enter some text content', 'error');
+            return;
+        }
+
+        processingQueue.texts.push({
+            longText: longText,
+            shortText: shortText,
+            charCount: longText.length
+        });
+
+        // Clear form
+        textInput.value = '';
+        document.getElementById('textSummary').value = '';
+        updateCharCounter(textInput, textCharCounter);
+
+        // Update summary
+        updateQueueSummary();
+        showNotification('Text content added to processing queue', 'success');
+    }
+
+    function addQAToQueue() {
+        const qaContent = qaInput.value.trim();
+        const format = document.getElementById('qaFormat').value;
+
+        if (!qaContent) {
+            showNotification('Please enter Q&A pairs', 'error');
+            return;
+        }
+
+        // Count Q&A pairs based on format
+        let pairCount = 0;
+        if (format === 'structured') {
+            pairCount = (qaContent.match(/Q:/g) || []).length;
+        } else if (format === 'json') {
+            try {
+                const parsed = JSON.parse(qaContent);
+                pairCount = Array.isArray(parsed) ? parsed.length : 0;
+            } catch {
+                pairCount = 0;
+            }
+        } else {
+            pairCount = qaContent.split('\n').filter(line => line.trim()).length;
+        }
+
+        processingQueue.qas.push({
+            content: qaContent,
+            format: format,
+            delimiter: format === 'custom' ? document.getElementById('customDelimiter').value : null,
+            pairCount: pairCount
+        });
+
+        // Clear form
+        qaInput.value = '';
+        updateCharCounter(qaInput, qaCharCounter, false);
+
+        // Update summary
+        updateQueueSummary();
+        showNotification(`Q&A set with ${pairCount} pairs added to processing queue`, 'success');
+    }
+
+    // Update queue summary
+    function updateQueueSummary() {
+        const queueContent = document.getElementById('queueContent');
+        const processBtn = document.getElementById('processBtn');
+
+        const totalItems = processingQueue.files.length +
+            processingQueue.urls.length +
+            processingQueue.texts.length +
+            processingQueue.qas.length;
+
+        if (totalItems === 0) {
+            queueContent.innerHTML = '<p class="empty-queue">No data sources added yet</p>';
+            processBtn.disabled = true;
+            return;
+        }
+
+        processBtn.disabled = false;
+
+        let statsHtml = '<div class="queue-stats">';
+
+        if (processingQueue.files.length > 0) {
+            const fileTypes = processingQueue.files.reduce((acc, item) => {
+                const ext = item.file.name.split('.').pop().toUpperCase();
+                acc[ext] = (acc[ext] || 0) + 1;
+                return acc;
+            }, {});
+            const fileTypesStr = Object.entries(fileTypes).map(([ext, count]) => `${count} ${ext}`).join(', ');
+            statsHtml += `
+                    <div class="queue-stat">
+                        <span class="queue-stat-icon">📁</span>
+                        <span>${processingQueue.files.length} Files (${fileTypesStr})</span>
+                    </div>
+                `;
+        }
+
+        if (processingQueue.urls.length > 0) {
+            statsHtml += `
+                    <div class="queue-stat">
+                        <span class="queue-stat-icon">🔗</span>
+                        <span>${processingQueue.urls.length} URLs</span>
+                    </div>
+                `;
+        }
+
+        if (processingQueue.texts.length > 0) {
+            statsHtml += `
+                    <div class="queue-stat">
+                        <span class="queue-stat-icon">📝</span>
+                        <span>${processingQueue.texts.length} Text ${processingQueue.texts.length > 1 ? 'entries' : 'entry'}</span>
+                    </div>
+                `;
+        }
+
+        if (processingQueue.qas.length > 0) {
+            const totalPairs = processingQueue.qas.reduce((sum, qa) => sum + qa.pairCount, 0);
+            statsHtml += `
+                    <div class="queue-stat">
+                        <span class="queue-stat-icon">❓</span>
+                        <span>${processingQueue.qas.length} Q&A ${processingQueue.qas.length > 1 ? 'sets' : 'set'} (${totalPairs} pairs)</span>
+                    </div>
+                `;
+        }
+
+        statsHtml += '</div>';
+        statsHtml += `<div class="queue-total">Total: ${totalItems} data source${totalItems > 1 ? 's' : ''} ready for processing</div>`;
+
+        queueContent.innerHTML = statsHtml;
+    }
+
+    // Process documents
+    async function processDocuments() {
+        const statusBar = document.getElementById('statusBar');
+        const statusText = document.getElementById('statusText');
+        const processBtn = document.getElementById('processBtn');
+
+        // Show processing status
+        statusBar.classList.add('show');
+        statusText.textContent = 'Processing documents...';
+        processBtn.disabled = true;
+
+        try {
+            // Collect all data
+            const processingData = {
+                queue: processingQueue,
+                settings: {
+                    splitLength: parseInt(document.getElementById('splitLength').value),
+                    questionPrompt: document.getElementById('questionPrompt').value.trim(),
+                    answerPrompt: document.getElementById('answerPrompt').value.trim()
+                },
+                uuid: pageSessionId,
+                configuration: localStorage.getItem('gaiabaseConfig')
+            };
+
+            const formData = new FormData();
+            processingData.queue.files.forEach((item, index) => {
+                formData.append(`file${index}`, item.file);
+            });
+            const jsonData = { ...processingData };
+            jsonData.queue.files = [];
+            formData.append('processingData', JSON.stringify(jsonData));
+
+            const response = await fetch("/api/processingAllData",{
+                method: 'POST',
+                body: formData
+            })
+
+            if (response.ok) {
+                statusBar.classList.remove('show');
+                showNotification('Documents processed successfully!', 'success');
+
+                // Clear queue
+                processingQueue = {
+                    files: [],
+                    urls: [],
+                    texts: [],
+                    qas: []
+                };
+                updateQueueSummary();
+                window.location.href = "/review?id=" + pageSessionId;
+            } else {
+                const errorData = await response.json();
+                showNotification('Error processing documents: ' + errorData.message, 'error');
+            }
+        } catch (error) {
+            statusBar.classList.remove('show');
+            showNotification('Error processing documents: ' + error.message, 'error');
+        } finally {
+            processBtn.disabled = false;
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: #fff;
+                font-weight: 500;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+
+        if (type === 'success') {
+            notification.style.background = 'rgba(46, 213, 115, 0.9)';
+        } else if (type === 'error') {
+            notification.style.background = 'rgba(255, 107, 107, 0.9)';
+        } else {
+            notification.style.background = 'rgba(102, 126, 234, 0.9)';
+        }
+
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animations
+    const style = document.createElement('style');
+    style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+    document.head.appendChild(style);
+
+    // Initialize
+    updateQAPlaceholder();
+    updateQueueSummary();
+
+    // Settings navigation
+    function goToSettings(event) {
+        event.preventDefault();
+        showNotification('Redirecting to configuration page...', 'info');
+        // In a real application, you would navigate to the configuration page
+        // window.location.href = '/configuration';
+    }
+</script>
+</body>
+</html>

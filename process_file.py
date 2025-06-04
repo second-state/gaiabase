@@ -50,7 +50,6 @@ def process_pdf(input_file, output_folder, old_name, semaphore, socketio, questi
             documents = parser.load_data(f, extra_info=extra_info)
             for data in documents:
                 total_text += data.text
-        save_and_summarize_file(total_text, file_name, input_file, output_folder, old_name, semaphore, socketio, question_prompt, answer_prompt, split_length)
         print(f"[log] pdf处理完成: {input_file}")
     except Exception as e:
         update_file_subtask(output_folder, file_name, 2)

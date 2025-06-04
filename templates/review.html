@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q&A Review & Edit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+        }
+
+        .nav-link.active {
+            color: #667eea;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .progress-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        .progress-line-active {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 50%;
+            z-index: 1;
+            transition: width 0.5s ease;
+        }
+
+        .progress-step {
+            background: #1a1a2e;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.completed {
+            background: #667eea;
+            border-color: #667eea;
+            color: #fff;
+        }
+
+        .progress-step.active {
+            border-color: #667eea;
+            color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .progress-label {
+            position: absolute;
+            top: 50px;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Document List Panel */
+        .document-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            height: fit-content;
+            max-height: calc(100vh - 220px);
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .document-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .document-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .document-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .document-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .document-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .document-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .document-meta {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .qa-count {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .status-badge.pending {
+            background: rgba(254, 225, 64, 0.2);
+            color: #fee140;
+        }
+
+        .status-badge.completed {
+            background: rgba(46, 213, 115, 0.2);
+            color: #2ed573;
+        }
+
+        .status-badge.generating {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Q&A Editor Panel */
+        .editor-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 220px);
+        }
+
+        .editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .editor-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+        }
+
+        .qa-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .qa-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .qa-item:hover {
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .qa-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .qa-number {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .qa-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .icon-btn.delete:hover {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .qa-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .qa-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .qa-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+
+        .qa-input, .qa-textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .qa-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .qa-input:focus, .qa-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .add-qa-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px dashed rgba(102, 126, 234, 0.5);
+            color: #667eea;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .add-qa-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        /* Bottom Actions */
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+
+        .actions-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-text {
+            font-size: 1rem;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .document-panel {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 15px;
+            }
+
+            .progress-container {
+                display: none;
+            }
+
+            .editor-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .bottom-actions {
+                position: static;
+                margin-top: 20px;
+            }
+
+            .actions-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="nav-content">
+        <h1 style="color: #fff; font-size: 1.5rem; font-weight: 600;">Q&A Review & Edit</h1>
+        <div class="user-info">
+            <span style="color: rgba(255, 255, 255, 0.6);">Processing Queue: <span
+                    id="queueCount">3</span> pending</span>
+        </div>
+    </div>
+</nav>
+
+<!-- Progress Bar -->
+<div class="progress-container">
+    <div class="progress-content">
+        <div class="progress-steps">
+            <div class="progress-line"></div>
+            <div class="progress-line-active" style="width: 33%;"></div>
+
+            <div class="progress-step completed">
+                <span>✓</span>
+                <span class="progress-label">Upload</span>
+            </div>
+            <div class="progress-step active">
+                <span>2</span>
+                <span class="progress-label">Review</span>
+            </div>
+            <div class="progress-step">
+                <span>3</span>
+                <span class="progress-label">Embedding</span>
+            </div>
+            <div class="progress-step">
+                <span>4</span>
+                <span class="progress-label">Complete</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-container">
+    <!-- Document List Panel -->
+    <div class="document-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Documents</h2>
+        </div>
+
+        <div class="document-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">12</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="reviewCount">8</div>
+                <div class="stat-label">Need Review</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="generatingCount">2</div>
+                <div class="stat-label">Generating</div>
+            </div>
+        </div>
+
+        <div class="document-list" id="documentList">
+            <!-- Document items will be populated here -->
+        </div>
+    </div>
+
+    <!-- Q&A Editor Panel -->
+    <div class="editor-panel" id="editorPanel">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">Select a document</div>
+            <div class="empty-text">Choose a document from the left panel to review its Q&A pairs</div>
+        </div>
+
+        <div id="editorContent" style="display: none;">
+            <div class="editor-header">
+                <h2 class="editor-title" id="editorTitle">Document Title</h2>
+                <div class="editor-actions">
+                    <button class="btn btn-secondary" onclick="regenerateAll()">
+                        🔄 Regenerate All
+                    </button>
+                    <button class="btn btn-secondary" onclick="saveDraft()">
+                        💾 Save Draft
+                    </button>
+                </div>
+            </div>
+
+            <div class="qa-list" id="qaList">
+                <!-- Q&A items will be populated here -->
+            </div>
+
+            <button class="btn add-qa-btn" onclick="addNewQA()">
+                <span>➕</span> Add New Q&A Pair
+            </button>
+        </div>
+
+        <div class="loading" id="loadingState" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Actions -->
+<div class="bottom-actions">
+    <div class="actions-content">
+        <div class="action-info">
+            <span>Changes are auto-saved</span>
+            <span id="lastSaved">Last saved: Just now</span>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="skipDocument()">Skip Document</button>
+            <button class="btn btn-success" onclick="approveAndNext()">Approve & Next</button>
+            <button class="btn" onclick="finalizeAll()">Finalize All & Create Embeddings</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Sample data
+    const documents = [];
+
+    let currentDocument = null;
+    let unsavedChanges = false;
+
+    const params = new URLSearchParams(window.location.search);
+
+    // 获取 id 参数
+    const uuid = params.get("id");
+
+    {#[#}
+    {#    [#}
+    {#        22,#}
+    {#        "a53e834a-098d-4b8d-8a10-140ce902e925",#}
+    {#        3,#}
+    {#        0,#}
+    {#        "Wed, 04 Jun 2025 02:53:40 GMT",#}
+    {#        "Wed, 04 Jun 2025 02:55:30 GMT",#}
+    {#        "paper.pdf",#}
+    {#        "paper.pdf",#}
+    {#        1#}
+    {#    ],#}
+    {#    [#}
+    {#        23,#}
+    {#        "a53e834a-098d-4b8d-8a10-140ce902e925",#}
+    {#        1,#}
+    {#        0,#}
+    {#        "Wed, 04 Jun 2025 03:14:02 GMT",#}
+    {#        "Wed, 04 Jun 2025 03:14:02 GMT",#}
+    {#        "Q&A Input",#}
+    {#        "Q&A_Input.json",#}
+    {#        4#}
+    {#    ]#}
+    {#]#}
+
+    function query_documents() {
+        fetch('/api/getAllSubtaskByUuid', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "uuid": uuid
+            })
+        })
+            .then(response => response.json())
+            .then(async data => {
+                const formatData = await Promise.all(data.map(async d => {
+                    let qa_file_name = d[7];
+                    if (d[8] !== 4) {
+                        qa_file_name += '_qa.json';
+                    }
+                    let sizeData = 0
+                    try{
+                        const sizeRes = await fetch(`/api/filesize/${d[1]}/original_files/${d[7]}`);
+                        sizeData = await sizeRes.json();
+                    }catch (e) {
+                        console.error(e);
+                    }
+
+                    const qaRes = await fetch(`/api/fileContent/${d[1]}/qa_files/${qa_file_name}`);
+                    let qaPairs = []
+                    try{
+                        const qaData = await qaRes.json();
+                        if (qaData) {
+                            qaPairs = qaData.map((qaList, index) => ({
+                                id: index,
+                                question: qaList[0],
+                                answer: qaList[1]
+                            }));
+                        }
+                    }catch (e) {
+                        console.error(e);
+                    }
+
+
+
+                    return {
+                        id: d[0],
+                        name: d[6],
+                        qaFileName: qa_file_name,
+                        type: d[8],
+                        charCount: sizeData.size,
+                        status: d[3],
+                        qaStatus: d[2],
+                        qaCount: qaPairs.length,
+                        qaPairs: qaPairs
+                    };
+                }));
+
+                console.log(formatData);
+                documents.length = 0; // Clear existing documents
+                documents.push(...formatData); // Add fetched documents
+                renderDocumentList();
+                updateStats();
+            })
+            .catch(error => console.error('Error fetching documents:', error));
+    }
+
+    // Update statistics
+    function updateStats() {
+        const total = documents.filter(d => d.qaStatus <= 4).length;
+        const needReview = documents.filter(d => d.qaStatus === 3).length;
+        const generating = documents.filter(d => d.qaStatus < 3).length;
+
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('reviewCount').textContent = needReview;
+        document.getElementById('generatingCount').textContent = generating;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        query_documents();
+        renderDocumentList();
+        updateStats();
+        {#setupAutoSave();#}
+
+        // Periodically check for newly generated Q&As
+        setInterval(() => {
+            query_documents();
+            renderDocumentList();
+            updateStats();
+            // In real implementation, this would check with the server
+            // for documents that finished generating
+        }, 5000);
+    });
+
+    // Render document list
+    function renderDocumentList() {
+        const listContainer = document.getElementById('documentList');
+        listContainer.innerHTML = '';
+
+        documents.forEach(doc => {
+            const item = document.createElement('div');
+            item.className = `document-item ${currentDocument?.id === doc.id ? 'active' : ''}`;
+            item.onclick = () => selectDocument(doc);
+
+            let statusBadge = '';
+            if (doc.qaStatus < 3) {
+                statusBadge = '<span class="status-badge generating">⚡ Generating...</span>';
+            } else if (doc.qaStatus === 3) {
+                statusBadge = '<span class="status-badge pending">⏳ Review needed</span>';
+            } else if (doc.qaStatus === 4) {
+                statusBadge = '<span class="status-badge completed">✓ Approved</span>';
+            }
+
+            item.innerHTML = `
+                    <div class="document-name">
+                        <span>${doc.type === 2 ? '🌐' : '📄'}</span>
+                        ${doc.name}
+                    </div>
+                    <div class="document-meta">
+                        <span style="display:${doc.charCount ? "inline-block":"none"};">${(doc.charCount / 1000).toFixed(1)}k chars</span>
+                        ${doc.qaCount > 0 ? `<span class="qa-count">${doc.qaCount} Q&As</span>` : ''}
+                        ${statusBadge}
+                    </div>
+                `;
+
+            listContainer.appendChild(item);
+        });
+    }
+
+    // Select document
+    function selectDocument(doc) {
+        if (unsavedChanges) {
+            if (!confirm('You have unsaved changes. Do you want to save them before switching?')) {
+                return;
+            }
+            saveDraft();
+        }
+
+        currentDocument = doc;
+        renderDocumentList();
+
+
+        if (doc.qaStatus < 3) {
+            showLoadingState('Generating Q&A pairs for this document...');
+            // Set up polling to check when generation is complete
+            startPollingForQA(doc.id);
+            return;
+        }
+
+        showEditor(doc);
+    }
+
+    // Show editor
+    function showEditor(doc) {
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('editorContent').style.display = 'block';
+
+        document.getElementById('editorTitle').textContent = doc.name;
+        renderQAPairs(doc.qaPairs);
+    }
+
+    // Render Q&A pairs
+    function renderQAPairs(qaPairs) {
+        const qaList = document.getElementById('qaList');
+        qaList.innerHTML = '';
+
+        qaPairs.forEach((qa, index) => {
+            const qaItem = createQAItem(qa, index + 1);
+            qaList.appendChild(qaItem);
+        });
+    }
+
+    // Create Q&A item
+    function createQAItem(qa, number) {
+        const item = document.createElement('div');
+        item.className = 'qa-item';
+        item.innerHTML = `
+                <div class="qa-header">
+                    <span class="qa-number">Q&A #${number}</span>
+                    <div class="qa-actions">
+                        <button class="icon-btn" onclick="regenerateQA(${qa.id})" title="Regenerate">
+                            🔄
+                        </button>
+                        <button class="icon-btn delete" onclick="deleteQA(${qa.id})" title="Delete">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+                <div class="qa-content">
+                    <div class="qa-field">
+                        <label class="qa-label">Question</label>
+                        <input type="text" class="qa-input" value="${qa.question}"
+                               onchange="updateQA(${qa.id}, 'question', this.value)"
+                               placeholder="Enter question...">
+                    </div>
+                    <div class="qa-field">
+                        <label class="qa-label">Answer</label>
+                        <textarea class="qa-textarea"
+                                  onchange="updateQA(${qa.id}, 'answer', this.value)"
+                                  placeholder="Enter answer...">${qa.answer}</textarea>
+                    </div>
+                </div>
+            `;
+        return item;
+    }
+
+    // Show loading state
+    function showLoadingState(message) {
+        document.getElementById('editorContent').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'flex';
+
+        // Add message to loading state
+        const loadingState = document.getElementById('loadingState');
+        loadingState.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px; color: rgba(255, 255, 255, 0.7);">${message}</p>
+                </div>
+            `;
+    }
+
+    // Poll for Q&A generation completion
+    let pollingInterval = null;
+
+    function startPollingForQA(docId) {
+        // Clear any existing polling
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+
+        pollingInterval = setInterval(() => {
+            // Simulate checking generation status
+            // In real implementation, this would be an API call
+            const doc = documents.find(d => d.id === docId);
+
+        }, 2000);
+    }
+
+    // Generate sample Q&As for demo
+    function generateSampleQAs() {
+        return Array.from({length: 10}, (_, i) => ({
+            id: Date.now() + i,
+            question: `Sample question ${i + 1} about the document content?`,
+            answer: `This is a sample answer ${i + 1} that provides detailed information about the topic discussed in the document.`
+        }));
+    }
+
+    // Update Q&A
+    function updateQA(id, field, value) {
+        if (!currentDocument) return;
+
+        const qa = currentDocument.qaPairs.find(q => q.id === id);
+        if (qa) {
+            qa[field] = value;
+            unsavedChanges = true;
+            updateLastSaved();
+        }
+    }
+
+    // Delete Q&A
+    function deleteQA(id) {
+        if (!confirm('Are you sure you want to delete this Q&A pair?')) return;
+
+        if (currentDocument) {
+            currentDocument.qaPairs = currentDocument.qaPairs.filter(qa => qa.id !== id);
+            renderQAPairs(currentDocument.qaPairs);
+            unsavedChanges = true;
+            updateLastSaved();
+        }
+    }
+
+    // Add new Q&A
+    function addNewQA() {
+        if (!currentDocument) return;
+
+        const newQA = {
+            id: Date.now(),
+            question: '',
+            answer: ''
+        };
+
+        currentDocument.qaPairs.push(newQA);
+        renderQAPairs(currentDocument.qaPairs);
+
+        // Focus on the new question input
+        setTimeout(() => {
+            const inputs = document.querySelectorAll('.qa-input');
+            inputs[inputs.length - 1].focus();
+        }, 100);
+
+        unsavedChanges = true;
+        updateLastSaved();
+    }
+
+    // Regenerate single Q&A
+    async function regenerateQA(id) {
+        showNotification('Regenerating Q&A pair...', 'info');
+
+        // Simulate API call
+        setTimeout(() => {
+        }, 1000);
+    }
+
+    // Regenerate all Q&As
+    async function regenerateAll() {
+        if (!confirm('This will regenerate all Q&A pairs. Continue?')) return;
+
+        document.getElementById('loadingState').style.display = 'flex';
+        document.getElementById('qaList').style.display = 'none';
+
+        // Simulate API call
+        setTimeout(() => {
+            showNotification('All Q&A pairs regenerated', 'success');
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('qaList').style.display = 'block';
+            unsavedChanges = true;
+        }, 2000);
+    }
+
+    // Save draft
+    async function saveDraft() {
+        if (!currentDocument || !unsavedChanges) return;
+
+        showNotification('Saving draft...', 'info');
+
+        await fetch(`/api/updateJSON/${uuid}/qa_files/${currentDocument["qaFileName"]}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(currentDocument["qaPairs"].map(qa => [qa.question, qa.answer]))
+        })
+        unsavedChanges = false;
+        updateLastSaved();
+        showNotification('Draft saved successfully', 'success');
+    }
+
+    // Auto-save functionality
+    function setupAutoSave() {
+        setInterval(() => {
+            if (unsavedChanges) {
+                saveDraft();
+            }
+        }, 30000); // Auto-save every 30 seconds
+    }
+
+    // Update last saved time
+    function updateLastSaved() {
+        const lastSavedEl = document.getElementById('lastSaved');
+        if (unsavedChanges) {
+            lastSavedEl.textContent = 'Last saved: Unsaved changes';
+            lastSavedEl.style.color = '#fee140';
+        } else {
+            lastSavedEl.textContent = 'Last saved: Just now';
+            lastSavedEl.style.color = 'rgba(255, 255, 255, 0.6)';
+        }
+    }
+
+    // Skip document
+    function skipDocument() {
+        if (!currentDocument) return;
+
+        const nextDoc = documents.find(d => d.qaStatus === 3 && d.id !== currentDocument.id);
+        if (nextDoc) {
+            selectDocument(nextDoc);
+        } else {
+            showNotification('No more documents ready for review', 'info');
+        }
+    }
+
+    // Approve and next
+    function approveAndNext() {
+        if (!currentDocument) return;
+
+        saveDraft();
+        currentDocument.qaStatus = 4;
+
+        fetch("/api/updateSubtask", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "subtask_id": currentDocument.id,
+                "step": 4
+            })
+        }).then(response => response.json())
+          .then(data => {
+              console.log('Status updated:', data);
+          }).catch(error => {
+              console.error('Error updating status:', error);
+          });
+
+        renderDocumentList();
+
+        const nextDoc = documents.find(d => d.qaStatus === 3);
+        if (nextDoc) {
+            selectDocument(nextDoc);
+            showNotification('Document approved. Moving to next...', 'success');
+        } else {
+            const generatingDocs = documents.filter(d => d.qaStatus < 3);
+            if (generatingDocs.length > 0) {
+                showEmptyState(`All available documents reviewed! ${generatingDocs.length} documents are still generating Q&As.`);
+            } else {
+                showEmptyState('All documents reviewed! Click "Finalize All" to create embeddings.');
+            }
+            showNotification('All available documents reviewed!', 'success');
+        }
+    }
+
+    // Finalize all and create embeddings
+    function finalizeAll() {
+        const pendingDocs = documents.filter(d => d.qaStatus === 3);
+        const generatingDocs = documents.filter(d => d.qaStatus < 3);
+
+        if (generatingDocs.length > 0) {
+            if (!confirm(`${generatingDocs.length} documents are still generating Q&As. You can finalize the reviewed documents now and process the remaining ones later. Continue?`)) {
+                return;
+            }
+        }
+
+        if (pendingDocs.length > 0) {
+            if (!confirm(`You have ${pendingDocs.length} documents still pending review. Finalize anyway?`)) {
+                return;
+            }
+        }
+
+        showNotification('Creating embeddings for all reviewed documents...', 'info');
+
+        Promise.all(
+            pendingDocs.map(d =>
+                fetch("/api/updateSubtask", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "subtask_id": d.id,
+                        "step": 4
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(`Status updated for document ${d.name}:`, data);
+                    })
+                    .catch(error => {
+                        console.error(`Error updating status for document ${d.name}:`, error);
+                    })
+            )
+        ).then(async () => {
+            await fetch("/api/runAllEmbed", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "uuid": uuid
+                })
+            })
+            window.location.href = '/status?id=' + uuid;
+        });
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                color: #fff;
+                font-weight: 500;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+
+        if (type === 'success') {
+            notification.style.background = 'rgba(46, 213, 115, 0.9)';
+        } else if (type === 'error') {
+            notification.style.background = 'rgba(255, 107, 107, 0.9)';
+        } else {
+            notification.style.background = 'rgba(102, 126, 234, 0.9)';
+        }
+
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animations
+    const style = document.createElement('style');
+    style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+    document.head.appendChild(style);
+
+    // Handle page leave warning
+    window.addEventListener('beforeunload', (e) => {
+        if (unsavedChanges) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+</script>
+</body>
+</html>

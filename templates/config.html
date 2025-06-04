@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .config-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .config-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .config-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .config-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .qdrant-icon {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+        }
+
+        .tidb-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .embedding-icon {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .chat-icon {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            transition: color 0.3s ease;
+        }
+
+        .form-group:focus-within label {
+            color: #667eea;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            color: #667eea;
+        }
+
+        .save-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .save-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .save-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .save-btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: rgba(46, 213, 115, 0.9);
+            color: #fff;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 5px 20px rgba(46, 213, 115, 0.3);
+        }
+
+        .status-message.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .config-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Service Configuration</h1>
+
+    <form id="configForm">
+        <div class="config-grid">
+            <!-- Qdrant Configuration -->
+            <div class="config-card">
+                <div class="card-header">
+                    <div class="card-icon qdrant-icon">🗄️</div>
+                    <h2>Qdrant</h2>
+                </div>
+                <div class="form-group">
+                    <label for="qdrant-url">Database URL</label>
+                    <input required type="url" id="qdrant-url" name="qdrant-url" placeholder="https://your-qdrant-instance.com">
+                </div>
+                <div class="form-group">
+                    <label for="qdrant-api-key">API Key</label>
+                    <div class="password-toggle">
+                        <input type="password" id="qdrant-api-key" name="qdrant-api-key" placeholder="Enter your API key">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('qdrant-api-key')">👁️</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="qdrant-collection">Collection Name</label>
+                    <input required type="text" id="qdrant-collection" name="qdrant-collection" placeholder="my-collection">
+                </div>
+            </div>
+
+            <!-- TiDB Configuration -->
+            <div class="config-card">
+                <div class="card-header">
+                    <div class="card-icon tidb-icon">🔷</div>
+                    <h2>TiDB</h2>
+                </div>
+                <div class="form-group">
+                    <label for="tidb-url">Database URL</label>
+                    <input required type="url" id="tidb-url" name="tidb-url" placeholder="mysql://user:pass@host:port/db">
+                </div>
+                <div class="form-group">
+                    <label for="tidb-api-key">API Key</label>
+                    <div class="password-toggle">
+                        <input type="password" id="tidb-api-key" name="tidb-api-key" placeholder="Enter your API key">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('tidb-api-key')">👁️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Embedding Service Configuration -->
+            <div class="config-card">
+                <div class="card-header">
+                    <div class="card-icon embedding-icon">🧮</div>
+                    <h2>Embedding Service</h2>
+                </div>
+                <div class="form-group">
+                    <label for="embedding-base-url">Base URL</label>
+                    <input required type="url" id="embedding-base-url" name="embedding-base-url" placeholder="https://api.openai.com">
+                </div>
+                <div class="form-group">
+                    <label for="embedding-model">Model Name</label>
+                    <input required type="text" id="embedding-model" name="embedding-model" placeholder="text-embedding-ada-002">
+                </div>
+                <div class="form-group">
+                    <label for="embedding-vector-size">Vector Size</label>
+                    <input required type="number" id="embedding-vector-size" name="embedding-vector-size" placeholder="768" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="embedding-api-key">API Key</label>
+                    <div class="password-toggle">
+                        <input type="password" id="embedding-api-key" name="embedding-api-key" placeholder="Enter your API key">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('embedding-api-key')">👁️</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Service Configuration -->
+            <div class="config-card">
+                <div class="card-header">
+                    <div class="card-icon chat-icon">💬</div>
+                    <h2>Chat Service</h2>
+                </div>
+                <div class="form-group">
+                    <label for="chat-base-url">Base URL</label>
+                    <input required type="url" id="chat-base-url" name="chat-base-url" placeholder="https://api.openai.com">
+                </div>
+                <div class="form-group">
+                    <label for="chat-model">Model Name</label>
+                    <input required type="text" id="chat-model" name="chat-model" placeholder="gpt-3.5-turbo">
+                </div>
+                <div class="form-group">
+                    <label for="chat-api-key">API Key</label>
+                    <div class="password-toggle">
+                        <input type="password" id="chat-api-key" name="chat-api-key" placeholder="Enter your API key">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('chat-api-key')">👁️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="save-section">
+            <button type="submit" class="save-btn">Save Configuration</button>
+        </div>
+    </form>
+
+    <div id="statusMessage" class="status-message">
+        Configuration saved successfully!
+    </div>
+</div>
+
+<script>
+    const secret = 'gaiabase';
+
+    let submitStatus = false;
+
+    async function encrypt(obj) {
+        try {
+            const response = await fetch('/api/encrypt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(obj)
+            })
+            const encryptData = await response.json()
+            return encryptData.encrypted;
+        } catch (error) {
+            console.error('Encryption failed:', error);
+            return {};
+        }
+    }
+
+    async function decrypt(data) {
+        try {
+            const response = await fetch('/api/decrypt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    encrypted: data
+                })
+            })
+            const decryptData = await response.json()
+            return decryptData.decrypted;
+        } catch (error) {
+            console.error('Decryption failed:', error);
+            return {};
+        }
+    }
+
+    // Toggle password visibility
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const type = field.getAttribute('type') === 'password' ? 'text' : 'password';
+        field.setAttribute('type', type);
+    }
+
+    // Load saved configuration
+    async function loadConfiguration() {
+        const stored = localStorage.getItem('gaiabaseConfig');
+        const savedConfig = await decrypt(stored);
+        if (savedConfig && typeof savedConfig === 'object' && Object.keys(savedConfig).length > 0) {
+            Object.keys(savedConfig).forEach(key => {
+                const field = document.getElementById(key);
+                if (field) {
+                    field.value = savedConfig[key];
+                }
+            });
+        }
+    }
+
+    // Save configuration
+    document.getElementById('configForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (submitStatus) {
+            return; // Prevent multiple submissions
+        }
+
+        submitStatus = true;
+        document.querySelector(".save-btn").disabled = true;
+        document.querySelector(".save-btn").innerText = "On saving...";
+
+        const formData = new FormData(this);
+        const config = {};
+
+        for (let [key, value] of formData.entries()) {
+            config[key] = value;
+        }
+
+        const encrypted = await encrypt(config);
+        if (encrypted) {
+            localStorage.setItem('gaiabaseConfig', encrypted);
+        }
+
+        try {
+            await fetch('/api/createQdrantCollection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    qdrant_url: config['qdrant-url'],
+                    qdrant_api_key: config['qdrant-api-key'],
+                    collection_name: config['qdrant-collection'],
+                    vector_size: config['embedding-vector-size']
+                })
+            })
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.classList.add('show');
+            window.location.href = "/process";
+        } catch (error) {
+            console.error('Decryption failed:', error);
+            submitStatus = false;
+            return {};
+        }
+    });
+
+    // Load configuration on page load
+    window.addEventListener('DOMContentLoaded', loadConfiguration);
+
+    // Add input animations
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.parentElement.style.transform = 'scale(1.02)';
+        });
+
+        input.addEventListener('blur', function() {
+            this.parentElement.parentElement.style.transform = 'scale(1)';
+        });
+    });
+</script>
+</body>
+</html>
