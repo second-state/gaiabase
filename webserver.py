@@ -52,8 +52,6 @@ q_gen_embed = Queue('step3_gen_embed', connection=redis_conn)
 
 nest_asyncio.apply()
 
-secret = 'gaiabase'
-
 
 @app.route("/")
 def index():

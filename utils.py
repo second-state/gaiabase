@@ -1,3 +1,8 @@
+import base64
+import json
+
+secret = 'gaiabase'
+
 def encrypt_data(obj):
     json_str = json.dumps(obj)
     base64_bytes = base64.b64encode(json_str.encode('utf-8'))
