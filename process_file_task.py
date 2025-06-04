@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from http.cookiejar import CookieJar
 
 from sql_query import get_task_info_by_subtask_id, create_subtask, update_subtask
-from webserver import decrypt_data
+from utils import decrypt_data
 from gen_qa_pair import gen_pair
 
 # 初始化 Redis 和队列
