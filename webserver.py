@@ -362,6 +362,25 @@ def update_subtask_route():
     return jsonify({"message": "Subtask updated successfully", "subtask_id": result})
 
 
+def find_corresponding_file(filename):
+    # 去掉 `_qa.json` 得到原始文件名
+    if not filename.endswith('_qa.json'):
+        return None
+    base_name = filename[:-8]  # 去掉 `_qa.json`
+
+    # 判断是否是 pdf 文件的特例
+    if base_name.endswith('.pdf'):
+        target_name = base_name + '.md'
+    else:
+        target_name = base_name + '.txt'
+
+    # 构造完整路径
+    target_path = os.path.join("processed_files", target_name)
+
+    # 检查文件是否存在
+    return target_path if os.path.exists(target_path) else None
+
+
 @app.route('/api/runAllEmbed', methods=['POST'])
 def run_all_embed():
     data = request.get_json()
@@ -379,16 +398,29 @@ def run_all_embed():
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
+                full_text = ""
+                if find_corresponding_file(file):
+                    with open(find_corresponding_file(file), 'r', encoding='utf-8') as f:
+                        full_text = f.read()
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         qa_data = json.load(f)
                         for qa in qa_data:
-                            q_gen_embed.enqueue(gen_embed, qa[0], qa[1], decrypt_user_config["embedding-base-url"],
-                                                decrypt_user_config["embedding-model"],
-                                                decrypt_user_config["embedding-api-key"],
-                                                decrypt_user_config["qdrant-url"],
-                                                decrypt_user_config["qdrant-api-key"],
-                                                decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                            if full_text:
+                                for text in qa:
+                                    q_gen_embed.enqueue(gen_embed, text, full_text, decrypt_user_config["embedding-base-url"],
+                                                        decrypt_user_config["embedding-model"],
+                                                        decrypt_user_config["embedding-api-key"],
+                                                        decrypt_user_config["qdrant-url"],
+                                                        decrypt_user_config["qdrant-api-key"],
+                                                        decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                            else:
+                                q_gen_embed.enqueue(gen_embed, qa[0], qa[1], decrypt_user_config["embedding-base-url"],
+                                                    decrypt_user_config["embedding-model"],
+                                                    decrypt_user_config["embedding-api-key"],
+                                                    decrypt_user_config["qdrant-url"],
+                                                    decrypt_user_config["qdrant-api-key"],
+                                                    decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
 
