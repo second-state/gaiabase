@@ -30,9 +30,9 @@ def complete_embed_url(base_url):
     return urljoin(base_url + '/', 'v1/embeddings')
 
 
-def gen_embed(question, answer, embedding_base_url, embedding_model, embedding_api_key, qdrant_url, qdrant_api_key,
+def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedding_api_key, qdrant_url, qdrant_api_key,
               qdrant_collection):
-    text = f"{question} {answer}"
+    text = f"{short_text} {full_text}"
     headers = {
         "Authorization": f"Bearer {embedding_api_key}",
         "Content-Type": "application/json"
@@ -67,8 +67,8 @@ def gen_embed(question, answer, embedding_base_url, embedding_model, embedding_a
                     "id": point_id,
                     "vector": normalize_vector(embedding).tolist(),
                     "payload": {
-                        "question": question,
-                        "answer": answer
+                        "short_text": short_text,
+                        "full_text": full_text
                     }
                 }
             ]

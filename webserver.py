@@ -362,7 +362,7 @@ def update_subtask_route():
     return jsonify({"message": "Subtask updated successfully", "subtask_id": result})
 
 
-def find_corresponding_file(filename):
+def find_corresponding_file(filename, uuid):
     # 去掉 `_qa.json` 得到原始文件名
     if not filename.endswith('_qa.json'):
         return None
@@ -375,7 +375,7 @@ def find_corresponding_file(filename):
         target_name = base_name + '.txt'
 
     # 构造完整路径
-    target_path = os.path.join("processed_files", target_name)
+    target_path = os.path.join(uuid, "processed_files", target_name)
 
     # 检查文件是否存在
     return target_path if os.path.exists(target_path) else None
@@ -399,12 +399,13 @@ def run_all_embed():
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
                 full_text = ""
-                if find_corresponding_file(file):
-                    with open(find_corresponding_file(file), 'r', encoding='utf-8') as f:
+                if find_corresponding_file(file, uuid):
+                    with open(find_corresponding_file(file, uuid), 'r', encoding='utf-8') as f:
                         full_text = f.read()
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         qa_data = json.load(f)
+                        print(full_text)
                         for qa in qa_data:
                             if full_text:
                                 for text in qa:
