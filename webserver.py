@@ -408,20 +408,29 @@ def run_all_embed():
                         print(full_text)
                         for qa in qa_data:
                             if full_text:
+                                for i in range(2):
+                                    if i == 0:
+                                        q_gen_embed.enqueue(gen_embed, qa[0], full_text, decrypt_user_config["embedding-base-url"],
+                                                            decrypt_user_config["embedding-model"],
+                                                            decrypt_user_config["embedding-api-key"],
+                                                            decrypt_user_config["qdrant-url"],
+                                                            decrypt_user_config["qdrant-api-key"],
+                                                            decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                                    else:
+                                        q_gen_embed.enqueue(gen_embed, qa[0] + "\n" + qa[1], full_text, decrypt_user_config["embedding-base-url"],
+                                                            decrypt_user_config["embedding-model"],
+                                                            decrypt_user_config["embedding-api-key"],
+                                                            decrypt_user_config["qdrant-url"],
+                                                            decrypt_user_config["qdrant-api-key"],
+                                                            decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                            else:
                                 for text in qa:
-                                    q_gen_embed.enqueue(gen_embed, text, full_text, decrypt_user_config["embedding-base-url"],
+                                    q_gen_embed.enqueue(gen_embed, text, qa[0] + "\n" + qa[1], decrypt_user_config["embedding-base-url"],
                                                         decrypt_user_config["embedding-model"],
                                                         decrypt_user_config["embedding-api-key"],
                                                         decrypt_user_config["qdrant-url"],
                                                         decrypt_user_config["qdrant-api-key"],
                                                         decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
-                            else:
-                                q_gen_embed.enqueue(gen_embed, qa[0], qa[1], decrypt_user_config["embedding-base-url"],
-                                                    decrypt_user_config["embedding-model"],
-                                                    decrypt_user_config["embedding-api-key"],
-                                                    decrypt_user_config["qdrant-url"],
-                                                    decrypt_user_config["qdrant-api-key"],
-                                                    decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
 
