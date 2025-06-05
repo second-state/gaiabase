@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import requests
 
@@ -19,6 +20,19 @@ def complete_url(base_url):
 
     # 其他情况，拼接完整路径
     return urljoin(base_url + '/', 'v1/chat/completions')
+
+
+def extract_json(text):
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    if match:
+        json_str = match.group()
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print("JSON 解析失败:", e)
+    else:
+        print("未找到 JSON 数据")
+    return None
 
 
 def gen_pair(user_input, subtask_id, question_prompt, answer_prompt, base_url="https://qwen7b.gaia.domains/v1", node_model="qwen7b",
@@ -74,11 +88,10 @@ def gen_pair(user_input, subtask_id, question_prompt, answer_prompt, base_url="h
                     response_data = response.json()
                     content = response_data["choices"][0]["message"]["content"]
                     print(content)
+                    content = extract_json(content)
+                    print("fixed content:", content)
                     if content:
-                        if content.startswith("```json") and content.endswith("```"):
-                            content = content[7:-3].strip()
-                        data = json.loads(content)
-                        qa_pairs = data.get("qa_pairs", [])
+                        qa_pairs = content.get("qa_pairs", [])
                         print([(qa["question"], qa["answer"]) for qa in qa_pairs])
                         all_qa_pairs.extend([(qa["question"], qa["answer"]) for qa in qa_pairs])
                 except Exception as e:
