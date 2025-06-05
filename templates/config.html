@@ -278,7 +278,7 @@
                 </div>
                 <div class="form-group">
                     <label for="qdrant-url">Database URL</label>
-                    <input required type="url" id="qdrant-url" name="qdrant-url" placeholder="https://your-qdrant-instance.com">
+                    <input required type="url" id="qdrant-url" name="qdrant-url" pattern="https?://.*" placeholder="https://your-qdrant-instance.com">
                 </div>
                 <div class="form-group">
                     <label for="qdrant-api-key">API Key</label>
@@ -301,7 +301,7 @@
                 </div>
                 <div class="form-group">
                     <label for="tidb-url">Database URL</label>
-                    <input required type="url" id="tidb-url" name="tidb-url" placeholder="mysql://user:pass@host:port/db">
+                    <input required type="url" id="tidb-url" name="tidb-url" pattern="mysql://.*" placeholder="mysql://user:pass@host:port/db">
                 </div>
                 <div class="form-group">
                     <label for="tidb-api-key">API Key</label>
@@ -320,7 +320,7 @@
                 </div>
                 <div class="form-group">
                     <label for="embedding-base-url">Base URL</label>
-                    <input required type="url" id="embedding-base-url" name="embedding-base-url" placeholder="https://api.openai.com">
+                    <input required type="url" id="embedding-base-url" name="embedding-base-url" pattern="https?://.*" placeholder="https://api.openai.com">
                 </div>
                 <div class="form-group">
                     <label for="embedding-model">Model Name</label>
@@ -347,7 +347,7 @@
                 </div>
                 <div class="form-group">
                     <label for="chat-base-url">Base URL</label>
-                    <input required type="url" id="chat-base-url" name="chat-base-url" placeholder="https://api.openai.com">
+                    <input required type="url" id="chat-base-url" name="chat-base-url" pattern="https?://.*" placeholder="https://api.openai.com">
                 </div>
                 <div class="form-group">
                     <label for="chat-model">Model Name</label>
