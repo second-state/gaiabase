@@ -797,22 +797,76 @@
     const uuid = params.get("id");
 
     // Sample data
-    const documents = [
-        { id: 1, name: 'Document1.pdf', type: 'file', embedding: 'completed', tidb: 'completed', status: 'done' },
-        { id: 2, name: 'Article.txt', type: 'file', embedding: 'completed', tidb: 'completed', status: 'done' },
-        { id: 3, name: 'Report.doc', type: 'file', embedding: 'processing', tidb: 'waiting', status: 'processing' },
-        { id: 4, name: 'example.com', type: 'url', embedding: 'queued', tidb: 'waiting', status: 'queued' },
-        { id: 5, name: 'Manual.pdf', type: 'file', embedding: 'failed', tidb: 'none', status: 'error' },
-        { id: 6, name: 'Research.txt', type: 'file', embedding: 'processing', tidb: 'waiting', status: 'processing' },
-    ];
+    const documents = [];
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
+        query_documents()
         renderStatusTable();
         startAutoRefresh();
         checkForErrors();
         updateProgressBars();
     });
+
+    function query_documents() {
+        fetch('/api/getAllSubtaskByUuid', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "uuid": uuid
+            })
+        })
+            .then(response => response.json())
+            .then(async data => {
+                const formatData = await Promise.all(data.map(async d => {
+                    let qa_file_name = d[7];
+                    if (d[8] !== 4) {
+                        qa_file_name += '_qa.json';
+                    }
+                    let sizeData = 0
+                    try{
+                        const sizeRes = await fetch(`/api/filesize/${d[1]}/original_files/${d[7]}`);
+                        sizeData = await sizeRes.json();
+                    }catch (e) {
+                        console.error(e);
+                    }
+
+                    const qaRes = await fetch(`/api/fileContent/${d[1]}/qa_files/${qa_file_name}`);
+                    let qaPairs = []
+                    try{
+                        const qaData = await qaRes.json();
+                        if (qaData) {
+                            qaPairs = qaData.map((qaList, index) => ({
+                                id: index,
+                                question: qaList[0],
+                                answer: qaList[1]
+                            }));
+                        }
+                    }catch (e) {
+                        console.error(e);
+                    }
+
+                    return {
+                        id: d[0],
+                        name: d[6],
+                        qaFileName: qa_file_name,
+                        type: d[8],
+                        charCount: sizeData.size,
+                        status: d[3],
+                        qaStatus: d[2],
+                        qaCount: qaPairs.length,
+                        qaPairs: qaPairs
+                    };
+                }));
+
+                documents.length = 0; // Clear existing documents
+                documents.push(...formatData); // Add fetched documents
+                renderStatusTable();
+            })
+            .catch(error => console.error('Error fetching documents:', error));
+    }
 
     // Render status table
     function renderStatusTable() {
@@ -838,7 +892,7 @@
     }
 
     // Get status badge HTML
-    function getStatusBadge(status) {
+    function getStatusBadge(step, status) {
         const badges = {
             'completed': '<span class="status-badge success">✅ Completed</span>',
             'processing': '<span class="status-badge processing"><span class="loading-spinner"></span> Processing</span>',
@@ -852,11 +906,11 @@
 
     // Get overall status
     function getOverallStatus(status) {
+        console.log(status)
         const statuses = {
-            'done': '<span style="color: #2ed573;">Done</span>',
-            'processing': '<span style="color: #667eea;">In Progress</span>',
-            'queued': '<span style="color: rgba(255, 255, 255, 0.6);">Queued</span>',
-            'error': '<span style="color: #ff6b6b;">Error</span>'
+            '1': '<span style="color: #2ed573;">Done</span>',
+            '0': '<span style="color: #667eea;">In Progress</span>',
+            '-1': '<span style="color: #ff6b6b;">Error</span>'
         };
         return statuses[status] || '-';
     }

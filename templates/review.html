@@ -273,6 +273,11 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
 
+        .status-badge.error {
+            background: rgba(234, 102, 102, 0.2);
+            color: #ea6666;
+        }
+
         @keyframes pulse {
             0%, 100% {
                 opacity: 1;
@@ -591,10 +596,6 @@
 <nav class="navbar">
     <div class="nav-content">
         <h1 style="color: #fff; font-size: 1.5rem; font-weight: 600;">Q&A Review & Edit</h1>
-        <div class="user-info">
-            <span style="color: rgba(255, 255, 255, 0.6);">Processing Queue: <span
-                    id="queueCount">3</span> pending</span>
-        </div>
     </div>
 </nav>
 
@@ -693,7 +694,6 @@
 <div class="bottom-actions">
     <div class="actions-content">
         <div class="action-info">
-            <span>Changes are auto-saved</span>
             <span id="lastSaved">Last saved: Just now</span>
         </div>
         <div class="action-buttons">
@@ -706,7 +706,7 @@
 
 <script>
     // Sample data
-    const documents = [];
+    let documents = [];
 
     let currentDocument = null;
     let unsavedChanges = false;
@@ -758,10 +758,11 @@
                     if (d[8] !== 4) {
                         qa_file_name += '_qa.json';
                     }
-                    let sizeData = 0
+                    let countData = 0
                     try{
-                        const sizeRes = await fetch(`/api/filesize/${d[1]}/original_files/${d[7]}`);
-                        sizeData = await sizeRes.json();
+                        const processedFileName = d[7] + (d[7].endsWith('.pdf') ? '.md' : '.txt');
+                        const countRes = await fetch(`/api/fileWords/${d[1]}/processed_files/${processedFileName}`);
+                        countData = await countRes.json();
                     }catch (e) {
                         console.error(e);
                     }
@@ -788,7 +789,7 @@
                         name: d[6],
                         qaFileName: qa_file_name,
                         type: d[8],
-                        charCount: sizeData.size,
+                        charCount: countData.char_count,
                         status: d[3],
                         qaStatus: d[2],
                         qaCount: qaPairs.length,
@@ -844,12 +845,23 @@
             item.onclick = () => selectDocument(doc);
 
             let statusBadge = '';
-            if (doc.qaStatus < 3) {
-                statusBadge = '<span class="status-badge generating">⚡ Generating...</span>';
-            } else if (doc.qaStatus === 3) {
-                statusBadge = '<span class="status-badge pending">⏳ Review needed</span>';
-            } else if (doc.qaStatus === 4) {
-                statusBadge = '<span class="status-badge completed">✓ Approved</span>';
+            if (doc.status === -1) {
+
+                if (doc.qaStatus === 0) {
+                    statusBadge = '<span class="status-badge error">❌ Upload Error</span>';
+                } else if (doc.qaStatus === 1) {
+                    statusBadge = '<span class="status-badge error">❌ Process Error</span>';
+                } else if (doc.qaStatus === 2) {
+                    statusBadge = '<span class="status-badge error">❌ Generating Q&A Error</span>';
+                }
+            }else {
+                if (doc.qaStatus < 3) {
+                    statusBadge = '<span class="status-badge generating">⚡ Generating...</span>';
+                } else if (doc.qaStatus === 3) {
+                    statusBadge = '<span class="status-badge pending">⏳ Review needed</span>';
+                } else if (doc.qaStatus === 4) {
+                    statusBadge = '<span class="status-badge completed">✓ Approved</span>';
+                }
             }
 
             item.innerHTML = `
@@ -880,12 +892,16 @@
         currentDocument = doc;
         renderDocumentList();
 
+        if (doc.status === -1) {
+            showEditor();
+        } else {
+            if (doc.qaStatus < 3) {
+                showLoadingState('Generating Q&A pairs for this document...');
+                // Set up polling to check when generation is complete
+                startPollingForQA(doc.id);
+                return;
+            }
 
-        if (doc.qaStatus < 3) {
-            showLoadingState('Generating Q&A pairs for this document...');
-            // Set up polling to check when generation is complete
-            startPollingForQA(doc.id);
-            return;
         }
 
         showEditor(doc);
@@ -920,9 +936,6 @@
                 <div class="qa-header">
                     <span class="qa-number">Q&A #${number}</span>
                     <div class="qa-actions">
-                        <button class="icon-btn" onclick="regenerateQA(${qa.id})" title="Regenerate">
-                            🔄
-                        </button>
                         <button class="icon-btn delete" onclick="deleteQA(${qa.id})" title="Delete">
                             🗑️
                         </button>
@@ -979,15 +992,6 @@
         }, 2000);
     }
 
-    // Generate sample Q&As for demo
-    function generateSampleQAs() {
-        return Array.from({length: 10}, (_, i) => ({
-            id: Date.now() + i,
-            question: `Sample question ${i + 1} about the document content?`,
-            answer: `This is a sample answer ${i + 1} that provides detailed information about the topic discussed in the document.`
-        }));
-    }
-
     // Update Q&A
     function updateQA(id, field, value) {
         if (!currentDocument) return;
@@ -1035,29 +1039,43 @@
         updateLastSaved();
     }
 
-    // Regenerate single Q&A
-    async function regenerateQA(id) {
-        showNotification('Regenerating Q&A pair...', 'info');
-
-        // Simulate API call
-        setTimeout(() => {
-        }, 1000);
-    }
-
     // Regenerate all Q&As
     async function regenerateAll() {
         if (!confirm('This will regenerate all Q&A pairs. Continue?')) return;
 
+        currentDocument.qaPairs = [];
+        currentDocument.qaStatus = 2;
+        documents = documents.map(d => {
+            if (d.id === currentDocument.id) {
+                d.qaPairs = [];
+                d.qaStatus = 2;
+            }
+            return d;
+        });
+        renderDocumentList();
+        updateStats();
+
         document.getElementById('loadingState').style.display = 'flex';
         document.getElementById('qaList').style.display = 'none';
 
-        // Simulate API call
-        setTimeout(() => {
-            showNotification('All Q&A pairs regenerated', 'success');
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('qaList').style.display = 'block';
-            unsavedChanges = true;
-        }, 2000);
+        fetch("/api/regenerateQAs", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "uuid": uuid,
+                "qaFileName": currentDocument.qaFileName
+            })
+        }).then(response => response.json())
+          .then(data => {
+              console.log('Regeneration started:', data);
+              showNotification('Q&A regeneration started. Please wait...', 'info');
+              startPollingForQA(currentDocument.id);
+          }).catch(error => {
+              console.error('Error starting regeneration:', error);
+              showNotification('Error starting Q&A regeneration', 'error');
+          });
     }
 
     // Save draft

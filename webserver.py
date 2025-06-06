@@ -281,6 +281,38 @@ def processing_all_data():
     return "Success", 200
 
 
+@app.route("/api/regenerateQAs", methods=["POST"])
+def regenerate_qas():
+    data = request.get_json()
+    uuid = data.get("uuid")
+    if not uuid:
+        return jsonify({"error": "UUID is required"}), 400
+
+    task_info = get_task_info(uuid)
+    if not task_info:
+        return jsonify({"error": "Task not found"}), 404
+
+    user_config = task_info[3]
+    decrypt_user_config = decrypt_data(user_config)
+
+    qa_file_path = os.path.join(uuid, "qa_files", "Q&A_Input.json")
+    if not os.path.exists(qa_file_path):
+        return jsonify({"error": "Q&A Input file not found"}), 404
+
+    with open(qa_file_path, 'r', encoding='utf-8') as f:
+        qa_data = json.load(f)
+
+    for qa in qa_data:
+        q_gen_embed.enqueue(gen_embed, qa[0], qa[1], decrypt_user_config["embedding-base-url"],
+                            decrypt_user_config["embedding-model"],
+                            decrypt_user_config["embedding-api-key"],
+                            decrypt_user_config["qdrant-url"],
+                            decrypt_user_config["qdrant-api-key"],
+                            decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+
+    return jsonify({"message": "Q&As regeneration started"}), 200
+
+
 @app.route("/api/getAllSubtaskByUuid", methods=["POST"])
 def get_all_subtask_by_uuid():
     data = request.get_json()
@@ -302,6 +334,22 @@ def get_file_size(uuid, folder_name, filename):
         abort(404, description="File not found.")
     size = os.path.getsize(file_path)
     return jsonify({'filename': filename, 'size_bytes': size})
+
+
+@app.route('/api/fileWords/<uuid>/<folder_name>/<filename>')
+def get_file_word_count(uuid, folder_name, filename):
+    file_path = os.path.join(uuid, folder_name, filename)
+    if not os.path.isfile(file_path):
+        abort(404, description="File not found.")
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            word_count = len(content)
+    except Exception as e:
+        abort(500, description=f"Error reading file: {str(e)}")
+
+    return jsonify({'filename': filename, 'char_count': word_count})
 
 
 @app.route('/api/fileContent/<uuid>/<folder_name>/<filename>')
