@@ -28,23 +28,28 @@ FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 # d处理函数
 def task_qa(file_path, subtask_id):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        user_input = file.read().strip()
-    question_prompt, answer_prompt, split_length, user_config = get_task_info_by_subtask_id(subtask_id)
-    decrypt_user_config = decrypt_data(user_config)
-    qa_list = gen_pair(
-        user_input, subtask_id, question_prompt, answer_prompt,
-        decrypt_user_config["chat-base-url"],
-        decrypt_user_config["chat-model"],
-        decrypt_user_config["chat-api-key"],
-        split_length
-    )
-    output_path = Path(file_path).parent.parent / "qa_files" / f"{Path(file_path).stem}_qa.json"
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(qa_list, f, ensure_ascii=False, indent=2)
-    update_subtask(subtask_id, 3,0)
-    print(f"已将qa_list保存到: {output_path}")
-    return output_path
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            user_input = file.read().strip()
+        question_prompt, answer_prompt, split_length, user_config = get_task_info_by_subtask_id(subtask_id)
+        decrypt_user_config = decrypt_data(user_config)
+        qa_list = gen_pair(
+            user_input, subtask_id, question_prompt, answer_prompt,
+            decrypt_user_config["chat-base-url"],
+            decrypt_user_config["chat-model"],
+            decrypt_user_config["chat-api-key"],
+            split_length
+        )
+        output_path = Path(file_path).parent.parent / "qa_files" / f"{Path(file_path).stem}_qa.json"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(qa_list, f, ensure_ascii=False, indent=2)
+        update_subtask(subtask_id, 3,0)
+        print(f"已将qa_list保存到: {output_path}")
+        return output_path
+    except Exception as e:
+        update_subtask(subtask_id, 2, -1)
+        raise e
+
 
 
 # 各类任务
