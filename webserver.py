@@ -19,7 +19,7 @@ from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
-from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort
+from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort, Response
 from flask_socketio import SocketIO
 
 from sql_query import *
@@ -362,7 +362,9 @@ def get_file_content(uuid, folder_name, filename):
             data = json.load(f)
         return jsonify(data)
     except json.JSONDecodeError:
-        abort(400, description="File is not valid JSON.")
+        f.seek(0)  # 重置文件指针到开头
+        raw_content = f.read()
+        return Response(raw_content, mimetype='text/plain')
 
 
 @app.route('/api/updateJSON/<uuid>/<folder_name>/<filename>', methods=['POST'])
