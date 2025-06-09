@@ -915,7 +915,6 @@
         document.getElementById('editorContent').style.display = 'block';
         document.getElementById('editorTitle').textContent = doc.name;
         if(error) {
-            document.getElementById('qaList').style.display = 'none';
             document.getElementById('addQaBtn').style.display = 'none';
             fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.originalFileName}_err.txt`)
                 .then(response => response.text())
