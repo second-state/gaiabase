@@ -360,7 +360,6 @@ def get_file_content(uuid, folder_name, filename):
     if not os.path.isfile(file_path):
         abort(404, description="File not found.")
     try:
-        file_data
         with open(file_path, 'r', encoding='utf-8') as f:
             try:
                 data = json.load(f)
