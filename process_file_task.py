@@ -48,8 +48,10 @@ def task_qa(file_path, subtask_id):
         return output_path
     except Exception as e:
         update_subtask(subtask_id, 2, -1)
+        output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(e)
         raise e
-
 
 
 # 各类任务
@@ -141,6 +143,7 @@ def task_url(url, process_file_path):
 
 
 def task_txt(src_path, dest_dir, subtask_id):
+    print("进来了")
     try:
         dest_dir = Path(dest_dir)
         dest_dir.mkdir(parents=True, exist_ok=True)

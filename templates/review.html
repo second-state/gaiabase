@@ -679,7 +679,7 @@
                 <!-- Q&A items will be populated here -->
             </div>
 
-            <button class="btn add-qa-btn" onclick="addNewQA()">
+            <button id="addQaBtn" class="btn add-qa-btn" onclick="addNewQA()">
                 <span>➕</span> Add New Q&A Pair
             </button>
         </div>
@@ -718,15 +718,15 @@
 
     {#[#}
     {#    [#}
-    {#        22,#}
-    {#        "a53e834a-098d-4b8d-8a10-140ce902e925",#}
-    {#        3,#}
-    {#        0,#}
-    {#        "Wed, 04 Jun 2025 02:53:40 GMT",#}
-    {#        "Wed, 04 Jun 2025 02:55:30 GMT",#}
-    {#        "paper.pdf",#}
-    {#        "paper.pdf",#}
-    {#        1#}
+    {#0        22,#}
+    {#1        "a53e834a-098d-4b8d-8a10-140ce902e925",#}
+    {#2        3,#}
+    {#3        0,#}
+    {#4        "Wed, 04 Jun 2025 02:53:40 GMT",#}
+    {#5        "Wed, 04 Jun 2025 02:55:30 GMT",#}
+    {#6        "paper.pdf",#}
+    {#7        "paper.pdf",#}
+    {#8        1#}
     {#    ],#}
     {#    [#}
     {#        23,#}
@@ -754,13 +754,13 @@
             .then(response => response.json())
             .then(async data => {
                 const formatData = await Promise.all(data.map(async d => {
+                    const processedFileName = d[7] + (d[7].endsWith('.pdf') ? '.md' : '.txt');
                     let qa_file_name = d[7];
                     if (d[8] !== 4) {
                         qa_file_name += '_qa.json';
                     }
                     let countData = 0
                     try{
-                        const processedFileName = d[7] + (d[7].endsWith('.pdf') ? '.md' : '.txt');
                         const countRes = await fetch(`/api/fileWords/${d[1]}/processed_files/${processedFileName}`);
                         countData = await countRes.json();
                     }catch (e) {
@@ -792,8 +792,10 @@
                         charCount: countData.char_count,
                         status: d[3],
                         qaStatus: d[2],
+                        uuid: d[1],
                         qaCount: qaPairs.length,
-                        qaPairs: qaPairs
+                        qaPairs: qaPairs,
+                        processedFileName: processedFileName
                     };
                 }));
 
@@ -846,7 +848,6 @@
 
             let statusBadge = '';
             if (doc.status === -1) {
-
                 if (doc.qaStatus === 0) {
                     statusBadge = '<span class="status-badge error">❌ Upload Error</span>';
                 } else if (doc.qaStatus === 1) {
@@ -893,7 +894,7 @@
         renderDocumentList();
 
         if (doc.status === -1) {
-            showEditor();
+            showEditor(doc, true); // Show error state
         } else {
             if (doc.qaStatus < 3) {
                 showLoadingState('Generating Q&A pairs for this document...');
@@ -908,12 +909,26 @@
     }
 
     // Show editor
-    function showEditor(doc) {
+    function showEditor(doc, error = false) {
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('editorContent').style.display = 'block';
-
         document.getElementById('editorTitle').textContent = doc.name;
+        if(error) {
+            document.getElementById('qaList').style.display = 'none';
+            document.getElementById('addQaBtn').style.display = 'none';
+            fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.processedFileName}_err.txt`)
+                .then(response => response.text())
+                .then(errorText => {
+                    document.getElementById('qaList').innerHTML = `<p style="color: red;">Error: ${errorText}</p>`;
+                })
+                .catch(err => {
+                    console.error('Error loading error file:', err);
+                    document.getElementById('qaList').innerHTML = '<p>Error loading error details. Please try again later.</p>';
+                });
+            document.getElementById('qaList').innerHTML = '<p>Error loading Q&A pairs. Please try again later.</p>';
+            return;
+        }
         renderQAPairs(doc.qaPairs);
     }
 

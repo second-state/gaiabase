@@ -258,7 +258,7 @@ def processing_all_data():
     question_prompt = settings.get("questionPrompt")
     answer_prompt = settings.get("answerPrompt")
 
-    for sub in ['original_files', 'processed_files', 'qa_files']:
+    for sub in ['original_files', 'processed_files', 'qa_files', 'err_files']:
         Path(f'./{uuid}/{sub}').mkdir(parents=True, exist_ok=True)
 
     create_task(uuid, configuration, question_prompt, answer_prompt, split_length)
