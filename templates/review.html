@@ -795,7 +795,7 @@
                         uuid: d[1],
                         qaCount: qaPairs.length,
                         qaPairs: qaPairs,
-                        processedFileName: processedFileName
+                        originalFileName: d[7]
                     };
                 }));
 
@@ -917,7 +917,7 @@
         if(error) {
             document.getElementById('qaList').style.display = 'none';
             document.getElementById('addQaBtn').style.display = 'none';
-            fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.processedFileName}_err.txt`)
+            fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.originalFileName}_err.txt`)
                 .then(response => response.text())
                 .then(errorText => {
                     document.getElementById('qaList').innerHTML = `<p style="color: red;">Error: ${errorText}</p>`;
