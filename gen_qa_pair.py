@@ -36,7 +36,7 @@ def extract_json(text):
 
 
 def gen_pair(user_input, subtask_id, question_prompt, answer_prompt, base_url="https://qwen7b.gaia.domains/v1", node_model="qwen7b",
-                 gaia_api_key=None, split_length=10000):
+                 gaia_api_key=None, split_length=10000, err_output_path=""):
             sys_prompt = os.getenv(
                 "SYS_PROMPT",
                 f"As a highly skilled assistant, you are tasked with generating as many as possible informative question and answer pairs from the provided text. Craft Q&A pairs that are relevant, accurate, and varied in type (factual, inferential, thematic). Your questions should be engaging, and answers should be concise, both reflecting the text's intent. Aim for a comprehensive dataset that is rich in content and suitable for training language models, balancing the depth and breadth of information without redundancy. When generating questions you need to keep in mind: {question_prompt}; When generating answers you need to keep in mind: {answer_prompt}."
@@ -96,6 +96,9 @@ def gen_pair(user_input, subtask_id, question_prompt, answer_prompt, base_url="h
                         all_qa_pairs.extend([(qa["question"], qa["answer"]) for qa in qa_pairs])
                 except Exception as e:
                     print(f"Failed to create chat for chunk {idx}: {e}")
+                    if err_output_path:
+                        with open(err_output_path, 'w', encoding='utf-8') as f:
+                            f.write(str(e))
                     raise e
 
             return all_qa_pairs if all_qa_pairs else None

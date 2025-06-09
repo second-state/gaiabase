@@ -28,6 +28,7 @@ FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 # d处理函数
 def task_qa(file_path, subtask_id):
+    err_output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             user_input = file.read().strip()
@@ -38,7 +39,8 @@ def task_qa(file_path, subtask_id):
             decrypt_user_config["chat-base-url"],
             decrypt_user_config["chat-model"],
             decrypt_user_config["chat-api-key"],
-            split_length
+            split_length,
+            err_output_path
         )
         output_path = Path(file_path).parent.parent / "qa_files" / f"{Path(file_path).stem}_qa.json"
         with open(output_path, 'w', encoding='utf-8') as f:
@@ -48,8 +50,7 @@ def task_qa(file_path, subtask_id):
         return output_path
     except Exception as e:
         update_subtask(subtask_id, 2, -1)
-        output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(err_output_path, 'w', encoding='utf-8') as f:
             f.write(str(e))
         raise e
 
