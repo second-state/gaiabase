@@ -360,13 +360,17 @@ def get_file_content(uuid, folder_name, filename):
     if not os.path.isfile(file_path):
         abort(404, description="File not found.")
     try:
+        file_data
         with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return jsonify(data)
-    except json.JSONDecodeError:
-        f.seek(0)  # 重置文件指针到开头
-        raw_content = f.read()
-        return Response(raw_content, mimetype='text/plain')
+            try:
+                data = json.load(f)
+                return jsonify(data)
+            except json.JSONDecodeError:
+                f.seek(0)  # 重置文件指针到开头
+                raw_content = f.read()
+                return Response(raw_content, mimetype='text/plain')
+    except Exception as e:
+        return Response(f"Error reading file: {e}", status=500, mimetype='text/plain')
 
 
 @app.route('/api/updateJSON/<uuid>/<folder_name>/<filename>', methods=['POST'])
