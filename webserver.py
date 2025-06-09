@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
 from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort, Response
 from flask_socketio import SocketIO
+from urllib.parse import unquote
 
 from sql_query import *
 from file_utils import *
@@ -354,6 +355,7 @@ def get_file_word_count(uuid, folder_name, filename):
 
 @app.route('/api/fileContent/<uuid>/<folder_name>/<filename>')
 def get_file_content(uuid, folder_name, filename):
+    filename = unquote(filename)
     file_path = os.path.join(uuid, folder_name, filename)
     if not os.path.isfile(file_path):
         abort(404, description="File not found.")
