@@ -144,7 +144,7 @@
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
-            min-height: calc(100vh - 200px);
+            min-height: calc(100vh - 270px);
         }
 
         /* Document List Panel */
@@ -155,7 +155,7 @@
             border-radius: 20px;
             padding: 20px;
             height: fit-content;
-            max-height: calc(100vh - 220px);
+            max-height: calc(100vh - 270px);
             overflow-y: auto;
         }
 
@@ -795,6 +795,7 @@
                         uuid: d[1],
                         qaCount: qaPairs.length,
                         qaPairs: qaPairs,
+                        processedFileName: processedFileName,
                         originalFileName: d[7]
                     };
                 }));
@@ -1079,7 +1080,8 @@
             },
             body: JSON.stringify({
                 "uuid": uuid,
-                "qaFileName": currentDocument.qaFileName
+                "subtask_id": currentDocument.id,
+                "processed_file_name": currentDocument.processedFileName
             })
         }).then(response => response.json())
           .then(data => {

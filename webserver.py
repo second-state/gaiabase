@@ -286,31 +286,15 @@ def processing_all_data():
 def regenerate_qas():
     data = request.get_json()
     uuid = data.get("uuid")
+    subtask_id = data.get("subtask_id")
+    processed_file_name = data.get("processed_file_name")
     if not uuid:
         return jsonify({"error": "UUID is required"}), 400
 
-    task_info = get_task_info(uuid)
-    if not task_info:
-        return jsonify({"error": "Task not found"}), 404
+    update_subtask(subtask_id, 2, 0)
 
-    user_config = task_info[3]
-    decrypt_user_config = decrypt_data(user_config)
-
-    qa_file_path = os.path.join(uuid, "qa_files", "Q&A_Input.json")
-    if not os.path.exists(qa_file_path):
-        return jsonify({"error": "Q&A Input file not found"}), 404
-
-    with open(qa_file_path, 'r', encoding='utf-8') as f:
-        qa_data = json.load(f)
-
-    for qa in qa_data:
-        q_gen_embed.enqueue(gen_embed, qa[0], qa[1], decrypt_user_config["embedding-base-url"],
-                            decrypt_user_config["embedding-model"],
-                            decrypt_user_config["embedding-api-key"],
-                            decrypt_user_config["qdrant-url"],
-                            decrypt_user_config["qdrant-api-key"],
-                            decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
-
+    processed_file_path = os.path.join(uuid, "processed_files", processed_file_name)
+    q_qa.enqueue(task_qa, processed_file_path, subtask_id)
     return jsonify({"message": "Q&As regeneration started"}), 200
 
 
