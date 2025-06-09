@@ -50,7 +50,7 @@ def task_qa(file_path, subtask_id):
         update_subtask(subtask_id, 2, -1)
         output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
         with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(e)
+            f.write(str(e))
         raise e
 
 
