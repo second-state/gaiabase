@@ -225,7 +225,29 @@ def get_subtask_info(subtask_id):
             conn.close()
 
 
-def update_subtask(subtask_id, step=None, status=None):
+def get_subtask_id_by_uuid_and_name(uuid, name):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       SELECT id
+                       FROM `subtask`
+                       WHERE task_id = %s AND save_name = %s;
+                       """, (uuid, name,))
+        result = cursor.fetchone()
+        return result[0] if result else None
+    except Error as e:
+        print(f"Get subtask id by uuid and name failed. Error: {e}")
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def update_subtask(subtask_id, step=None, status=None, embed_status=None, tidb_status=None):
     conn = create_connection()
     if conn is None:
         return None
@@ -239,6 +261,12 @@ def update_subtask(subtask_id, step=None, status=None):
             params.append(step)
         if status is not None:
             updates.append("subtask_status = %s")
+            params.append(status)
+        if embed_status is not None:
+            updates.append("embed_status = %s")
+            params.append(status)
+        if tidb_status is not None:
+            updates.append("tidb_status = %s")
             params.append(status)
         # 如果没有字段需要更新，直接返回
         if not updates:
@@ -265,17 +293,182 @@ def get_subtasks_by_uuid(uuid):
     conn = create_connection()
     if conn is None:
         return None
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("""
                        SELECT *
                        FROM `subtask`
                        WHERE task_id = %s;
                        """, (uuid,))
-        result = cursor.fetchall()
-        return result
+        subtasks = cursor.fetchall()
+
+        for subtask in subtasks:
+            subtask_id = subtask['id']
+            # 使用同样的dictionary=True cursor，或者创建新的dictionary cursor
+            cursor.execute("""
+                           SELECT status FROM embed_task WHERE subtask_id = %s;
+                           """, (subtask_id,))
+            embed_results = cursor.fetchall()
+
+            # 现在可以用字段名访问
+            embed_statuses = [row['status'] for row in embed_results]
+
+            embed_status = None
+            if embed_statuses:
+                if 0 in embed_statuses:
+                    embed_status = 0
+                elif -1 in embed_statuses:
+                    embed_status = -1
+                elif all(s == 1 for s in embed_statuses):
+                    embed_status = 1
+
+            subtask['embed_status'] = embed_status
+
+            cursor.execute("""
+                           SELECT status FROM tidb_task WHERE subtask_id = %s;
+                           """, (subtask_id,))
+            tidb_results = cursor.fetchall()
+
+            # 现在可以用字段名访问
+            tidb_statuses = [row['status'] for row in tidb_results]
+
+            tidb_status = None
+            if tidb_statuses:
+                if 0 in tidb_statuses:
+                    tidb_status = 0
+                elif -1 in tidb_statuses:
+                    tidb_status = -1
+                elif all(s == 1 for s in tidb_statuses):
+                    tidb_status = 1
+            subtask['tidb_status'] = tidb_status
+
+        return subtasks
     except Error as e:
         print(f"Get subtask id by uuid failed. Error: {e}")
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def get_embed_and_tidb_id_by_subtask_id(subtask_id):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+                          SELECT embed_id
+                            FROM `embed_task`
+                            WHERE subtask_id = %s;
+                          """, (subtask_id,))
+        embed_result = cursor.fetchall()
+        cursor.execute("""
+                          SELECT tidb_id
+                            FROM `tidb_task`
+                            WHERE subtask_id = %s;
+                          """, (subtask_id,))
+        tidb_result = cursor.fetchall()
+        if result:
+            return {
+                'tidb_id': [row['tidb_id'] for row in tidb_result],
+                'embed_ids': [row['embed_id'] for row in embed_result]
+            }
+        else:
+            return None
+    except Error as e:
+        print(f"Get embed and tidb id by subtask id failed. Error: {e}")
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def create_embed_task(subtask_id, embed_id):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       INSERT INTO `embed_task` (`embed_id`, `subtask_id`)
+                       VALUES (%s, %s);
+                       """, (embed_id, subtask_id,))
+        conn.commit()
+        return cursor.lastrowid
+    except Error as e:
+        print(f"Create embed task failed and rolled back. Error: {e}")
+        conn.rollback()
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def create_tidb_task(subtask_id):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       INSERT INTO `tidb_task` (`subtask_id`)
+                       VALUES (%s);
+                       """, (subtask_id,))
+        conn.commit()
+        return cursor.lastrowid
+    except Error as e:
+        print(f"Create tidb task failed and rolled back. Error: {e}")
+        conn.rollback()
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def update_embed_task_status(embed_task_id, status):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       UPDATE `embed_task`
+                       SET status = %s
+                       WHERE embed_id = %s;
+                       """, (status, embed_task_id))
+        conn.commit()
+        return embed_task_id
+    except Error as e:
+        print(f"Update embed task status failed and rolled back. Error: {e}")
+        conn.rollback()
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def update_tidb_task_status(tidb_task_id, tidb_id, status):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       UPDATE `tidb_task`
+                       SET status = %s, tidb_id = %s
+                       WHERE id = %s;
+                       """, (status, tidb_id, tidb_task_id))
+        conn.commit()
+        return tidb_task_id
+    except Error as e:
+        print(f"Update tidb task status failed and rolled back. Error: {e}")
+        conn.rollback()
         return None
     finally:
         if conn:

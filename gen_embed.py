@@ -1,10 +1,12 @@
 import requests
 import json
-import uuid
 
 from urllib.parse import urljoin
 
 import numpy as np
+
+from sql_query import update_embed_task_status
+
 
 def normalize_vector(vector):
     """归一化向量"""
@@ -31,7 +33,7 @@ def complete_embed_url(base_url):
 
 
 def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedding_api_key, qdrant_url, qdrant_api_key,
-              qdrant_collection):
+              qdrant_collection, point_id):
     text = f"{short_text} {full_text}"
     headers = {
         "Authorization": f"Bearer {embedding_api_key}",
@@ -60,7 +62,6 @@ def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedd
         }
 
         # 构造要插入的向量数据
-        point_id = str(uuid.uuid4())
         point_payload = {
             "points": [
                 {
@@ -76,8 +77,10 @@ def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedd
 
         # 插入向量
         insert_response = requests.put(points_url, headers=headers, json=point_payload)
-
+        update_embed_task_status(point_id, 1)
         print("Qdrant Response:", insert_response.status_code, insert_response.text)
+        return True
     except requests.RequestException as e:
+        update_embed_task_status(point_id, -1)
         print(f"请求或解析嵌入时出错: {e}")
         return None

@@ -1,9 +1,37 @@
-import mariadb
-import urllib.parse
+import json
+from pytidb import TiDBClient
+from pytidb.schema import TableModel, Field
+
+from sql_query import update_tidb_task_status
 
 
-def save_txt_to_tidb(file_path, db_url, table_name):
-    # 1. 解析 URL
+def parse_nested_json_file(file_path):
+    # 检查文件是否是 .json 结尾
+    if not file_path.endswith(".json"):
+        return None
+        # raise ValueError("文件不是 .json 格式")
+
+    # 读取并解析 JSON 内容
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    # 构造返回的对象数组
+    result = []
+    for item in data:
+        if isinstance(item, list) and len(item) >= 2:
+            result.append({
+                "title": item[0],
+                "content": f"{item[0]}\n{item[1]}"
+            })
+        else:
+            raise ValueError(f"数据格式错误，期望一个包含至少两个元素的列表，但得到了：{item}")
+
+    return result
+
+
+def save_txt_to_tidb(file_path, db_url, table_name, tidb_id):
+    # 解析 db_url
+    import urllib.parse
     parsed = urllib.parse.urlparse(db_url)
     if parsed.scheme != "mysql":
         raise ValueError("仅支持 mysql:// 开头的连接字符串")
@@ -12,52 +40,45 @@ def save_txt_to_tidb(file_path, db_url, table_name):
     password = parsed.password
     host = parsed.hostname
     port = parsed.port or 4000
-    dbname = parsed.path.lstrip("/")  # 可能为空
+    dbname = parsed.path.lstrip("/")
 
-    # 2. 初步连接参数（不带 database）
-    conn_args = {
-        "user": userinfo,
-        "password": password,
-        "host": host,
-        "port": port,
-        "ssl": {
-            "ssl_ca": "/etc/ssl/certs/ca-certificates.crt"
-        }
-    }
+    # 连接 TiDB
+    db = TiDBClient.connect(
+        host=host,
+        port=port,
+        username=userinfo,
+        password=password,
+        database=dbname,
+    )
 
-    # 3. 连接 MariaDB（无数据库）
-    conn = mariadb.connect(**conn_args)
-    cursor = conn.cursor()
+    # 定义表结构
+    class Chunk(TableModel, table=True):
+        __tablename__ = table_name
+        id: int = Field(primary_key=True)
+        title: str = Field()
+        content: str = Field()
 
-    # 如果有数据库名，尝试创建
-    if dbname:
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{dbname}`")
-        conn.commit()
-        cursor.close()
-        conn.close()
+    # 创建表
+    table = db.create_table(schema=Chunk)
 
-        # 加上数据库名再连接
-        conn_args["database"] = dbname
-        conn = mariadb.connect(**conn_args)
-        cursor = conn.cursor()
+    # 创建全文索引（如需要）
+    if not table.has_fts_index("content"):
+        table.create_fts_index("content")
 
-        # 创建表
-        cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS `{table_name}` (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                content TEXT
-            ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        """)
-        conn.commit()
-
-        # 读取文件并写入
+    # 读取文件内容
+    title_and_content = parse_nested_json_file(file_path)
+    rows = []
+    if title_and_content:
+        for idx, item in enumerate(title_and_content, start=1):
+            title = item.get("title", "")
+            content = item.get("content", "")
+            rows.append(Chunk(title=title, content=content))
+    else:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        cursor.execute(f"INSERT INTO `{table_name}` (content) VALUES (%s)", (content,))
-        conn.commit()
+        rows.append(Chunk(title="", content=content))
 
-        print(f"✅ 成功将文件内容写入 `{dbname}.{table_name}`")
-        cursor.close()
-        conn.close()
-    else:
-        raise ValueError("连接字符串中未包含数据库名")
+    # 批量插入
+    table.bulk_insert(rows)
+    update_tidb_task_status(tidb_id, 1, 1)
+    print(f"✅ 成功将文件内容写入 `{dbname}.{table_name}`")

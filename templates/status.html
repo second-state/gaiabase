@@ -47,8 +47,8 @@
 
         /* Progress Bar */
         .progress-wrapper {
-            background: rgba(20, 20, 30, 0.95);
-            padding: 30px 0;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px 0 50px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -68,26 +68,23 @@
         .progress-line {
             position: absolute;
             top: 20px;
-            left: 10%;
-            right: 10%;
             height: 2px;
             background: rgba(255, 255, 255, 0.1);
+            width: 100%;
             z-index: 0;
         }
 
         .progress-line-active {
             position: absolute;
             top: 20px;
-            left: 10%;
             height: 2px;
             background: #667eea;
-            width: 60%;
+            width: 65%;
             z-index: 1;
             transition: width 0.5s ease;
         }
 
         .progress-step {
-            background: transparent;
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             width: 40px;
@@ -97,6 +94,7 @@
             justify-content: center;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.6);
+            background: #1c1c2d;
             position: relative;
             z-index: 2;
             transition: all 0.3s ease;
@@ -109,9 +107,9 @@
         }
 
         .progress-step.active {
-            background: #667eea;
             border-color: #667eea;
-            color: #fff;
+            color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
         }
 
         .progress-label {
@@ -197,8 +195,12 @@
         }
 
         @keyframes progressPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
         }
 
         /* Stats Cards */
@@ -546,7 +548,7 @@
             font-size: 1.5rem;
             font-weight: 600;
             color: #2ed573;
-            margin-bottom: 15px;
+            margin-bottom: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -604,7 +606,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Responsive */
@@ -655,8 +659,6 @@
 <div class="progress-wrapper">
     <div class="progress-container">
         <div class="progress-steps">
-            <div class="progress-line"></div>
-            <div class="progress-line-active"></div>
 
             <div class="progress-step completed">
                 <span>✓</span>
@@ -674,84 +676,19 @@
                 <span>4</span>
                 <span class="progress-label">Complete</span>
             </div>
+            <div class="progress-line"></div>
+            <div class="progress-line-active"></div>
         </div>
     </div>
 </div>
 
 <!-- Main Content -->
 <div class="main-container">
-    <!-- Overall Progress -->
-    <div class="overall-progress">
-        <h2 class="progress-title">Embedding & Database Import Progress</h2>
-
-        <div class="progress-item">
-            <div class="progress-header">
-                <span class="progress-label-text">Creating Embeddings</span>
-                <span class="progress-percentage">75% (30/40)</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill animated" style="width: 75%"></div>
-            </div>
-        </div>
-
-        <div class="progress-item">
-            <div class="progress-header">
-                <span class="progress-label-text">Importing to TiDB</span>
-                <span class="progress-percentage">50% (20/40)</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill animated" style="width: 50%"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value primary">40</div>
-            <div class="stat-label">Total Documents</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value success">20</div>
-            <div class="stat-label">Completed</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value warning">18</div>
-            <div class="stat-label">In Progress</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value error">2</div>
-            <div class="stat-label">Failed</div>
-        </div>
-    </div>
-
-    <!-- Error Section (if any) -->
-    <div class="error-section" id="errorSection" style="display: none;">
-        <div class="error-header">
-            <span>⚠️</span>
-            <span>Errors & Warnings</span>
-        </div>
-        <div class="error-item">
-            <div class="error-doc">Manual.pdf</div>
-            <div class="error-message">Error: Document size exceeds limit (150k tokens)</div>
-            <div class="error-actions">
-                <button class="action-btn" onclick="retryDocument('manual.pdf')">Retry</button>
-                <button class="action-btn" onclick="skipDocument('manual.pdf')">Skip</button>
-                <button class="action-btn" onclick="viewDetails('manual.pdf')">View Details</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Status Table -->
     <div class="status-section">
         <div class="section-header">
             <h2 class="section-title">Document Status</h2>
-            <div class="filter-tabs">
-                <button class="filter-tab active" onclick="filterStatus('all')">All</button>
-                <button class="filter-tab" onclick="filterStatus('completed')">Completed</button>
-                <button class="filter-tab" onclick="filterStatus('processing')">Processing</button>
-                <button class="filter-tab" onclick="filterStatus('failed')">Failed</button>
-            </div>
         </div>
 
         <table class="status-table">
@@ -776,16 +713,9 @@
             <span>✅</span>
             <span>Processing Complete!</span>
         </div>
-        <div class="completion-summary">
-            Successfully processed 38/40 documents<br>
-            2 documents failed (see errors above)<br>
-            Total processing time: 5 min 32 sec<br>
-            Database: TiDB Vector Store
-        </div>
         <div class="completion-buttons">
-            <button class="btn" onclick="viewFailedDocs()">View Failed Documents</button>
+            <button class="btn" id="retryAllButton" onclick="retryAllFailedDocs()">Retry All Failed Documents</button>
             <button class="btn btn-secondary" onclick="processNewBatch()">Process New Batch</button>
-            <button class="btn" onclick="goToSearch()">Go to Search Interface</button>
         </div>
     </div>
 </div>
@@ -802,11 +732,26 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         query_documents()
-        renderStatusTable();
-        startAutoRefresh();
-        checkForErrors();
-        updateProgressBars();
+        setInterval(() => {
+            query_documents();
+            // In real implementation, this would check with the server
+            // for documents that finished generating
+        }, 5000);
     });
+
+    /* {
+    "create_time": "Wed, 04 Jun 2025 02:53:40 GMT",
+    "embed_status": null,
+    "id": 22,
+    "original_name": "paper.pdf",
+    "save_name": "paper.pdf",
+    "subtask_source": 1,
+    "subtask_status": -1,
+    "subtask_step": 4,
+    "task_id": "a53e834a-098d-4b8d-8a10-140ce902e925",
+    "tidb_status": 1,
+    "updata_time": "Thu, 12 Jun 2025 19:56:29 GMT"
+    } */
 
     function query_documents() {
         fetch('/api/getAllSubtaskByUuid', {
@@ -821,21 +766,21 @@
             .then(response => response.json())
             .then(async data => {
                 const formatData = await Promise.all(data.map(async d => {
-                    let qa_file_name = d[7];
-                    if (d[8] !== 4) {
+                    let qa_file_name = d["save_name"];
+                    if (d["subtask_source"] !== 4) {
                         qa_file_name += '_qa.json';
                     }
                     let sizeData = 0
-                    try{
-                        const sizeRes = await fetch(`/api/filesize/${d[1]}/original_files/${d[7]}`);
+                    try {
+                        const sizeRes = await fetch(`/api/filesize/${d["task_id"]}/original_files/${d["save_name"]}`);
                         sizeData = await sizeRes.json();
-                    }catch (e) {
+                    } catch (e) {
                         console.error(e);
                     }
 
-                    const qaRes = await fetch(`/api/fileContent/${d[1]}/qa_files/${qa_file_name}`);
+                    const qaRes = await fetch(`/api/fileContent/${d["task_id"]}/qa_files/${qa_file_name}`);
                     let qaPairs = []
-                    try{
+                    try {
                         const qaData = await qaRes.json();
                         if (qaData) {
                             qaPairs = qaData.map((qaList, index) => ({
@@ -844,25 +789,39 @@
                                 answer: qaList[1]
                             }));
                         }
-                    }catch (e) {
+                    } catch (e) {
                         console.error(e);
                     }
 
+
                     return {
-                        id: d[0],
-                        name: d[6],
+                        id: d["id"],
+                        uuid: d["task_id"],
+                        name: d["original_name"],
                         qaFileName: qa_file_name,
-                        type: d[8],
+                        type: d["subtask_source"],
                         charCount: sizeData.size,
-                        status: d[3],
-                        qaStatus: d[2],
+                        status: d["subtask_status"],
+                        embedStatus: d["embed_status"] || 0,
+                        tidbStatus: d["tidb_status"],
+                        step: d["subtask_step"],
                         qaCount: qaPairs.length,
-                        qaPairs: qaPairs
+                        qaPairs: qaPairs,
+                        originalFileName: d["save_name"]
                     };
                 }));
 
                 documents.length = 0; // Clear existing documents
                 documents.push(...formatData); // Add fetched documents
+                const allProcessed = documents.filter(d => d.status === 1 || d.status === -1).length === documents.length;
+                if (allProcessed) {
+                    document.getElementById('completionActions').style.display = 'block';
+                    // Update progress to complete
+                    document.querySelector('.progress-step:nth-child(3)').classList.remove('active');
+                    document.querySelector('.progress-step:nth-child(3)').classList.add('completed');
+                    document.querySelector('.progress-step:nth-child(4)').classList.add('completed');
+                    document.querySelector('.progress-line-active').style.width = '100%';
+                }
                 renderStatusTable();
             })
             .catch(error => console.error('Error fetching documents:', error));
@@ -878,12 +837,12 @@
             row.innerHTML = `
                     <td>
                         <div class="doc-name">
-                            <span class="doc-icon">${doc.type === 'file' ? '📄' : '🌐'}</span>
+                            <span class="doc-icon">${doc.type === '2' ? '🌐' : '📄'}</span>
                             <span>${doc.name}</span>
                         </div>
                     </td>
-                    <td>${getStatusBadge(doc.embedding)}</td>
-                    <td>${getStatusBadge(doc.tidb)}</td>
+                    <td>${getStatusBadge(doc.step, doc.embedStatus)}</td>
+                    <td>${getStatusBadge(doc.step, doc.tidbStatus)}</td>
                     <td>${getOverallStatus(doc.status)}</td>
                     <td>${getActions(doc)}</td>
                 `;
@@ -894,19 +853,31 @@
     // Get status badge HTML
     function getStatusBadge(step, status) {
         const badges = {
-            'completed': '<span class="status-badge success">✅ Completed</span>',
-            'processing': '<span class="status-badge processing"><span class="loading-spinner"></span> Processing</span>',
-            'waiting': '<span class="status-badge waiting">⏳ Waiting</span>',
-            'queued': '<span class="status-badge waiting">⏳ Queued</span>',
-            'failed': '<span class="status-badge error">❌ Failed</span>',
-            'none': '<span class="status-badge waiting">-</span>'
+            '0': {
+                '0': '<span class="status-badge waiting">⏳ Waiting</span>',
+                '1': '<span class="status-badge waiting">⏳ Waiting</span>',
+                '2': '<span class="status-badge waiting">⏳ Waiting</span>',
+                '3': '<span class="status-badge waiting">⏳ Waiting</span>',
+                '4': '<span class="status-badge processing"><span class="loading-spinner"></span> Processing</span>',
+                '5': '<span class="status-badge waiting">-</span>',
+            }, '1': {
+                '3': '<span class="status-badge success">✅ Completed</span>',
+                '4': '<span class="status-badge success">✅ Completed</span>',
+                '5': '<span class="status-badge success">✅ Completed</span>'
+            }, '-1': {
+                '0': '<span class="status-badge waiting">-</span>',
+                '1': '<span class="status-badge waiting">-</span>',
+                '2': '<span class="status-badge waiting">-</span>',
+                '3': '<span class="status-badge waiting">-</span>',
+                '4': '<span class="status-badge error">❌ Failed</span>',
+                '5': '<span class="status-badge error">❌ Failed</span>'
+            }
         };
-        return badges[status] || '-';
+        return badges[status][step] || '-';
     }
 
     // Get overall status
     function getOverallStatus(status) {
-        console.log(status)
         const statuses = {
             '1': '<span style="color: #2ed573;">Done</span>',
             '0': '<span style="color: #667eea;">In Progress</span>',
@@ -917,37 +888,15 @@
 
     // Get actions HTML
     function getActions(doc) {
-        if (doc.status === 'error') {
+        if (doc.status === -1) {
             return `
                     <button class="action-btn" onclick="retryDocument('${doc.name}')">Retry</button>
-                    <button class="action-btn" onclick="viewDetails('${doc.name}')">Details</button>
+                    <button class="action-btn" onclick="viewDetails('${doc.id}')">Details</button>
                 `;
-        } else if (doc.status === 'processing') {
+        } else if (doc.status === 0) {
             return '<span style="color: rgba(255, 255, 255, 0.5);">Processing...</span>';
         }
-        return '-';
-    }
-
-    // Check for errors
-    function checkForErrors() {
-        const hasErrors = documents.some(doc => doc.status === 'error');
-        if (hasErrors) {
-            document.getElementById('errorSection').style.display = 'block';
-        }
-    }
-
-    // Update progress bars
-    function updateProgressBars() {
-        // Simulate progress updates
-        setInterval(() => {
-            const embeddingProgress = document.querySelector('.progress-fill');
-            const currentWidth = parseInt(embeddingProgress.style.width);
-            if (currentWidth < 100) {
-                embeddingProgress.style.width = (currentWidth + 1) + '%';
-                document.querySelectorAll('.progress-percentage')[0].textContent =
-                    `${currentWidth + 1}% (${Math.floor((currentWidth + 1) * 0.4)}/40)`;
-            }
-        }, 500);
+        return `<button class="action-btn" onclick="deleteDocument('${doc.name}')">Delete</button>`;
     }
 
     // Filter status
@@ -968,35 +917,58 @@
         // Implement retry logic
     }
 
-    function skipDocument(docName) {
-        showNotification(`Skipped ${docName}`, 'info');
-        // Implement skip logic
+    // Action handlers
+    function deleteDocument(docName) {
+        const result = confirm("This operation cannot be undone. Do you want to continue deleting?");
+        if (result) {
+            showNotification(`Deleting ${docName}...`, 'info');
+            fetch(`/api/deleteSubtask/${docName}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showNotification(`${docName} deleted successfully!`, 'success');
+                        query_documents(); // Refresh the document list
+                    } else {
+                        throw new Error('Failed to delete document');
+                    }
+                })
+                .catch(error => {
+                    showNotification(`Error deleting ${docName}: ${error.message}`, 'error');
+                });
+        }
+        // Implement retry logic
     }
 
-    function viewDetails(docName) {
-        showNotification(`Viewing details for ${docName}`, 'info');
+    function viewDetails(id) {
+        console.log(id)
+        const doc = documents.find(doc => doc.id === parseInt(id));
+        console.log(doc)
+        fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.originalFileName}_err.txt`)
+            .then(response => {
+                console.log(response);
+                if (!response.ok) {
+                    return Promise.reject();
+                } else {
+                    return response.text()
+                }
+            })
+            .then(errorText => {
+                showNotification(`${doc.name} Error Info: ${errorText}`, 'error');
+            })
+            .catch(err => {
+                showNotification(`Error loading error details${err ? "--" + err : ""}. Please try again later.`, 'error');
+            });
+
         // Implement view details logic
     }
 
-    function viewFailedDocs() {
+    function retryAllFailedDocs() {
         filterStatus('failed');
     }
 
     function processNewBatch() {
-        window.location.href = '/upload';
-    }
-
-    function goToSearch() {
-        window.location.href = '/search';
-    }
-
-    // Auto refresh
-    function startAutoRefresh() {
-        setInterval(() => {
-            document.getElementById('currentTime').textContent =
-                `Last updated: ${new Date().toLocaleTimeString()}`;
-            // In real implementation, fetch new data
-        }, 5000);
+        window.location.href = '/process';
     }
 
     // Show notification
@@ -1058,18 +1030,6 @@
             }
         `;
     document.head.appendChild(style);
-
-    // Simulate completion after some time
-    setTimeout(() => {
-        // Check if all documents are processed
-        const allProcessed = documents.filter(d => d.status === 'done' || d.status === 'error').length === documents.length;
-        if (allProcessed) {
-            document.getElementById('completionActions').style.display = 'block';
-            // Update progress to complete
-            document.querySelector('.progress-step:nth-child(4)').classList.add('completed');
-            document.querySelector('.progress-line-active').style.width = '90%';
-        }
-    }, 10000);
 </script>
 </body>
 </html>

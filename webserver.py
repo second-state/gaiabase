@@ -2,6 +2,7 @@ import base64
 import json
 import requests
 import fitz
+import uuid
 import textract
 import tempfile
 from io import BytesIO
@@ -13,6 +14,8 @@ import string
 import threading
 
 from rq import Queue, Retry
+from rq.exceptions import NoSuchJobError
+import time
 from redis import Redis
 from pathlib import Path
 
@@ -51,7 +54,9 @@ q_process_doc = Queue('step1_process_doc', connection=redis_conn)
 q_process_pdf = Queue('step1_process_pdf', connection=redis_conn)
 q_process_txt = Queue('step1_process_txt', connection=redis_conn)
 q_gen_embed = Queue('step3_gen_embed', connection=redis_conn)
+q_del_embed = Queue('step5_del_embed', connection=redis_conn)
 q_save_tidb = Queue('step3_save_tidb', connection=redis_conn)
+q_del_tidb = Queue('step5_del_tidb', connection=redis_conn)
 
 nest_asyncio.apply()
 
@@ -171,18 +176,18 @@ def get_file_count():
     return jsonify({"files": result_array})
 
 
-def save_all_file(files, uuid):
+def save_all_file(files, task_id):
     for file_object in files:
         print(file_object)
         file = file_object["file"]
         filename = file.filename
         file_extension = filename.rsplit('.', 1)[-1].lower()
-        save_file_path = os.path.join(uuid, "original_files")
+        save_file_path = os.path.join(task_id, "original_files")
         save_file_path = Path(save_file_path) / filename
-        subtask_id = create_subtask(uuid, filename, filename, 1)
+        subtask_id = create_subtask(task_id, filename, filename, 1)
         file.save(save_file_path)
-        update_subtask(uuid, None, 1)
-        process_file_path = os.path.join(uuid, "processed_files")
+        update_subtask(task_id, None, 1)
+        process_file_path = os.path.join(task_id, "processed_files")
         if file_extension in ['doc', 'docx']:
             q_process_doc.enqueue(task_doc, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是doc")
@@ -199,7 +204,7 @@ def save_all_file(files, uuid):
             print(f"{filename} 不是有效的文件格式")
 
 
-def save_all_qa(qa_data, uuid):
+def save_all_qa(qa_data, task_id):
     qa_list = []
 
     for item in qa_data:
@@ -213,26 +218,29 @@ def save_all_qa(qa_data, uuid):
                 qa_list.append([q, a])
 
     if len(qa_list) > 0:
-        qa_file_path = os.path.join(uuid, "qa_files", "Q&A_Input.json")
-        subtask_id = create_subtask(uuid, "Q&A Input", "Q&A_Input.json", 4)
+        qa_file_path = os.path.join(task_id, "qa_files", "Q&A_Input.json")
+        subtask_id = create_subtask(task_id, "Q&A Input", "Q&A_Input.json", 4)
         update_subtask(subtask_id, 3, 0)
         with open(qa_file_path, "w", encoding="utf-8") as f:
             f.write(json.dumps(qa_list, ensure_ascii=False, indent=2))
+        processed_file_path = os.path.join(task_id, "processed_files", "Q&A_Input.json")
+        with open(processed_file_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(qa_list, ensure_ascii=False, indent=2))
 
 
-def crawl_all_url(host_url_list, uuid):
+def crawl_all_url(host_url_list, task_id):
     print(host_url_list)
     for host_url in host_url_list:
-        process_file_path = os.path.join(uuid, "processed_files")
+        process_file_path = os.path.join(task_id, "processed_files")
         q_save_url.enqueue(crawl_url, host_url, process_file_path, retry=Retry(max=3))
 
 
-def save_all_text(text_list, uuid):
+def save_all_text(text_list, task_id):
     total_text = "\n".join(f"{item['longText']} {item['shortText']}" for item in text_list)
     if total_text:
-        save_file_path = os.path.join(uuid, "original_files", "text_input.txt")
-        process_file_path = os.path.join(uuid, "processed_files")
-        subtask_id = create_subtask(uuid, "Text Input", "text_input.txt", 3)
+        save_file_path = os.path.join(task_id, "original_files", "text_input.txt")
+        process_file_path = os.path.join(task_id, "processed_files")
+        subtask_id = create_subtask(task_id, "Text Input", "text_input.txt", 3)
         with open(save_file_path, "w", encoding="utf-8") as f:
             f.write(total_text)
         q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
@@ -252,7 +260,7 @@ def processing_all_data():
 
     queue = data.get("queue", {})
     settings = data.get("settings", {})
-    uuid = data.get("uuid")
+    task_id = data.get("uuid")
     configuration = data.get("configuration")
 
     split_length = settings.get("splitLength")
@@ -260,9 +268,9 @@ def processing_all_data():
     answer_prompt = settings.get("answerPrompt")
 
     for sub in ['original_files', 'processed_files', 'qa_files', 'err_files']:
-        Path(f'./{uuid}/{sub}').mkdir(parents=True, exist_ok=True)
+        Path(f'./{task_id}/{sub}').mkdir(parents=True, exist_ok=True)
 
-    create_task(uuid, configuration, question_prompt, answer_prompt, split_length)
+    create_task(task_id, configuration, question_prompt, answer_prompt, split_length)
 
     # 处理文件上传
     uploaded_files = []
@@ -274,10 +282,10 @@ def processing_all_data():
         })
         i += 1
 
-    save_all_file(uploaded_files, uuid)
-    save_all_text(queue.get("texts", []), uuid)
-    crawl_all_url(queue.get("urls", []), uuid)
-    save_all_qa(queue.get("qas", []), uuid)
+    save_all_file(uploaded_files, task_id)
+    save_all_text(queue.get("texts", []), task_id)
+    crawl_all_url(queue.get("urls", []), task_id)
+    save_all_qa(queue.get("qas", []), task_id)
 
     return "Success", 200
 
@@ -285,15 +293,15 @@ def processing_all_data():
 @app.route("/api/regenerateQAs", methods=["POST"])
 def regenerate_qas():
     data = request.get_json()
-    uuid = data.get("uuid")
+    task_id = data.get("uuid")
     subtask_id = data.get("subtask_id")
     processed_file_name = data.get("processed_file_name")
-    if not uuid:
+    if not task_id:
         return jsonify({"error": "UUID is required"}), 400
 
     update_subtask(subtask_id, 2, 0)
 
-    processed_file_path = os.path.join(uuid, "processed_files", processed_file_name)
+    processed_file_path = os.path.join(task_id, "processed_files", processed_file_name)
     q_qa.enqueue(task_qa, processed_file_path, subtask_id)
     return jsonify({"message": "Q&As regeneration started"}), 200
 
@@ -301,29 +309,29 @@ def regenerate_qas():
 @app.route("/api/getAllSubtaskByUuid", methods=["POST"])
 def get_all_subtask_by_uuid():
     data = request.get_json()
-    uuid = data.get("uuid")
-    if not uuid:
+    task_id = data.get("uuid")
+    if not task_id:
         return jsonify({"error": "UUID is required"}), 400
 
-    subtasks = get_subtasks_by_uuid(uuid)
+    subtasks = get_subtasks_by_uuid(task_id)
     if not subtasks:
         return jsonify({"error": "No subtasks found for this UUID"}), 404
 
     return jsonify(subtasks)
 
 
-@app.route('/api/filesize/<uuid>/<folder_name>/<filename>')
-def get_file_size(uuid, folder_name, filename):
-    file_path = os.path.join(uuid, folder_name, filename)
+@app.route('/api/filesize/<task_id>/<folder_name>/<filename>')
+def get_file_size(task_id, folder_name, filename):
+    file_path = os.path.join(task_id, folder_name, filename)
     if not os.path.isfile(file_path):
         abort(404, description="File not found.")
     size = os.path.getsize(file_path)
     return jsonify({'filename': filename, 'size_bytes': size})
 
 
-@app.route('/api/fileWords/<uuid>/<folder_name>/<filename>')
-def get_file_word_count(uuid, folder_name, filename):
-    file_path = os.path.join(uuid, folder_name, filename)
+@app.route('/api/fileWords/<task_id>/<folder_name>/<filename>')
+def get_file_word_count(task_id, folder_name, filename):
+    file_path = os.path.join(task_id, folder_name, filename)
     if not os.path.isfile(file_path):
         abort(404, description="File not found.")
 
@@ -337,10 +345,10 @@ def get_file_word_count(uuid, folder_name, filename):
     return jsonify({'filename': filename, 'char_count': word_count})
 
 
-@app.route('/api/fileContent/<uuid>/<folder_name>/<filename>')
-def get_file_content(uuid, folder_name, filename):
+@app.route('/api/fileContent/<task_id>/<folder_name>/<filename>')
+def get_file_content(task_id, folder_name, filename):
     filename = unquote(filename)
-    file_path = os.path.join(uuid, folder_name, filename)
+    file_path = os.path.join(task_id, folder_name, filename)
     if not os.path.isfile(file_path):
         abort(404, description="File not found.")
     try:
@@ -356,16 +364,16 @@ def get_file_content(uuid, folder_name, filename):
         return Response(f"Error reading file: {e}", status=500, mimetype='text/plain')
 
 
-@app.route('/api/updateJSON/<uuid>/<folder_name>/<filename>', methods=['POST'])
-def update_json_file(uuid, folder_name, filename):
-    file_path = os.path.join(uuid, folder_name, filename)
+@app.route('/api/updateJSON/<task_id>/<folder_name>/<filename>', methods=['POST'])
+def update_json_file(task_id, folder_name, filename):
+    file_path = os.path.join(task_id, folder_name, filename)
 
     # 验证是否是 .json 文件
     if not filename.endswith('.json'):
         abort(400, description="Only .json files are allowed.")
 
     # 检查目录是否存在（如果不存在就创建）
-    folder_dir = os.path.join(uuid, folder_name)
+    folder_dir = os.path.join(task_id, folder_name)
     os.makedirs(folder_dir, exist_ok=True)
 
     # 解析 JSON 数据
@@ -401,7 +409,7 @@ def update_subtask_route():
     return jsonify({"message": "Subtask updated successfully", "subtask_id": result})
 
 
-def find_corresponding_file(filename, uuid):
+def find_corresponding_file(filename, task_id):
     # 去掉 `_qa.json` 得到原始文件名
     if not filename.endswith('_qa.json'):
         return None
@@ -414,64 +422,150 @@ def find_corresponding_file(filename, uuid):
         target_name = base_name + '.txt'
 
     # 构造完整路径
-    target_path = os.path.join(uuid, "processed_files", target_name)
+    target_path = os.path.join(task_id, "processed_files", target_name)
 
     # 检查文件是否存在
     return target_path if os.path.exists(target_path) else None
 
 
+def wait_for_summary(summary_job, check_interval=5):
+    """等待汇总任务完成"""
+    print("等待所有任务完成...")
+
+    while not summary_job.is_finished and not summary_job.is_failed:
+        print(f"汇总任务状态: {summary_job.get_status()}")
+        time.sleep(check_interval)
+        summary_job.refresh()  # 刷新任务状态
+
+    if summary_job.is_finished:
+        return summary_job.result
+    else:
+        print(f"汇总任务失败: {summary_job.exc_info}")
+        return None
+
+
 @app.route('/api/runAllEmbed', methods=['POST'])
 def run_all_embed():
     data = request.get_json()
-    uuid = data.get("uuid")
-    task_info = get_task_info(uuid)
+    task_id = data.get("uuid")
+    task_info = get_task_info(task_id)
     user_config = task_info[3] if task_info else None
     decrypt_user_config = decrypt_data(user_config)
-    process_folder_path = os.path.join(uuid, "processed_files")
+    process_folder_path = os.path.join(task_id, "processed_files")
     for root, dirs, files in os.walk(process_folder_path):
         for file in files:
             file_path = os.path.join(root, file)
-            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"])
-    qa_folder_path = os.path.join(uuid, "qa_files")
+            subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
+            print(subtask_id)
+            tidb_subtask_id = create_tidb_task(subtask_id)
+            print(tidb_subtask_id)
+            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"], tidb_subtask_id)
+    qa_folder_path = os.path.join(task_id, "qa_files")
     for root, dirs, files in os.walk(qa_folder_path):
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
                 full_text = ""
-                if find_corresponding_file(file, uuid):
-                    with open(find_corresponding_file(file, uuid), 'r', encoding='utf-8') as f:
+                subtask_id = None
+                if find_corresponding_file(file, task_id):
+                    if file == "Q&A_Input.json":
+                        subtask_id = get_subtask_id_by_uuid_and_name(task_id, "Q&A_Input.json")
+                    else:
+                        subtask_id = get_subtask_id_by_uuid_and_name(task_id, file[:-8])
+                    with open(find_corresponding_file(file, task_id), 'r', encoding='utf-8') as f:
                         full_text = f.read()
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         qa_data = json.load(f)
-                        print(full_text)
                         for qa in qa_data:
                             if full_text:
                                 for i in range(2):
+                                    point_id = str(uuid.uuid4())
+                                    create_embed_task(subtask_id ,point_id)
                                     if i == 0:
                                         q_gen_embed.enqueue(gen_embed, qa[0], full_text, decrypt_user_config["embedding-base-url"],
                                                             decrypt_user_config["embedding-model"],
                                                             decrypt_user_config["embedding-api-key"],
                                                             decrypt_user_config["qdrant-url"],
                                                             decrypt_user_config["qdrant-api-key"],
-                                                            decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                                                            decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
                                     else:
                                         q_gen_embed.enqueue(gen_embed, qa[0] + "\n" + qa[1], full_text, decrypt_user_config["embedding-base-url"],
                                                             decrypt_user_config["embedding-model"],
                                                             decrypt_user_config["embedding-api-key"],
                                                             decrypt_user_config["qdrant-url"],
                                                             decrypt_user_config["qdrant-api-key"],
-                                                            decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                                                            decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
                             else:
                                 for text in qa:
+                                    point_id = str(uuid.uuid4())
+                                    create_embed_task(subtask_id ,point_id)
                                     q_gen_embed.enqueue(gen_embed, text, qa[0] + "\n" + qa[1], decrypt_user_config["embedding-base-url"],
                                                         decrypt_user_config["embedding-model"],
                                                         decrypt_user_config["embedding-api-key"],
                                                         decrypt_user_config["qdrant-url"],
                                                         decrypt_user_config["qdrant-api-key"],
-                                                        decrypt_user_config["qdrant-collection"], retry=Retry(max=3))
+                                                        decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
+
+
+@app.route('/api/delete_subtask', methods=['DELETE'])
+def get_embed_and_tidb_id():
+    data = request.get_json()
+    task_id = data.get("uuid")
+    subtask_id = data.get("subtask_id")
+    if not subtask_id:
+        return jsonify({"error": "Subtask ID is required"}), 400
+
+    try:
+        task_info = get_task_info(task_id)
+        user_config = task_info[3] if task_info else None
+        decrypt_user_config = decrypt_data(user_config)
+        id_data = get_embed_and_tidb_id_by_subtask_id(subtask_id)
+        url = f"{decrypt_user_config['qdrant-url']}/collections/{decrypt_user_config['qdrant-collection']}/points/delete"
+
+        payload = json.dumps({
+            "points": id_data["embed_ids"],
+        })
+        headers = {
+            'api-key': decrypt_user_config['qdrant-api-key'],
+            'Content-Type': 'application/json'
+        }
+
+        requests.request("POST", url, headers=headers, data=payload)
+        parsed = urllib.parse.urlparse(db_url)
+        if parsed.scheme != "mysql":
+            raise ValueError("仅支持 mysql:// 开头的连接字符串")
+
+        userinfo = parsed.username
+        password = parsed.password
+        host = parsed.hostname
+        port = parsed.port or 4000
+        dbname = parsed.path.lstrip("/")  # 可能为空
+
+        conn_args = {
+            "user": userinfo,
+            "password": password,
+            "host": host,
+            "port": port,
+            "database": dbname if dbname else "database",
+            "ssl": {
+                "ssl_ca": "/etc/ssl/certs/ca-certificates.crt"
+            }
+        }
+
+        conn = mariadb.connect(**conn_args)
+        cursor = conn.cursor()
+
+        placeholders = ','.join(['?'] * len(id_data["tidb_ids"]))
+        cursor.execute(f"DELETE FROM `{decrypt_user_config['qdrant-collection']}` WHERE id IN  ({placeholders})", (id_data["tidb_ids"],))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return None
+    except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

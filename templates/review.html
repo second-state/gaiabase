@@ -64,7 +64,7 @@
         /* Progress Bar */
         .progress-container {
             background: rgba(255, 255, 255, 0.03);
-            padding: 20px;
+            padding: 20px 40px 50px;
             margin-bottom: 20px;
         }
 
@@ -712,6 +712,8 @@
     let unsavedChanges = false;
 
     const params = new URLSearchParams(window.location.search);
+    console.log(params)
+    console.log(params.get("id"))
 
     // 获取 id 参数
     const uuid = params.get("id");
@@ -754,20 +756,20 @@
             .then(response => response.json())
             .then(async data => {
                 const formatData = await Promise.all(data.map(async d => {
-                    const processedFileName = d[7] + (d[7].endsWith('.pdf') ? '.md' : '.txt');
-                    let qa_file_name = d[7];
-                    if (d[8] !== 4) {
+                    const processedFileName = d["save_name"] + (d["save_name"].endsWith('.pdf') ? '.md' : '.txt');
+                    let qa_file_name = d["save_name"];
+                    if (d["subtask_source"] !== 4) {
                         qa_file_name += '_qa.json';
                     }
                     let countData = 0
                     try{
-                        const countRes = await fetch(`/api/fileWords/${d[1]}/processed_files/${processedFileName}`);
+                        const countRes = await fetch(`/api/fileWords/${d["task_id"]}/processed_files/${processedFileName}`);
                         countData = await countRes.json();
                     }catch (e) {
                         console.error(e);
                     }
 
-                    const qaRes = await fetch(`/api/fileContent/${d[1]}/qa_files/${qa_file_name}`);
+                    const qaRes = await fetch(`/api/fileContent/${d["task_id"]}/qa_files/${qa_file_name}`);
                     let qaPairs = []
                     try{
                         const qaData = await qaRes.json();
@@ -782,25 +784,22 @@
                         console.error(e);
                     }
 
-
-
                     return {
-                        id: d[0],
-                        name: d[6],
+                        id: d["id"],
+                        uuid: d["task_id"],
+                        name: d["original_name"],
                         qaFileName: qa_file_name,
-                        type: d[8],
+                        type: d["subtask_source"],
                         charCount: countData.char_count,
-                        status: d[3],
-                        qaStatus: d[2],
-                        uuid: d[1],
+                        status: d["subtask_status"],
+                        step: d["subtask_step"],
                         qaCount: qaPairs.length,
                         qaPairs: qaPairs,
                         processedFileName: processedFileName,
-                        originalFileName: d[7]
+                        originalFileName: d["save_name"]
                     };
                 }));
 
-                console.log(formatData);
                 documents.length = 0; // Clear existing documents
                 documents.push(...formatData); // Add fetched documents
                 renderDocumentList();
