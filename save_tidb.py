@@ -1,4 +1,5 @@
 import json
+from sqlalchemy import Text
 from pytidb import TiDBClient
 from pytidb.schema import TableModel, Field
 
@@ -55,8 +56,9 @@ def save_txt_to_tidb(file_path, db_url, table_name, tidb_id):
     class Chunk(TableModel, table=True):
         __tablename__ = table_name
         id: int = Field(primary_key=True)
-        title: str = Field(sa_type="TEXT")
-        content: str = Field(sa_type="TEXT")
+
+        title: str = Field(sa_type=Text)
+        content: str = Field(sa_type=Text)
 
     # 创建表
     table = db.create_table(schema=Chunk)
