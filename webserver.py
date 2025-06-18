@@ -19,6 +19,10 @@ import time
 from redis import Redis
 from pathlib import Path
 
+from pytidb import TiDBClient
+from pytidb.schema import TableModel, Field
+from sqlalchemy import MetaData, Table, delete
+
 from datetime import datetime
 from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
@@ -315,7 +319,7 @@ def get_all_subtask_by_uuid():
 
     subtasks = get_subtasks_by_uuid(task_id)
     if not subtasks:
-        return jsonify({"error": "No subtasks found for this UUID"}), 404
+        return jsonify([]), 404
 
     return jsonify(subtasks)
 
@@ -456,9 +460,7 @@ def run_all_embed():
         for file in files:
             file_path = os.path.join(root, file)
             subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
-            print(subtask_id)
             tidb_subtask_id = create_tidb_task(subtask_id)
-            print(tidb_subtask_id)
             q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"], tidb_subtask_id)
     qa_folder_path = os.path.join(task_id, "qa_files")
     for root, dirs, files in os.walk(qa_folder_path):
@@ -468,12 +470,11 @@ def run_all_embed():
                 full_text = ""
                 subtask_id = None
                 if find_corresponding_file(file, task_id):
-                    if file == "Q&A_Input.json":
-                        subtask_id = get_subtask_id_by_uuid_and_name(task_id, "Q&A_Input.json")
-                    else:
-                        subtask_id = get_subtask_id_by_uuid_and_name(task_id, file[:-8])
+                    subtask_id = get_subtask_id_by_uuid_and_name(task_id, file[:-8])
                     with open(find_corresponding_file(file, task_id), 'r', encoding='utf-8') as f:
                         full_text = f.read()
+                else:
+                    subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         qa_data = json.load(f)
@@ -508,18 +509,17 @@ def run_all_embed():
                                                         decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
+                    return jsonify({"error": f"Error processing {file_path}: {str(e)}"}), 500
+    return jsonify({"status": "success"})
 
 
-@app.route('/api/delete_subtask', methods=['DELETE'])
-def get_embed_and_tidb_id():
-    data = request.get_json()
-    task_id = data.get("uuid")
-    subtask_id = data.get("subtask_id")
+@app.route('/api/deleteSubtask/<subtask_id>', methods=['DELETE'])
+def get_embed_and_tidb_id(subtask_id):
     if not subtask_id:
         return jsonify({"error": "Subtask ID is required"}), 400
 
     try:
-        task_info = get_task_info(task_id)
+        task_info = get_task_info_by_subtask_id(subtask_id)
         user_config = task_info[3] if task_info else None
         decrypt_user_config = decrypt_data(user_config)
         id_data = get_embed_and_tidb_id_by_subtask_id(subtask_id)
@@ -534,7 +534,8 @@ def get_embed_and_tidb_id():
         }
 
         requests.request("POST", url, headers=headers, data=payload)
-        parsed = urllib.parse.urlparse(db_url)
+
+        parsed = urllib.parse.urlparse(decrypt_user_config["tidb-url"])
         if parsed.scheme != "mysql":
             raise ValueError("仅支持 mysql:// 开头的连接字符串")
 
@@ -544,26 +545,34 @@ def get_embed_and_tidb_id():
         port = parsed.port or 4000
         dbname = parsed.path.lstrip("/")  # 可能为空
 
-        conn_args = {
-            "user": userinfo,
-            "password": password,
-            "host": host,
-            "port": port,
-            "database": dbname if dbname else "database",
-            "ssl": {
-                "ssl_ca": "/etc/ssl/certs/ca-certificates.crt"
-            }
-        }
+        # 连接 TiDB
+        db = TiDBClient.connect(
+            host=host,
+            port=port,
+            username=userinfo,
+            password=password,
+            database=dbname if dbname else "database",
+        )
 
-        conn = mariadb.connect(**conn_args)
-        cursor = conn.cursor()
+        print(dir(db))
 
-        placeholders = ','.join(['?'] * len(id_data["tidb_ids"]))
-        cursor.execute(f"DELETE FROM `{decrypt_user_config['qdrant-collection']}` WHERE id IN  ({placeholders})", (id_data["tidb_ids"],))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return None
+        engine = db.db_engine
+        metadata = MetaData()
+        table = Table(
+            decrypt_user_config["qdrant-collection"],
+            metadata,
+            autoload_with=engine
+        )
+
+        print(f"表名: {table.name}")
+
+        # 删除指定 id 的数据
+        if id_data["tidb_ids"]:
+            delete_stmt = delete(table).where(table.c.id.in_(id_data["tidb_ids"]))
+            db.execute(delete_stmt)
+
+        delete_subtask(subtask_id)
+        return jsonify({"status": "success"})
     except Exception as e:
             return jsonify({"error": str(e)}), 500
 

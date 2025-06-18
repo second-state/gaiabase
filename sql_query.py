@@ -181,6 +181,28 @@ def create_subtask(uuid, original_name, save_name, subtask_source, subtask_step=
             conn.close()
 
 
+def delete_subtask(subtask_id):
+    conn = create_connection()
+    if conn is None:
+        return False
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       DELETE FROM `subtask`
+                       WHERE id = %s;
+                       """, (subtask_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Error as e:
+        print(f"Delete subtask failed and rolled back. Error: {e}")
+        conn.rollback()
+        return False
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
 def check_subtask_status(subtask_id):
     conn = create_connection()
     if conn is None:
@@ -370,9 +392,9 @@ def get_embed_and_tidb_id_by_subtask_id(subtask_id):
                             WHERE subtask_id = %s;
                           """, (subtask_id,))
         tidb_result = cursor.fetchall()
-        if result:
+        if embed_result and tidb_result:
             return {
-                'tidb_id': [row['tidb_id'] for row in tidb_result],
+                'tidb_ids': [row['tidb_id'] for row in tidb_result],
                 'embed_ids': [row['embed_id'] for row in embed_result]
             }
         else:
@@ -397,6 +419,7 @@ def create_embed_task(subtask_id, embed_id):
                        VALUES (%s, %s);
                        """, (embed_id, subtask_id,))
         conn.commit()
+        print(cursor.lastrowid)
         return cursor.lastrowid
     except Error as e:
         print(f"Create embed task failed and rolled back. Error: {e}")

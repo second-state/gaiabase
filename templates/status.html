@@ -801,7 +801,7 @@
                         qaFileName: qa_file_name,
                         type: d["subtask_source"],
                         charCount: sizeData.size,
-                        status: d["subtask_status"],
+                        status: d["embed_status"] === 0 || d["tidb_status"] === 0 ? 0 : (d["subtask_status"] === -1 || d["embed_status"] === -1 || d["tidb_status"] === -1 ? -1 : 1),
                         embedStatus: d["embed_status"] || 0,
                         tidbStatus: d["tidb_status"],
                         step: d["subtask_step"],
@@ -814,8 +814,14 @@
                 documents.length = 0; // Clear existing documents
                 documents.push(...formatData); // Add fetched documents
                 const allProcessed = documents.filter(d => d.status === 1 || d.status === -1).length === documents.length;
+                const haveFailed = documents.filter(d => d.status === -1).length > 0;
                 if (allProcessed) {
                     document.getElementById('completionActions').style.display = 'block';
+                    if (haveFailed) {
+                        document.getElementById('retryAllButton').style.display = 'block';
+                    }else {
+                        document.getElementById('retryAllButton').style.display = 'none';
+                    }
                     // Update progress to complete
                     document.querySelector('.progress-step:nth-child(3)').classList.remove('active');
                     document.querySelector('.progress-step:nth-child(3)').classList.add('completed');
@@ -896,7 +902,7 @@
         } else if (doc.status === 0) {
             return '<span style="color: rgba(255, 255, 255, 0.5);">Processing...</span>';
         }
-        return `<button class="action-btn" onclick="deleteDocument('${doc.name}')">Delete</button>`;
+        return `<button class="action-btn" onclick="deleteDocument('${doc.name}', '${doc.id}')">Delete</button>`;
     }
 
     // Filter status
@@ -918,11 +924,11 @@
     }
 
     // Action handlers
-    function deleteDocument(docName) {
+    function deleteDocument(docName, docId) {
         const result = confirm("This operation cannot be undone. Do you want to continue deleting?");
         if (result) {
             showNotification(`Deleting ${docName}...`, 'info');
-            fetch(`/api/deleteSubtask/${docName}`, {
+            fetch(`/api/deleteSubtask/${docId}`, {
                 method: 'DELETE'
             })
                 .then(response => {
