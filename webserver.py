@@ -461,14 +461,13 @@ def run_all_embed():
             file_path = os.path.join(root, file)
             subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
             tidb_subtask_id = create_tidb_task(subtask_id)
-            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"], tidb_subtask_id)
+            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"], tidb_subtask_id, task_id, subtask_id)
     qa_folder_path = os.path.join(task_id, "qa_files")
     for root, dirs, files in os.walk(qa_folder_path):
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
                 full_text = ""
-                subtask_id = None
                 if find_corresponding_file(file, task_id):
                     subtask_id = get_subtask_id_by_uuid_and_name(task_id, file[:-8])
                     with open(find_corresponding_file(file, task_id), 'r', encoding='utf-8') as f:
@@ -489,14 +488,14 @@ def run_all_embed():
                                                             decrypt_user_config["embedding-api-key"],
                                                             decrypt_user_config["qdrant-url"],
                                                             decrypt_user_config["qdrant-api-key"],
-                                                            decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
+                                                            decrypt_user_config["qdrant-collection"], point_id, task_id, subtask_id, retry=Retry(max=3))
                                     else:
                                         q_gen_embed.enqueue(gen_embed, qa[0] + "\n" + qa[1], full_text, decrypt_user_config["embedding-base-url"],
                                                             decrypt_user_config["embedding-model"],
                                                             decrypt_user_config["embedding-api-key"],
                                                             decrypt_user_config["qdrant-url"],
                                                             decrypt_user_config["qdrant-api-key"],
-                                                            decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
+                                                            decrypt_user_config["qdrant-collection"], point_id, task_id, subtask_id, retry=Retry(max=3))
                             else:
                                 for text in qa:
                                     point_id = str(uuid.uuid4())
@@ -506,7 +505,7 @@ def run_all_embed():
                                                         decrypt_user_config["embedding-api-key"],
                                                         decrypt_user_config["qdrant-url"],
                                                         decrypt_user_config["qdrant-api-key"],
-                                                        decrypt_user_config["qdrant-collection"], point_id, retry=Retry(max=3))
+                                                        decrypt_user_config["qdrant-collection"], point_id, task_id, subtask_id, retry=Retry(max=3))
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
                     return jsonify({"error": f"Error processing {file_path}: {str(e)}"}), 500

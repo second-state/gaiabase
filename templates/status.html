@@ -950,7 +950,7 @@
         console.log(id)
         const doc = documents.find(doc => doc.id === parseInt(id));
         console.log(doc)
-        fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.originalFileName}_err.txt`)
+        fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.id}_embed_err.txt`)
             .then(response => {
                 console.log(response);
                 if (!response.ok) {

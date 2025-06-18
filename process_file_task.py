@@ -70,6 +70,9 @@ def task_doc(file_path, process_file_path, subtask_id):
         return full_path
     except Exception as e:
         update_subtask(subtask_id, 1,-1)
+        err_output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
+        with open(err_output_path, 'w', encoding='utf-8') as f:
+            f.write(str(e))
         print(f"[error] doc处理失败! \n 文件名：{file_path} \n 原因： {e}")
         raise e
 
@@ -99,6 +102,9 @@ def task_pdf(file_path, process_file_path, subtask_id):
         return output_path
     except Exception as e:
         update_subtask(subtask_id, 1,-1)
+        err_output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
+        with open(err_output_path, 'w', encoding='utf-8') as f:
+            f.write(str(e))
         print(f"[error] pdf处理失败! \n 文件名：{file_path} \n 原因： {e}")
 
 
@@ -139,6 +145,9 @@ def task_url(url, process_file_path):
         return output_path
     except Exception as e:
         update_subtask(subtask_id, 1,-1)
+        err_output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
+        with open(err_output_path, 'w', encoding='utf-8') as f:
+            f.write(str(e))
         print(f"[error] url处理失败! \n url：{url} \n 原因： {e}")
         raise e
 
@@ -157,6 +166,9 @@ def task_txt(src_path, dest_dir, subtask_id):
         return dest_path
     except Exception as e:
         update_subtask(subtask_id, 1,-1)
+        err_output_path = Path(file_path).parent.parent / "err_files" / f"{Path(file_path).stem}_err.txt"
+        with open(err_output_path, 'w', encoding='utf-8') as f:
+            f.write(str(e))
         print(f"[error] 文件复制失败！\n源文件：{src_path}\n原因：{e}")
         raise e
 

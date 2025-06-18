@@ -33,7 +33,7 @@ def complete_embed_url(base_url):
 
 
 def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedding_api_key, qdrant_url, qdrant_api_key,
-              qdrant_collection, point_id):
+              qdrant_collection, point_id, task_id, subtask_id):
     text = f"{short_text} {full_text}"
     headers = {
         "Authorization": f"Bearer {embedding_api_key}",
@@ -82,5 +82,8 @@ def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedd
         return True
     except requests.RequestException as e:
         update_embed_task_status(point_id, -1)
+        err_output_path = task_id / "err_files" / f"{subtask_id}_embed_err.txt"
+        with open(err_output_path, 'a', encoding='utf-8') as f:
+            f.write(str(e))
         print(f"请求或解析嵌入时出错: {e}")
         return None

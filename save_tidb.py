@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 from sqlalchemy import Text
 from pytidb import TiDBClient
 from pytidb.schema import TableModel, Field
@@ -30,57 +31,64 @@ def parse_nested_json_file(file_path):
     return result
 
 
-def save_txt_to_tidb(file_path, db_url, table_name, tidb_id):
-    # 解析 db_url
-    import urllib.parse
-    parsed = urllib.parse.urlparse(db_url)
-    if parsed.scheme != "mysql":
-        raise ValueError("仅支持 mysql:// 开头的连接字符串")
+def save_txt_to_tidb(file_path, db_url, table_name, tidb_id, task_id, subtask_id):
+    try:
+        # 解析 db_url
+        parsed = urllib.parse.urlparse(db_url)
+        if parsed.scheme != "mysql":
+            raise ValueError("仅支持 mysql:// 开头的连接字符串")
 
-    userinfo = parsed.username
-    password = parsed.password
-    host = parsed.hostname
-    port = parsed.port or 4000
-    dbname = parsed.path.lstrip("/")
+        userinfo = parsed.username
+        password = parsed.password
+        host = parsed.hostname
+        port = parsed.port or 4000
+        dbname = parsed.path.lstrip("/")
 
-    # 连接 TiDB
-    db = TiDBClient.connect(
-        host=host,
-        port=port,
-        username=userinfo,
-        password=password,
-        database=dbname,
-    )
+        # 连接 TiDB
+        db = TiDBClient.connect(
+            host=host,
+            port=port,
+            username=userinfo,
+            password=password,
+            database=dbname,
+        )
 
-    # 定义表结构
-    class Chunk(TableModel, table=True):
-        __tablename__ = table_name
-        id: int = Field(primary_key=True)
+        # 定义表结构
+        class Chunk(TableModel, table=True):
+            __tablename__ = table_name
+            id: int = Field(primary_key=True)
 
-        title: str = Field(sa_type=Text)
-        content: str = Field(sa_type=Text)
+            title: str = Field(sa_type=Text)
+            content: str = Field(sa_type=Text)
 
-    # 创建表
-    table = db.create_table(schema=Chunk)
+        # 创建表
+        table = db.create_table(schema=Chunk)
 
-    # 创建全文索引（如需要）
-    if not table.has_fts_index("content"):
-        table.create_fts_index("content")
+        # 创建全文索引（如需要）
+        if not table.has_fts_index("content"):
+            table.create_fts_index("content")
 
-    # 读取文件内容
-    title_and_content = parse_nested_json_file(file_path)
-    rows = []
-    if title_and_content:
-        for idx, item in enumerate(title_and_content, start=1):
-            title = item.get("title", "")
-            content = item.get("content", "")
-            rows.append(Chunk(title=title, content=content))
-    else:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        rows.append(Chunk(title="", content=content))
+        # 读取文件内容
+        title_and_content = parse_nested_json_file(file_path)
+        if title_and_content:
+            for idx, item in enumerate(title_and_content, start=1):
+                title = item.get("title", "")
+                content = item.get("content", "")
+                row = Chunk(title=title, content=content)
+        else:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                row = Chunk(title="", content=content)
 
-    # 批量插入
-    table.bulk_insert(rows)
-    update_tidb_task_status(tidb_id, 1, 1)
-    print(f"✅ 成功将文件内容写入 `{dbname}.{table_name}`")
+        # 批量插入
+        result = table.insert(row)
+        inserted_id = result.id
+        update_tidb_task_status(tidb_id, inserted_id, 1)
+        print(f"✅ 成功将文件内容写入 `{dbname}.{table_name}`")
+    except Exception as e:
+        update_tidb_task_status(tidb_id, 0, -1)
+        err_output_path = task_id / "err_files" / f"{subtask_id}_embed_err.txt"
+        with open(err_output_path, 'a', encoding='utf-8') as f:
+            f.write(str(e))
+        print(f"❌ 保存到 TiDB 时出错: {e}")
+        raise e
