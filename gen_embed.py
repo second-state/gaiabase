@@ -1,6 +1,8 @@
 import requests
 import json
 
+from pathlib import Path
+
 from urllib.parse import urljoin
 
 import numpy as np
@@ -82,7 +84,7 @@ def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedd
         return True
     except requests.RequestException as e:
         update_embed_task_status(point_id, -1)
-        err_output_path = task_id / "err_files" / f"{subtask_id}_embed_err.txt"
+        err_output_path = Path(task_id) / "err_files" / f"{subtask_id}_embed_err.txt"
         with open(err_output_path, 'a', encoding='utf-8') as f:
             f.write(str(e))
         print(f"请求或解析嵌入时出错: {e}")
