@@ -768,7 +768,7 @@
                 const formatData = await Promise.all(data.map(async d => {
                     let qa_file_name = d["save_name"];
                     if (d["subtask_source"] !== 4) {
-                        qa_file_name += '_qa.json';
+                        qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
                     }
                     let sizeData = 0
                     try {
