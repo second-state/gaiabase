@@ -256,7 +256,7 @@ def get_subtask_id_by_uuid_and_name(uuid, name):
         cursor.execute("""
                        SELECT id
                        FROM `subtask`
-                       WHERE task_id = %s AND save_name = %s;
+                       WHERE task_id = %s AND save_name LIKE %s;;
                        """, (uuid, name,))
         result = cursor.fetchone()
         return result[0] if result else None

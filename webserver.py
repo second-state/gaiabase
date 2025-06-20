@@ -188,7 +188,8 @@ def save_all_file(files, task_id):
         file_extension = filename.rsplit('.', 1)[-1].lower()
         save_file_path = os.path.join(task_id, "original_files")
         save_file_path = Path(save_file_path) / filename
-        subtask_id = create_subtask(task_id, filename, filename, 1)
+        save_name = os.path.join(task_id, "process_files", Path(filename).stem)
+        subtask_id = create_subtask(task_id, filename, save_name, 1)
         file.save(save_file_path)
         update_subtask(task_id, None, 1)
         process_file_path = os.path.join(task_id, "processed_files")
@@ -210,16 +211,13 @@ def save_all_file(files, task_id):
 
 def save_all_qa(qa_data, task_id):
     qa_list = []
-
     for item in qa_data:
-        content = item["content"].strip()
-        pairs = content.split('\n\n')  # 分割每组 QA
-        for pair in pairs:
-            lines = pair.strip().split('\n')
-            if len(lines) == 2:
-                q = lines[0].replace('Q:', '').strip()
-                a = lines[1].replace('A:', '').strip()
-                qa_list.append([q, a])
+        try:
+            qa_list.extend(item["content"])  # 追加多个 [Q, A] 对
+        except json.JSONDecodeError as e:
+            print(f"跳过无效 JSON: {e}")
+
+    print(qa_list)
 
     if len(qa_list) > 0:
         qa_file_path = os.path.join(task_id, "qa_files", "Q&A_Input.json")
@@ -240,14 +238,16 @@ def crawl_all_url(host_url_list, task_id):
 
 
 def save_all_text(text_list, task_id):
-    total_text = "\n".join(f"{item['longText']} {item['shortText']}" for item in text_list)
-    if total_text:
-        save_file_path = os.path.join(task_id, "original_files", "text_input.txt")
-        process_file_path = os.path.join(task_id, "processed_files")
-        subtask_id = create_subtask(task_id, "Text Input", "text_input.txt", 3)
-        with open(save_file_path, "w", encoding="utf-8") as f:
-            f.write(total_text)
-        q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
+    for idx, item in enumerate(text_list):
+        total_text = f"{item['longText']} {item['shortText']}"
+        if total_text:
+            save_name = f"{item.get('shortText') or f'Input_Text{idx+1}'}" + ".txt"
+            save_file_path = os.path.join(task_id, "original_files", save_name)
+            process_file_path = os.path.join(task_id, "processed_files")
+            subtask_id = create_subtask(task_id, "Text Input", save_name, 3)
+            with open(save_file_path, "w", encoding="utf-8") as f:
+                f.write(total_text)
+            q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
 
 
 @app.route("/api/processingAllData", methods=["POST"])
@@ -285,7 +285,6 @@ def processing_all_data():
             "file": file
         })
         i += 1
-
     save_all_file(uploaded_files, task_id)
     save_all_text(queue.get("texts", []), task_id)
     crawl_all_url(queue.get("urls", []), task_id)
@@ -460,7 +459,9 @@ def run_all_embed():
         for file in files:
             file_path = os.path.join(root, file)
             subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
+            print(f"Processing file: {file_path}, Subtask ID: {subtask_id}")
             tidb_subtask_id = create_tidb_task(subtask_id)
+            print(f"Created TiDB task with ID: {tidb_subtask_id}")
             q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"], tidb_subtask_id, task_id, subtask_id)
     qa_folder_path = os.path.join(task_id, "qa_files")
     for root, dirs, files in os.walk(qa_folder_path):
@@ -469,7 +470,7 @@ def run_all_embed():
                 file_path = os.path.join(root, file)
                 full_text = ""
                 if find_corresponding_file(file, task_id):
-                    subtask_id = get_subtask_id_by_uuid_and_name(task_id, file[:-8])
+                    subtask_id = get_subtask_id_by_uuid_and_name(task_id, file.replace('_qa.json', ''))
                     with open(find_corresponding_file(file, task_id), 'r', encoding='utf-8') as f:
                         full_text = f.read()
                 else:
@@ -552,8 +553,6 @@ def get_embed_and_tidb_id(subtask_id):
             password=password,
             database=dbname if dbname else "database",
         )
-
-        print(dir(db))
 
         engine = db.db_engine
         metadata = MetaData()

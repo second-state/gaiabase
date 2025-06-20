@@ -1066,6 +1066,52 @@
         }
     }
 
+    function parseQAPairs(inputType, inputContent, customSeparator = '|') {
+        const result = [];
+
+        if (inputType === 'structured') {
+            // 处理 Q: xxx A: xxx 的格式
+            const lines = inputContent.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+            let question = null;
+
+            for (const line of lines) {
+                if (/^Q\s*:/.test(line)) {
+                    question = line.replace(/^Q\s*:\s*/, '').trim();
+                } else if (/^A\s*:/.test(line) && question !== null) {
+                    const answer = line.replace(/^A\s*:\s*/, '').trim();
+                    result.push([question, answer]);
+                    question = null;
+                }
+            }
+        } else if (inputType === 'json') {
+            // 处理 JSON 数组格式
+            try {
+                const parsed = JSON.parse(inputContent);
+                for (const item of parsed) {
+                    if (item.question && item.answer) {
+                        result.push([item.question.trim(), item.answer.trim()]);
+                    }
+                }
+            } catch (e) {
+                console.error('Invalid JSON input:', e);
+            }
+        } else if (inputType === 'custom') {
+            // 处理自定义分隔符格式
+            const lines = inputContent.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+            const sep = customSeparator.trim().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // 转义正则特殊字符
+            const regex = new RegExp(`^(.*?)\\s*${sep}\\s*(.*?)$`);
+
+            for (const line of lines) {
+                const match = line.match(regex);
+                if (match) {
+                    result.push([match[1].trim(), match[2].trim()]);
+                }
+            }
+        }
+
+        return result;
+    }
+
     // Add to queue functions
     function addFilesToQueue() {
         if (uploadedFiles.length === 0) return;
@@ -1155,10 +1201,7 @@
         }
 
         processingQueue.qas.push({
-            content: qaContent,
-            format: format,
-            delimiter: format === 'custom' ? document.getElementById('customDelimiter').value : null,
-            pairCount: pairCount
+            content: parseQAPairs(format, qaContent, format === 'custom' ? document.getElementById('customDelimiter').value : null),
         });
 
         // Clear form
@@ -1224,7 +1267,7 @@
         }
 
         if (processingQueue.qas.length > 0) {
-            const totalPairs = processingQueue.qas.reduce((sum, qa) => sum + qa.pairCount, 0);
+            const totalPairs = processingQueue.qas.reduce((sum, qa) => sum + qa.content.length, 0);
             statsHtml += `
                     <div class="queue-stat">
                         <span class="queue-stat-icon">❓</span>

@@ -1,3 +1,4 @@
+import os
 import json
 import urllib.parse
 from sqlalchemy import Text
@@ -69,21 +70,36 @@ def save_txt_to_tidb(file_path, db_url, table_name, tidb_id, task_id, subtask_id
         if not table.has_fts_index("content"):
             table.create_fts_index("content")
 
+        print(dir(table))
+        print(dir(table.query))
         # 读取文件内容
         title_and_content = parse_nested_json_file(file_path)
         if title_and_content:
             for idx, item in enumerate(title_and_content, start=1):
                 title = item.get("title", "")
                 content = item.get("content", "")
-                row = Chunk(title=title, content=content)
+                # 检查是否已存在相同 content
+                exist_rows = table.query(filters={"content": content})
+                print(exist_rows)
+                if exist_rows:
+                    inserted_id = exist_rows[0].id
+                else:
+                    row = Chunk(title=title, content=content)
+                    result = table.insert(row)
+                    inserted_id = result.id
         else:
             with open(file_path, 'r', encoding='utf-8') as f:
+                filename = os.path.basename(file_path)
                 content = f.read()
-                row = Chunk(title="", content=content)
-
-        # 批量插入
-        result = table.insert(row)
-        inserted_id = result.id
+                # 检查是否已存在相同 content
+                exist_rows = table.query(filters={"content": content})
+                print(exist_rows)
+                if exist_rows:
+                    inserted_id = exist_rows[0].id
+                else:
+                    row = Chunk(title=filename.split(".", 1)[0], content=content)
+                    result = table.insert(row)
+                    inserted_id = result.id
         update_tidb_task_status(tidb_id, inserted_id, 1)
         print(f"✅ 成功将文件内容写入 `{dbname}.{table_name}`")
     except Exception as e:

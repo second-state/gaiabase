@@ -756,14 +756,13 @@
             .then(response => response.json())
             .then(async data => {
                 const formatData = await Promise.all(data.map(async d => {
-                    const processedFileName = d["save_name"] + (d["save_name"].endsWith('.pdf') ? '.md' : '.txt');
                     let qa_file_name = d["save_name"];
                     if (d["subtask_source"] !== 4) {
-                        qa_file_name += '_qa.json';
+                        qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
                     }
                     let countData = 0
                     try{
-                        const countRes = await fetch(`/api/fileWords/${d["task_id"]}/processed_files/${processedFileName}`);
+                        const countRes = await fetch(`/api/fileWords/${d["task_id"]}/processed_files/${d["save_name"]}`);
                         countData = await countRes.json();
                     }catch (e) {
                         console.error(e);
@@ -795,8 +794,7 @@
                         step: d["subtask_step"],
                         qaCount: qaPairs.length,
                         qaPairs: qaPairs,
-                        processedFileName: processedFileName,
-                        originalFileName: d["save_name"]
+                        processedFileName: d["save_name"]
                     };
                 }));
 
@@ -916,7 +914,7 @@
         document.getElementById('editorTitle').textContent = doc.name;
         if(error) {
             document.getElementById('addQaBtn').style.display = 'none';
-            fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.originalFileName}_err.txt`)
+            fetch(`/api/fileContent/${doc.uuid}/err_files/${doc.processedFileName.substring(0, doc.processedFileName.lastIndexOf('.'))}_err.txt`)
                 .then(response => response.text())
                 .then(errorText => {
                     document.getElementById('qaList').innerHTML = `<p style="color: red;">Error: ${errorText}</p>`;
