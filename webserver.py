@@ -189,20 +189,26 @@ def save_all_file(files, task_id):
         save_file_path = os.path.join(task_id, "original_files")
         save_file_path = Path(save_file_path) / filename
         save_name = os.path.join(task_id, "process_files", Path(filename).stem)
-        subtask_id = create_subtask(task_id, filename, save_name, 1)
         file.save(save_file_path)
-        update_subtask(task_id, None, 1)
         process_file_path = os.path.join(task_id, "processed_files")
         if file_extension in ['doc', 'docx']:
+            subtask_id = create_subtask(task_id, filename, Path(filename).stem + ".txt", 1)
+            update_subtask(subtask_id, None, 1)
             q_process_doc.enqueue(task_doc, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是doc")
         elif file_extension in ['pdf']:
+            subtask_id = create_subtask(task_id, filename, Path(filename).stem + ".md", 1)
+            update_subtask(subtask_id, None, 1)
             q_process_pdf.enqueue(task_pdf, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是pdf")
         elif file_extension in ['txt']:
+            subtask_id = create_subtask(task_id, filename, Path(filename).stem + ".txt", 1)
+            update_subtask(subtask_id, None, 1)
             q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是txt")
         elif file_extension in ['md']:
+            subtask_id = create_subtask(task_id, filename, Path(filename).stem + ".md", 1)
+            update_subtask(subtask_id, None, 1)
             q_process_txt.enqueue(task_md, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
             print(f"{filename} 是md")
         else:

@@ -903,7 +903,7 @@
         const validTypes = ['text/plain', 'application/pdf', 'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         return validTypes.includes(file.type) ||
-            file.name.match(/\.(txt|pdf|doc|docx)$/i);
+            file.name.match(/\.(md|txt|pdf|doc|docx)$/i);
     }
 
     function displayFile(file) {
