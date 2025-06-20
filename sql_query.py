@@ -256,8 +256,8 @@ def get_subtask_id_by_uuid_and_name(uuid, name):
         cursor.execute("""
                        SELECT id, save_name
                        FROM `subtask`
-                       WHERE task_id = %s AND save_name LIKE %s;;
-                       """, (uuid, name,))
+                       WHERE task_id = %s AND save_name LIKE %s;
+                       """, (uuid, f"%{name}%",))
         result = cursor.fetchone()
         return result
     except Error as e:
@@ -419,7 +419,6 @@ def create_embed_task(subtask_id, embed_id):
                        VALUES (%s, %s);
                        """, (embed_id, subtask_id,))
         conn.commit()
-        print(cursor.lastrowid)
         return cursor.lastrowid
     except Error as e:
         print(f"Create embed task failed and rolled back. Error: {e}")

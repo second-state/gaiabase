@@ -466,7 +466,6 @@ def run_all_embed():
             file_path = os.path.join(root, file)
             subtask_data = get_subtask_id_by_uuid_and_name(task_id, file)
             subtask_id = subtask_data[0]
-            save_file_data = subtask_data[1]
             print(f"Processing file: {file_path}, Subtask ID: {subtask_id}")
             tidb_subtask_id = create_tidb_task(subtask_id)
             print(f"Created TiDB task with ID: {tidb_subtask_id}")
@@ -477,9 +476,12 @@ def run_all_embed():
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
                 full_text = ""
-                subtask_data = get_subtask_id_by_uuid_and_name(task_id, file.replace('_qa.json', ''))
+                filename = file.replace('_qa.json', '')
+                print(f"task_id: {task_id}, filename: {filename}")
+                subtask_data = get_subtask_id_by_uuid_and_name(task_id, filename)
                 subtask_id = subtask_data[0]
                 save_file_data = subtask_data[1]
+                print(f"Processing file: {file_path}, Subtask ID: {subtask_id}, Save File Data: {save_file_data}")
                 with open(os.path.join(task_id, "processed_files", save_file_data), 'r', encoding='utf-8') as f:
                     full_text = f.read()
                 try:

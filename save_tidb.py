@@ -70,8 +70,6 @@ def save_txt_to_tidb(file_path, db_url, table_name, tidb_id, task_id, subtask_id
         if not table.has_fts_index("content"):
             table.create_fts_index("content")
 
-        print(dir(table))
-        print(dir(table.query))
         # 读取文件内容
         title_and_content = parse_nested_json_file(file_path)
         if title_and_content:
