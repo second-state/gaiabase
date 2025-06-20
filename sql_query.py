@@ -254,12 +254,12 @@ def get_subtask_id_by_uuid_and_name(uuid, name):
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                       SELECT id
+                       SELECT id, save_name
                        FROM `subtask`
                        WHERE task_id = %s AND save_name LIKE %s;;
                        """, (uuid, name,))
         result = cursor.fetchone()
-        return result[0] if result else None
+        return result
     except Error as e:
         print(f"Get subtask id by uuid and name failed. Error: {e}")
         return None

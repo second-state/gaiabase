@@ -770,13 +770,6 @@
                     if (d["subtask_source"] !== 4) {
                         qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
                     }
-                    let sizeData = 0
-                    try {
-                        const sizeRes = await fetch(`/api/filesize/${d["task_id"]}/original_files/${d["save_name"]}`);
-                        sizeData = await sizeRes.json();
-                    } catch (e) {
-                        console.error(e);
-                    }
 
                     const qaRes = await fetch(`/api/fileContent/${d["task_id"]}/qa_files/${qa_file_name}`);
                     let qaPairs = []
@@ -800,7 +793,6 @@
                         name: d["original_name"],
                         qaFileName: qa_file_name,
                         type: d["subtask_source"],
-                        charCount: sizeData.size,
                         status: !d["embed_status"] || !d["tidb_status"] ? 0 : d["embed_status"] === 0 || d["tidb_status"] === 0 ? 0 : (d["subtask_status"] === -1 || d["embed_status"] === -1 || d["tidb_status"] === -1 ? -1 : 1),
                         embedStatus: d["embed_status"] || 0,
                         tidbStatus: d["tidb_status"] || 0,

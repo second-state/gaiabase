@@ -464,7 +464,9 @@ def run_all_embed():
     for root, dirs, files in os.walk(process_folder_path):
         for file in files:
             file_path = os.path.join(root, file)
-            subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
+            subtask_data = get_subtask_id_by_uuid_and_name(task_id, file)
+            subtask_id = subtask_data[0]
+            save_file_data = subtask_data[1]
             print(f"Processing file: {file_path}, Subtask ID: {subtask_id}")
             tidb_subtask_id = create_tidb_task(subtask_id)
             print(f"Created TiDB task with ID: {tidb_subtask_id}")
@@ -475,12 +477,11 @@ def run_all_embed():
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
                 full_text = ""
-                if find_corresponding_file(file, task_id):
-                    subtask_id = get_subtask_id_by_uuid_and_name(task_id, file.replace('_qa.json', ''))
-                    with open(find_corresponding_file(file, task_id), 'r', encoding='utf-8') as f:
-                        full_text = f.read()
-                else:
-                    subtask_id = get_subtask_id_by_uuid_and_name(task_id, file)
+                subtask_data = get_subtask_id_by_uuid_and_name(task_id, file.replace('_qa.json', ''))
+                subtask_id = subtask_data[0]
+                save_file_data = subtask_data[1]
+                with open(os.path.join(task_id, "processed_files", save_file_data), 'r', encoding='utf-8') as f:
+                    full_text = f.read()
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         qa_data = json.load(f)
