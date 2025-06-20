@@ -165,8 +165,27 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        input::placeholder {
+        input::placeholder, select {
             color: rgba(255, 255, 255, 0.3);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            appearance: auto;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .password-toggle {
@@ -238,14 +257,20 @@
             right: 20px;
             padding: 15px 25px;
             border-radius: 10px;
-            background: rgba(46, 213, 115, 0.9);
             color: #fff;
-            transform: translateX(400px);
+            transform: translateX(9999px);
             transition: transform 0.3s ease;
-            box-shadow: 0 5px 20px rgba(46, 213, 115, 0.3);
         }
 
-        .status-message.show {
+        .status-message.success {
+            background: rgba(46, 213, 115, 0.9);
+            box-shadow: 0 5px 20px rgba(46, 213, 115, 0.3);
+            transform: translateX(0);
+        }
+
+        .status-message.error {
+            background: rgba(255, 71, 87, 0.9);
+            box-shadow: 0 5px 20px rgba(255, 71, 87, 0.3);
             transform: translateX(0);
         }
 
@@ -304,6 +329,10 @@
                     <input required type="url" id="tidb-url" name="tidb-url" pattern="mysql://.*" placeholder="mysql://user:pass@host:port/db">
                 </div>
                 <div class="form-group">
+                    <label for="tidb-table-name">Table Name</label>
+                    <input required type="text" id="tidb-table-name" name="tidb-table-name" placeholder="gaiabase">
+                </div>
+                <div class="form-group">
                     <label for="tidb-api-key">API Key</label>
                     <div class="password-toggle">
                         <input type="password" id="tidb-api-key" name="tidb-api-key" placeholder="Enter your API key">
@@ -328,7 +357,13 @@
                 </div>
                 <div class="form-group">
                     <label for="embedding-vector-size">Vector Size</label>
-                    <input required type="number" id="embedding-vector-size" name="embedding-vector-size" placeholder="768" min="1">
+                    <select required id="embedding-vector-size" name="embedding-vector-size" class="form-select">
+                        <option value="384">384</option>
+                        <option value="512">512</option>
+                        <option value="768" selected>768</option>
+                        <option value="1024">1024</option>
+                        <option value="1536">1536</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="embedding-api-key">API Key</label>
@@ -343,7 +378,7 @@
             <div class="config-card">
                 <div class="card-header">
                     <div class="card-icon chat-icon">💬</div>
-                    <h2>Chat Service</h2>
+                    <h2>LLM Service</h2>
                 </div>
                 <div class="form-group">
                     <label for="chat-base-url">Base URL</label>
@@ -423,21 +458,53 @@
 
     // Load saved configuration
     async function loadConfiguration() {
-        const stored = localStorage.getItem('gaiabaseConfig');
-        const savedConfig = await decrypt(stored);
-        if (savedConfig && typeof savedConfig === 'object' && Object.keys(savedConfig).length > 0) {
-            Object.keys(savedConfig).forEach(key => {
-                const field = document.getElementById(key);
-                if (field) {
-                    field.value = savedConfig[key];
+        // 检查URL是否包含id参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const configId = urlParams.get('id');
+
+        if (configId) {
+            // 如果URL中有id参数，从服务器获取配置
+            try {
+                const response = await fetch(`/api/getConfig/${configId}`);
+                if (response.ok) {
+                    const savedConfig = await response.json();
+                    if (savedConfig && typeof savedConfig === 'object' && Object.keys(savedConfig).length > 0) {
+                        Object.keys(savedConfig).forEach(key => {
+                            const field = document.getElementById(key);
+                            if (field) {
+                                field.value = savedConfig[key];
+                            }
+                        });
+                    }
+                    return savedConfig;
+                } else {
+                    console.error('Failed to fetch configuration from server');
                 }
-            });
+            } catch (error) {
+                console.error('Error fetching configuration:', error);
+            }
+        }
+        // 没有id参数时从localStorage获取
+        const stored = localStorage.getItem('gaiabaseConfig');
+        if (stored) {
+            const savedConfig = await decrypt(stored);
+            if (savedConfig && typeof savedConfig === 'object' && Object.keys(savedConfig).length > 0) {
+                Object.keys(savedConfig).forEach(key => {
+                    const field = document.getElementById(key);
+                    if (field) {
+                        field.value = savedConfig[key];
+                    }
+                });
+            }
         }
     }
 
     // Save configuration
     document.getElementById('configForm').addEventListener('submit', async function (e) {
         e.preventDefault();
+        const statusMessage = document.getElementById('statusMessage');
+
+        statusMessage.classList.remove('error');
 
         if (submitStatus) {
             return; // Prevent multiple submissions
@@ -460,7 +527,7 @@
         }
 
         try {
-            await fetch('/api/createQdrantCollection', {
+            const response = await fetch('/api/createQdrantCollection', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -472,9 +539,29 @@
                     vector_size: config['embedding-vector-size']
                 })
             })
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.classList.add('show');
-            window.location.href = "/process";
+            if (response.status === 409) {
+                statusMessage.classList.add('error');
+                const collectionData = await response.json();
+                console.log(collectionData)
+                {#statusMessage.innerText = `Collection already exists with a different format—— vector size: ${collectionData.size} distance: ${collectionData.distance}. Please choose a different name or check the existing collection configuration.`;#}
+                statusMessage.innerText = `Table already exists with a different chunk. Please choose a different name or check the existing table configuration.`;
+                statusMessage.classList.remove('success');
+                submitStatus = false;
+                document.querySelector(".save-btn").disabled = false;
+                document.querySelector(".save-btn").innerText = "Save Configuration";
+            } else if (response.status === 200) {
+                statusMessage.classList.add('success');
+                statusMessage.innerText = 'Configuration saved successfully!';
+                statusMessage.classList.remove('error');
+                window.location.href = "/process";
+            } else {
+                statusMessage.classList.add('error');
+                statusMessage.innerText = 'Unable to save configuration';
+                statusMessage.classList.remove('success');
+                submitStatus = false;
+                document.querySelector(".save-btn").disabled = false;
+                document.querySelector(".save-btn").innerText = "Save Configuration";
+            }
         } catch (error) {
             console.error('Decryption failed:', error);
             submitStatus = false;

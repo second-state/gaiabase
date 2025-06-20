@@ -124,8 +124,25 @@ def create_collection(qdrant_url, qdrant_key, collection_name, vector_size):
 
     response = requests.request("PUT", qdrant_url + f"/collections/{collection_name}", headers=headers, data=payload)
 
-    if response.status_code != 200 and response.status_code != 409:
-        raise Exception(f"Failed to create collection: {response.status_code} - {response.text}")
+    if response.status_code == 409:
+        # 集合已存在，检查配置是否匹配
+        get_response = requests.request("GET", qdrant_url + f"/collections/{collection_name}", headers=headers)
+        if get_response.status_code == 200:
+            collection_info = get_response.json()
+
+            existing_vector_config = collection_info.get("result", {}).get("config", {}).get("params", {}).get("vectors", {})
+            existing_size = existing_vector_config.get("size")
+            existing_distance = existing_vector_config.get("distance")
+
+            if existing_size != vector_size or existing_distance != "Cosine":
+                return {"size": existing_size, "distance": existing_distance}
+            # 配置匹配，继续执行
+            print(f"Collection '{collection_name}' 已存在且配置匹配")
+        else:
+            raise Exception(f"无法获取已存在的集合信息: {get_response.status_code} - {get_response.text}")
+    elif response.status_code != 200:
+        raise Exception(f"创建集合失败: {response.status_code} - {response.text}")
+    return None
 
 
 @app.route("/api/createQdrantCollection", methods=["POST"])
@@ -139,8 +156,11 @@ def create_qdrant_collection():
         if not collection_name:
             return jsonify({"error": "Collection name is required"}), 400
 
-        create_collection(qdrant_url, qdrant_api_key, collection_name, vector_size)
-        return jsonify({"message": f"Collection '{collection_name}' created successfully"})
+        error_collection = create_collection(qdrant_url, qdrant_api_key, collection_name, vector_size)
+        if error_collection:
+            return jsonify(error_collection), 409
+        else:
+            return jsonify({"message": f"Collection '{collection_name}' created successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -469,7 +489,7 @@ def run_all_embed():
             print(f"Processing file: {file_path}, Subtask ID: {subtask_id}")
             tidb_subtask_id = create_tidb_task(subtask_id)
             print(f"Created TiDB task with ID: {tidb_subtask_id}")
-            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["qdrant-collection"], tidb_subtask_id, task_id, subtask_id)
+            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["tidb-table-name"], tidb_subtask_id, task_id, subtask_id)
     qa_folder_path = os.path.join(task_id, "qa_files")
     for root, dirs, files in os.walk(qa_folder_path):
         for file in files:
@@ -582,6 +602,18 @@ def get_embed_and_tidb_id(subtask_id):
         return jsonify({"status": "success"})
     except Exception as e:
             return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/getConfig/<task_id>', methods=['GET'])
+def get_config(task_id):
+    if not task_id:
+        return jsonify({"error": "Task ID is required"}), 400
+
+    task_info = get_task_info(task_id)
+    if not task_info:
+        return jsonify({"error": "Task not found"}), 404
+
+    return jsonify(decrypt_data(task_info[3]))
 
 
 if __name__ == "__main__":
