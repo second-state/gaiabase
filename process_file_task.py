@@ -155,31 +155,11 @@ def task_url(url, process_file_path):
         print(f"[error] url处理失败! \n url：{url} \n 原因： {e}")
         raise e
 
-    def task_doc(file_path, process_file_path, subtask_id):
-        file_name = Path(file_path).stem
-    try:
-        content = textract.process(file_path).decode("utf-8")
-        full_path = Path(process_file_path) / f"{file_name}.txt"
-        Path(process_file_path).mkdir(parents=True, exist_ok=True)
-        with open(full_path, 'w', encoding='utf-8') as file:
-            file.write(content)
-        update_subtask(subtask_id, 2,0)
-        q_qa.enqueue(task_qa, full_path, subtask_id, retry=Retry(max=3))
-        print(f"[log] doc文件处理完成: {full_path}")
-        return full_path
-    except Exception as e:
-        update_subtask(subtask_id, 1,-1)
-        err_output_path = Path(file_path).parent.parent / "err_files" / f"{file_name}_err.txt"
-        with open(err_output_path, 'w', encoding='utf-8') as f:
-            f.write(str(e))
-        print(f"[error] doc处理失败! \n 文件名：{file_path} \n 原因： {e}")
-        raise e
-
 
 def task_txt(file_path, process_file_path, subtask_id):
     file_name = Path(file_path).stem
     try:
-        dest_path = Path(process_file_path) / f"{file_name}" + ".txt"
+        dest_path = Path(process_file_path) / f"{file_name}.txt"
         shutil.copy2(file_path, dest_path)
         update_subtask(subtask_id, 2,0)
         q_qa.enqueue(task_qa, dest_path, subtask_id, retry=Retry(max=3))
