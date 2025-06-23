@@ -332,13 +332,6 @@
                     <label for="tidb-table-name">Table Name</label>
                     <input required type="text" id="tidb-table-name" name="tidb-table-name" placeholder="gaiabase">
                 </div>
-                <div class="form-group">
-                    <label for="tidb-api-key">API Key</label>
-                    <div class="password-toggle">
-                        <input type="password" id="tidb-api-key" name="tidb-api-key" placeholder="Enter your API key">
-                        <button type="button" class="toggle-btn" onclick="togglePassword('tidb-api-key')">👁️</button>
-                    </div>
-                </div>
             </div>
 
             <!-- Embedding Service Configuration -->
@@ -543,8 +536,7 @@
                 statusMessage.classList.add('error');
                 const collectionData = await response.json();
                 console.log(collectionData)
-                {#statusMessage.innerText = `Collection already exists with a different format—— vector size: ${collectionData.size} distance: ${collectionData.distance}. Please choose a different name or check the existing collection configuration.`;#}
-                statusMessage.innerText = `Table already exists with a different chunk. Please choose a different name or check the existing table configuration.`;
+                statusMessage.innerText = `Collection already exists with a different format—— vector size: ${collectionData.size} distance: ${collectionData.distance}. Please choose a different name or check the existing collection configuration.`;
                 statusMessage.classList.remove('success');
                 submitStatus = false;
                 document.querySelector(".save-btn").disabled = false;

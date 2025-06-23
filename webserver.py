@@ -586,7 +586,7 @@ def get_embed_and_tidb_id(subtask_id):
         engine = db.db_engine
         metadata = MetaData()
         table = Table(
-            decrypt_user_config["qdrant-collection"],
+            decrypt_user_config["tidb-table-name"],
             metadata,
             autoload_with=engine
         )
