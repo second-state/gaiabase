@@ -26,7 +26,7 @@ from sqlalchemy import MetaData, Table, delete
 from datetime import datetime
 from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
-from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort, Response
+from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort, Response, redirect
 from flask_socketio import SocketIO
 from urllib.parse import unquote
 
@@ -235,7 +235,7 @@ def save_all_file(files, task_id):
             print(f"{filename} 不是有效的文件格式")
 
 
-def save_all_qa(qa_data, task_id):
+def save_all_qa(qa_data, task_id, only_qa=False):
     qa_list = []
     for item in qa_data:
         try:
@@ -254,6 +254,8 @@ def save_all_qa(qa_data, task_id):
         processed_file_path = os.path.join(task_id, "processed_files", "Q&A_Input.json")
         with open(processed_file_path, "w", encoding="utf-8") as f:
             f.write(json.dumps(qa_list, ensure_ascii=False, indent=2))
+        if only_qa:
+            handle_embed(task_id)
 
 
 def crawl_all_url(host_url_list, task_id):
@@ -311,12 +313,23 @@ def processing_all_data():
             "file": file
         })
         i += 1
-    save_all_file(uploaded_files, task_id)
-    save_all_text(queue.get("texts", []), task_id)
-    crawl_all_url(queue.get("urls", []), task_id)
-    save_all_qa(queue.get("qas", []), task_id)
 
-    return "Success", 200
+
+    save_all_file(uploaded_files, task_id)
+
+    texts = queue.get("texts", [])
+    urls = queue.get("urls", [])
+    qas = queue.get("qas", [])
+
+    save_all_text(texts, task_id)
+    crawl_all_url(urls, task_id)
+    save_all_qa(qas, task_id, qas and not texts and not urls and not uploaded_files)
+
+    # 如果只有qa的话，直接跳转到status页面
+    if qas and not texts and not urls and not uploaded_files:
+        return redirect(f"/status?task_id={task_id}")
+    else:
+        return "Success", 200
 
 
 @app.route("/api/regenerateQAs", methods=["POST"])
@@ -473,10 +486,7 @@ def wait_for_summary(summary_job, check_interval=5):
         return None
 
 
-@app.route('/api/runAllEmbed', methods=['POST'])
-def run_all_embed():
-    data = request.get_json()
-    task_id = data.get("uuid")
+def handle_embed(task_id):
     task_info = get_task_info(task_id)
     user_config = task_info[3] if task_info else None
     decrypt_user_config = decrypt_data(user_config)
@@ -540,6 +550,13 @@ def run_all_embed():
                     print(f"Error processing {file_path}: {e}")
                     return jsonify({"error": f"Error processing {file_path}: {str(e)}"}), 500
     return jsonify({"status": "success"})
+
+
+@app.route('/api/runAllEmbed', methods=['POST'])
+def run_all_embed():
+    data = request.get_json()
+    task_id = data.get("uuid")
+    return handle_embed(task_id)
 
 
 @app.route('/api/deleteSubtask/<subtask_id>', methods=['DELETE'])
