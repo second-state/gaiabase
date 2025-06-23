@@ -77,6 +77,8 @@ def gen_embed(short_text, full_text, embedding_base_url, embedding_model, embedd
             ]
         }
 
+        print("Vector size:", len(normalize_vector(embedding).tolist()))
+
         # 插入向量
         insert_response = requests.put(points_url, headers=headers, json=point_payload)
         update_embed_task_status(point_id, 1)
