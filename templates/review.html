@@ -802,7 +802,7 @@
                 documents.push(...formatData); // Add fetched documents
                 renderDocumentList();
                 updateStats();
-                if (formatData.every(item => item["type"] === 4)) {
+                if (formatData.every(item => item["subtask_source"] === 4)) {
                     finalizeAll();
                 }
             })

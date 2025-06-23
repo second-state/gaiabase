@@ -709,9 +709,9 @@
                 <textarea id="qaInput" placeholder="Q: What is machine learning?&#10;A: Machine learning is...&#10;&#10;Q: How does it work?&#10;A: It works by..." rows="12"></textarea>
                 <div class="char-counter" id="qaCharCounter">0 characters</div>
             </div>
-            <button class="btn btn-success add-to-queue-btn" onclick="addQAToQueue()">
-                Add Q&A to Processing Queue
-            </button>
+{#            <button class="btn btn-success add-to-queue-btn" onclick="addQAToQueue()">#}
+{#                Add Q&A to Processing Queue#}
+{#            </button>#}
         </div>
     </div>
 
@@ -1205,25 +1205,30 @@
         });
 
         // Clear form
-        qaInput.value = '';
-        updateCharCounter(qaInput, qaCharCounter, false);
+        {#qaInput.value = '';#}
+        {#updateCharCounter(qaInput, qaCharCounter, false);#}
 
         // Update summary
-        updateQueueSummary();
-        showNotification(`Q&A set with ${pairCount} pairs added to processing queue`, 'success');
+        {#updateQueueSummary();#}
+        {#showNotification(`Q&A set with ${pairCount} pairs added to processing queue`, 'success');#}
     }
+
+    document.getElementById('qaInput').addEventListener('input', () => {
+        updateQueueSummary()
+    });
 
     // Update queue summary
     function updateQueueSummary() {
         const queueContent = document.getElementById('queueContent');
         const processBtn = document.getElementById('processBtn');
+        const qaValue = document.getElementById('qaInput').value;
 
         const totalItems = processingQueue.files.length +
             processingQueue.urls.length +
             processingQueue.texts.length +
             processingQueue.qas.length;
 
-        if (totalItems === 0) {
+        if (totalItems === 0 && !qaValue) {
             queueContent.innerHTML = '<p class="empty-queue">No data sources added yet</p>';
             processBtn.disabled = true;
             return;
@@ -1284,6 +1289,8 @@
 
     // Process documents
     async function processDocuments() {
+        addQAToQueue()
+
         const statusBar = document.getElementById('statusBar');
         const statusText = document.getElementById('statusText');
         const processBtn = document.getElementById('processBtn');
@@ -1314,24 +1321,22 @@
             jsonData.queue.files = [];
             formData.append('processingData', JSON.stringify(jsonData));
 
-            const response = await fetch("/api/processingAllData",{
+            const response = await fetch("/api/processingAllData", {
                 method: 'POST',
                 body: formData
-            })
+            });
 
             if (response.ok) {
+                const data = await response.json();
                 statusBar.classList.remove('show');
                 showNotification('Documents processed successfully!', 'success');
-
-                // Clear queue
-                processingQueue = {
-                    files: [],
-                    urls: [],
-                    texts: [],
-                    qas: []
-                };
+                processingQueue = { files: [], urls: [], texts: [], qas: [] };
                 updateQueueSummary();
-                window.location.href = "/review?id=" + pageSessionId;
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.href = "/review?id=" + pageSessionId;
+                }
             } else {
                 const errorData = await response.json();
                 showNotification('Error processing documents: ' + errorData.message, 'error');

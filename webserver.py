@@ -327,9 +327,9 @@ def processing_all_data():
 
     # 如果只有qa的话，直接跳转到status页面
     if qas and not texts and not urls and not uploaded_files:
-        return redirect(f"/status?task_id={task_id}")
+        return jsonify({"redirect_url": f"/status?id={task_id}"}), 200
     else:
-        return "Success", 200
+        return jsonify({"message": "Success"}), 200
 
 
 @app.route("/api/regenerateQAs", methods=["POST"])
