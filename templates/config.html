@@ -48,8 +48,12 @@
         }
 
         @keyframes shimmer {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+            0%, 100% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 1;
+            }
         }
 
         .config-grid {
@@ -303,18 +307,21 @@
                 </div>
                 <div class="form-group">
                     <label for="qdrant-url">Database URL</label>
-                    <input required type="url" id="qdrant-url" name="qdrant-url" pattern="https?://.*" placeholder="https://your-qdrant-instance.com">
+                    <input required type="url" id="qdrant-url" name="qdrant-url" pattern="https?://.*"
+                           placeholder="https://your-qdrant-instance.com">
                 </div>
                 <div class="form-group">
                     <label for="qdrant-api-key">API Key</label>
                     <div class="password-toggle">
-                        <input type="password" id="qdrant-api-key" name="qdrant-api-key" placeholder="Enter your API key">
+                        <input type="password" id="qdrant-api-key" name="qdrant-api-key"
+                               placeholder="Enter your API key">
                         <button type="button" class="toggle-btn" onclick="togglePassword('qdrant-api-key')">👁️</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="qdrant-collection">Collection Name</label>
-                    <input required type="text" id="qdrant-collection" name="qdrant-collection" placeholder="my-collection">
+                    <input required type="text" id="qdrant-collection" name="qdrant-collection"
+                           placeholder="my-collection">
                 </div>
             </div>
 
@@ -326,7 +333,8 @@
                 </div>
                 <div class="form-group">
                     <label for="tidb-url">Database URL</label>
-                    <input required type="url" id="tidb-url" name="tidb-url" pattern="mysql://.*" placeholder="mysql://user:pass@host:port/db">
+                    <input required type="url" id="tidb-url" name="tidb-url" pattern="mysql://.*"
+                           placeholder="mysql://user:pass@host:port/db">
                 </div>
                 <div class="form-group">
                     <label for="tidb-table-name">Table Name</label>
@@ -342,11 +350,13 @@
                 </div>
                 <div class="form-group">
                     <label for="embedding-base-url">Base URL</label>
-                    <input required type="url" id="embedding-base-url" name="embedding-base-url" pattern="https?://.*" placeholder="https://api.openai.com">
+                    <input required type="url" id="embedding-base-url" name="embedding-base-url" pattern="https?://.*"
+                           placeholder="https://api.openai.com">
                 </div>
                 <div class="form-group">
                     <label for="embedding-model">Model Name</label>
-                    <input required type="text" id="embedding-model" name="embedding-model" placeholder="text-embedding-ada-002">
+                    <input required type="text" id="embedding-model" name="embedding-model"
+                           placeholder="text-embedding-ada-002">
                 </div>
                 <div class="form-group">
                     <label for="embedding-vector-size">Vector Size</label>
@@ -361,8 +371,10 @@
                 <div class="form-group">
                     <label for="embedding-api-key">API Key</label>
                     <div class="password-toggle">
-                        <input type="password" id="embedding-api-key" name="embedding-api-key" placeholder="Enter your API key">
-                        <button type="button" class="toggle-btn" onclick="togglePassword('embedding-api-key')">👁️</button>
+                        <input type="password" id="embedding-api-key" name="embedding-api-key"
+                               placeholder="Enter your API key">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('embedding-api-key')">👁️
+                        </button>
                     </div>
                 </div>
             </div>
@@ -375,7 +387,8 @@
                 </div>
                 <div class="form-group">
                     <label for="chat-base-url">Base URL</label>
-                    <input required type="url" id="chat-base-url" name="chat-base-url" pattern="https?://.*" placeholder="https://api.openai.com">
+                    <input required type="url" id="chat-base-url" name="chat-base-url" pattern="https?://.*"
+                           placeholder="https://api.openai.com">
                 </div>
                 <div class="form-group">
                     <label for="chat-model">Model Name</label>
@@ -548,7 +561,16 @@
                 window.location.href = "/process";
             } else {
                 statusMessage.classList.add('error');
-                statusMessage.innerText = 'Unable to save configuration';
+                try {
+                    const data = await response.json();
+                    if (data && data.error) {
+                        statusMessage.innerText = `Error: ${data.error}`;
+                    } else {
+                        statusMessage.innerText = 'Unable to save configuration';
+                    }
+                } catch (e) {
+                    statusMessage.innerText = 'Unable to save configuration';
+                }
                 statusMessage.classList.remove('success');
                 submitStatus = false;
                 document.querySelector(".save-btn").disabled = false;
@@ -566,11 +588,11 @@
 
     // Add input animations
     document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('focus', function() {
+        input.addEventListener('focus', function () {
             this.parentElement.parentElement.style.transform = 'scale(1.02)';
         });
 
-        input.addEventListener('blur', function() {
+        input.addEventListener('blur', function () {
             this.parentElement.parentElement.style.transform = 'scale(1)';
         });
     });

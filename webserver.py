@@ -139,9 +139,9 @@ def create_collection(qdrant_url, qdrant_key, collection_name, vector_size):
             # 配置匹配，继续执行
             print(f"Collection '{collection_name}' 已存在且配置匹配")
         else:
-            raise Exception(f"无法获取已存在的集合信息: {get_response.status_code} - {get_response.text}")
+            raise Exception(f"Failed to retrieve information of existing collection: {get_response.status_code} - {get_response.text}")
     elif response.status_code != 200:
-        raise Exception(f"创建集合失败: {response.status_code} - {response.text}")
+        raise Exception(f"Failed to create collection: {response.status_code} - {response.text}")
     return None
 
 
