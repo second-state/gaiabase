@@ -512,8 +512,9 @@ def handle_embed(task_id):
                 subtask_id = subtask_data[0]
                 save_file_data = subtask_data[1]
                 print(f"Processing file: {file_path}, Subtask ID: {subtask_id}, Save File Data: {save_file_data}")
-                with open(os.path.join(task_id, "processed_files", save_file_data), 'r', encoding='utf-8') as f:
-                    full_text = f.read()
+                if(save_file_data != "Q&A_Input.json"):
+                    with open(os.path.join(task_id, "processed_files", save_file_data), 'r', encoding='utf-8') as f:
+                        full_text = f.read()
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         qa_data = json.load(f)
