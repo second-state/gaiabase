@@ -727,7 +727,7 @@
     </div>
 
     <!-- Embedding Settings Section -->
-    <div class="section">
+    <div class="section" id="embeddingSettings">
         <div class="section-header">
             <div class="section-icon" style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);">⚙️</div>
             <h2>Embedding Settings</h2>
@@ -797,6 +797,14 @@
         document.getElementById(`${tabName}-tab`).classList.add('active');
 
         currentTab = tabName;
+
+        if(tabName === "qa") {
+            document.getElementById('queueSummary').style.display = 'none';
+            document.getElementById('embeddingSettings').style.display = 'none';
+        } else {
+            document.getElementById('queueSummary').style.display = 'block';
+            document.getElementById('embeddingSettings').style.display = 'block';
+        }
     }
 
     // File upload handling
