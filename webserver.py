@@ -350,11 +350,15 @@ def save_all_text(text_list, task_id, onliy_text=False):
         if total_text:
             save_name = f"{item.get('shortText') or f'Input_Text{idx+1}'}" + ".txt"
             save_file_path = os.path.join(task_id, "original_files", save_name)
-            process_file_path = os.path.join(task_id, "processed_files")
-            subtask_id = create_subtask(task_id, "Text Input", save_name, 3)
+            create_subtask(task_id, "Text Input", save_name, 3)
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
-            task_txt(save_file_path, process_file_path, subtask_id)
+            process_file_path = os.path.join(task_id, "original_files", save_name)
+            with open(process_file_path, "w", encoding="utf-8") as f:
+                f.write(total_text)
+            qa_file_path = os.path.join(task_id, "qa_files", save_name)
+            with open(qa_file_path, "w", encoding="utf-8") as f:
+                f.write(total_text)
 
     if onliy_text:
         handle_embed(task_id)
@@ -683,6 +687,20 @@ def handle_embed(task_id):
                 except Exception as e:
                     print(f"Error processing {file_path}: {e}")
                     return jsonify({"error": f"Error processing {file_path}: {str(e)}"}), 500
+            elif file.endswith('.txt'):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    text_data = f.read()
+                    point_id = str(uuid.uuid4())
+                    subtask_data = get_subtask_id_by_uuid_and_name(task_id, file)
+                    subtask_id = subtask_data[0]
+                    create_embed_task(subtask_id, point_id)
+                    q_gen_embed.enqueue(gen_embed, file, text_data, decrypt_user_config["embedding-base-url"],
+                                        decrypt_user_config["embedding-model"],
+                                        decrypt_user_config["embedding-api-key"],
+                                        decrypt_user_config["qdrant-url"],
+                                        decrypt_user_config["qdrant-api-key"],
+                                        decrypt_user_config["qdrant-collection"], point_id, task_id, subtask_id, retry=Retry(max=3))
     return jsonify({"status": "success"})
 
 
