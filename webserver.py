@@ -353,7 +353,7 @@ def save_all_text(text_list, task_id, onliy_text=False):
             subtask_id = create_subtask(task_id, "Text Input", save_name, 3)
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
-            process_file_path = os.path.join(task_id, "original_files", save_name)
+            process_file_path = os.path.join(task_id, "processed_files", save_name)
             with open(process_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
             qa_file_path = os.path.join(task_id, "qa_files", save_name)
