@@ -18,6 +18,229 @@
             color: #e0e0e0;
         }
 
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 35, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .auth-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sign-in-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sign-in-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .sign-up-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: 1px solid transparent;
+        }
+
+        .sign-up-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-profile {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #333 0%, #666 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .dropdown-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .user-profile.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(40, 40, 50, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .dropdown-item.logout {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ef4444;
+        }
+
+        .dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .dropdown-icon {
+            font-size: 16px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .github-info {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .github-username {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .github-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
         /* Header */
         .header {
             background: rgba(20, 20, 30, 0.95);
@@ -645,6 +868,46 @@
     </style>
 </head>
 <body>
+<nav class="nav">
+    <div class="nav-brand">Document Processing</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link active">Data Processing</a>
+        <a href="/tasks" class="nav-link">Task Center</a>
+        <a href="/config" class="nav-link">Settings</a>
+
+        <!-- Auth Buttons (shown when not logged in) -->
+        <div class="auth-buttons" id="authButtons">
+            <button class="auth-btn sign-in-btn" onclick="window.location.href='/auth/github'">
+                Sign In
+            </button>
+            <button class="auth-btn sign-up-btn" onclick="window.location.href='/auth/github'">
+                Sign Up
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="user-profile" id="userProfile" onclick="toggleUserDropdown(event)">
+            <div class="user-avatar" id="userAvatar">🐙</div>
+            <div class="user-name" id="userName"></div>
+            <div class="dropdown-arrow">▼</div>
+
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown" id="userDropdown">
+                <div class="github-info">
+                    <div class="github-username">
+                        <span>🐙</span>
+                        <span id="dropdownUsername"></span>
+                    </div>
+                    <div class="github-id" id="githubId"></div>
+                </div>
+                <a href="#" class="dropdown-item logout" onclick="logout(event)">
+                    <span class="dropdown-icon">🚪</span>
+                    Log Out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
 <!-- Header -->
 <div class="header">
     <div class="header-content">
@@ -721,6 +984,54 @@
 </div>
 
 <script>
+
+    let userData ={};
+
+    document.cookie.split(';').forEach(cookie => {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'username' || name === 'user_id') {
+            if (!value) return;
+            userData[name] = decodeURIComponent(value);
+        }
+    })
+
+    if(Object.keys(userData).length > 0) {
+        document.getElementById('authButtons').style.display = 'none';
+        updateUserProfile();
+    } else {
+        document.getElementById('userProfile').style.display = 'none';
+    }
+
+    function updateUserProfile() {
+        document.getElementById('userProfile').style.display = 'flex';
+        document.getElementById('userName').textContent = userData['username'] || 'Guest';
+        document.getElementById('dropdownUsername').innerText = userData['username'] || 'Guest';
+        document.getElementById('githubId').innerText = "ID: " + userData['user_id'];
+    }
+
+    function logout() {
+        fetch('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                showNotification('Logged out successfully', 'success');
+                window.location.reload();
+            } else {
+                showNotification('Logout failed. Please try again.', 'error');
+            }
+        });
+    }
+
+    function toggleUserDropdown() {
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+        userDropdown.classList.toggle('show');
+        userProfile.classList.toggle('open');
+    }
+
     const params = new URLSearchParams(window.location.search);
 
     // 获取 id 参数
