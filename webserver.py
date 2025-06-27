@@ -466,7 +466,7 @@ def processing_all_data():
 
     # 如果只有qa的话，直接跳转到status页面
     if (qas and not urls and not uploaded_files) or (texts and not urls and not uploaded_files):
-        return jsonify({"redirect_url": f"/status?id={task_id}"}), 200
+        return jsonify({"redirect_url": f"/tasks"}), 200
     else:
         return jsonify({"message": "Success"}), 200
 
