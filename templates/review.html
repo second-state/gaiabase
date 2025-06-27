@@ -802,9 +802,6 @@
                 documents.push(...formatData); // Add fetched documents
                 renderDocumentList();
                 updateStats();
-                if (formatData.every(item => item["subtask_source"] === 4)) {
-                    finalizeAll();
-                }
             })
             .catch(error => console.error('Error fetching documents:', error));
     }

@@ -708,296 +708,6 @@
 
     <!-- Task groups -->
     <div class="task-groups" id="taskGroups">
-        <!-- Today -->
-        <div class="task-group">
-            <div class="group-header">
-                <div class="group-info">
-                    <h2 class="group-title">Today - 2:30 PM</h2>
-                    <span class="group-count">3 tasks</span>
-                </div>
-                <div class="group-actions">
-                    <a href="#" class="group-view-details" onclick="viewGroupDetails('group-1'); return false;">
-                        <span>👁️</span>
-                        View Details
-                    </a>
-                </div>
-            </div>
-            <div class="task-list">
-                <!-- Task 1 - Error state -->
-                <div class="task-card" data-status="error">
-                    <div class="task-header">
-                        <div class="task-info">
-                            <div class="task-title">
-                                <span class="task-icon">📄</span>
-                                <span class="task-name">annual_report_2024.pdf</span>
-                            </div>
-                            <div class="task-meta">
-                                <span>Uploaded 5 minutes ago</span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn retry-btn" onclick="retryTask('task-1', 'tidb')">
-                                <span>⟳</span>
-                                Retry
-                            </button>
-                            <button class="action-btn delete-btn"
-                                    onclick="confirmDelete('task-1', 'annual_report_2024.pdf')">
-                                <span>🗑️</span>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="task-status">
-                        <div class="status-item">
-                            <span class="status-label">Embedding</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">TiDB</span>
-                            <span class="status-value status-error">
-                                    <span>⚠️</span>
-                                    Error
-                                </span>
-                        </div>
-                    </div>
-                    <div class="error-message">
-                        <span>⚠️</span>
-                        Database connection timeout - Click retry to attempt again
-                    </div>
-                </div>
-
-                <!-- Task 2 - Processing state -->
-                <div class="task-card" data-status="processing">
-                    <div class="task-header">
-                        <div class="task-info">
-                            <div class="task-title">
-                                <span class="task-icon">📊</span>
-                                <span class="task-name">financial_data.xlsx</span>
-                            </div>
-                            <div class="task-meta">
-                                <span>Uploaded 5 minutes ago</span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn delete-btn"
-                                    onclick="confirmDelete('task-2', 'financial_data.xlsx')">
-                                <span>🗑️</span>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="task-status">
-                        <div class="status-item">
-                            <span class="status-label">Embedding</span>
-                            <span class="status-value status-processing">
-                                    <span class="spinner">⏳</span>
-                                    Processing
-                                </span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">TiDB</span>
-                            <span class="status-value status-processing">
-                                    <span class="spinner">⏳</span>
-                                    Processing
-                                </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Task 3 - Completed state -->
-                <div class="task-card" data-status="completed">
-                    <div class="task-header">
-                        <div class="task-info">
-                            <div class="task-title">
-                                <span class="task-icon">📄</span>
-                                <span class="task-name">user_manual.pdf</span>
-                            </div>
-                            <div class="task-meta">
-                                <span>Uploaded 5 minutes ago</span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn delete-btn" onclick="confirmDelete('task-3', 'user_manual.pdf')">
-                                <span>🗑️</span>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="task-status">
-                        <div class="status-item">
-                            <span class="status-label">Embedding</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">TiDB</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today - Earlier -->
-        <div class="task-group">
-            <div class="group-header">
-                <div class="group-info">
-                    <h2 class="group-title">Today - 1:15 PM</h2>
-                    <span class="group-count">1 task</span>
-                </div>
-                <div class="group-actions">
-                    <a href="#" class="group-view-details" onclick="viewGroupDetails('group-2'); return false;">
-                        <span>👁️</span>
-                        View Details
-                    </a>
-                </div>
-            </div>
-            <div class="task-list">
-                <div class="task-card" data-status="completed">
-                    <div class="task-header">
-                        <div class="task-info">
-                            <div class="task-title">
-                                <span class="task-icon">🔗</span>
-                                <span class="task-name">tech_blog_article.html</span>
-                            </div>
-                            <div class="task-meta">
-                                <span>Web extraction completed</span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn delete-btn"
-                                    onclick="confirmDelete('task-4', 'tech_blog_article.html')">
-                                <span>🗑️</span>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="task-status">
-                        <div class="status-item">
-                            <span class="status-label">Embedding</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">TiDB</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Yesterday -->
-        <div class="task-group">
-            <div class="group-header">
-                <div class="group-info">
-                    <h2 class="group-title">Yesterday - 4:20 PM</h2>
-                    <span class="group-count">2 tasks</span>
-                </div>
-                <div class="group-actions">
-                    <a href="#" class="group-view-details" onclick="viewGroupDetails('group-3'); return false;">
-                        <span>👁️</span>
-                        View Details
-                    </a>
-                </div>
-            </div>
-            <div class="task-list">
-                <div class="task-card" data-status="error">
-                    <div class="task-header">
-                        <div class="task-info">
-                            <div class="task-title">
-                                <span class="task-icon">📝</span>
-                                <span class="task-name">meeting_notes.txt</span>
-                            </div>
-                            <div class="task-meta">
-                                <span>Processing failed</span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn retry-btn" onclick="retryTask('task-5', 'embedding')">
-                                <span>⟳</span>
-                                Retry
-                            </button>
-                            <button class="action-btn delete-btn"
-                                    onclick="confirmDelete('task-5', 'meeting_notes.txt')">
-                                <span>🗑️</span>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="task-status">
-                        <div class="status-item">
-                            <span class="status-label">Embedding</span>
-                            <span class="status-value status-error">
-                                    <span>⚠️</span>
-                                    Error
-                                </span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">TiDB</span>
-                            <span class="status-value status-pending">
-                                    <span>⏸️</span>
-                                    Pending
-                                </span>
-                        </div>
-                    </div>
-                    <div class="error-message">
-                        <span>⚠️</span>
-                        Content processing failed - Invalid file format detected
-                    </div>
-                </div>
-
-                <div class="task-card" data-status="completed">
-                    <div class="task-header">
-                        <div class="task-info">
-                            <div class="task-title">
-                                <span class="task-icon">📊</span>
-                                <span class="task-name">sales_report_q4.xlsx</span>
-                            </div>
-                            <div class="task-meta">
-                                <span>Processing completed successfully</span>
-                            </div>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn delete-btn"
-                                    onclick="confirmDelete('task-6', 'sales_report_q4.xlsx')">
-                                <span>🗑️</span>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div class="task-status">
-                        <div class="status-item">
-                            <span class="status-label">Embedding</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">TiDB</span>
-                            <span class="status-value status-completed">
-                                    <span>✅</span>
-                                    Completed
-                                </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -1069,8 +779,8 @@
             emptyState.className = 'empty-state';
             emptyState.innerHTML = `
             <div class="empty-icon">📂</div>
-            <h3 class="empty-title">没有处理任务</h3>
-            <p class="empty-subtitle">您还没有上传任何文档进行处理</p>
+            <h3 class="empty-title">No Processing Tasks</h3>
+            <p class="empty-subtitle">You have not uploaded any documents for processing yet</p>
         `;
             taskGroupsContainer.appendChild(emptyState);
             return;
@@ -1115,7 +825,7 @@
                     <span class="group-count">${task.subtasks.length} ${task.subtasks.length === 1 ? 'task' : 'tasks'}</span>
                 </div>
                 <div class="group-actions">
-                    <a href="#" class="group-view-details" onclick="viewGroupDetails(${task.task_id}); return false;">
+                    <a class="group-view-details" onclick="viewGroupDetails('${task.task_id}', ${task.subtasks[0].subtask_step}, ${task.subtasks[0].subtask_source}); return false;">
                         <span>👁️</span>
                         View Details
                     </a>
@@ -1335,19 +1045,13 @@
     }
 
     // Task actions
-    function viewGroupDetails(groupId) {
-        showNotification('Opening group details...', 'info');
-
-        // Generate group-specific URL - could be a batch/session details page
-        const groupUrl = `/batch/${groupId}/details`;
-
-        // In real app: navigate to group details page
-        // window.location.href = groupUrl;
-
-        // For demo: show what the URL would be
-        setTimeout(() => {
-            showNotification(`Would navigate to: ${groupUrl}`, 'info');
-        }, 1000);
+    function viewGroupDetails(groupId, step, source) {
+        showNotification(`Would navigate to Details page`, 'info');
+        if (step >= 4 || source === 3 || source === 4) {
+            window.location.href = `/status?id=${groupId}`;
+        } else {
+            window.location.href = `/review?id=${groupId}`;
+        }
     }
 
     function retryTask(taskId, component) {

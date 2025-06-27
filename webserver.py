@@ -344,7 +344,7 @@ def crawl_all_url(host_url_list, task_id):
         q_save_url.enqueue(crawl_url, host_url, process_file_path, retry=Retry(max=3))
 
 
-def save_all_text(text_list, task_id):
+def save_all_text(text_list, task_id, onliy_text=False):
     for idx, item in enumerate(text_list):
         total_text = f"{item['longText']} {item['shortText']}"
         if total_text:
@@ -354,7 +354,10 @@ def save_all_text(text_list, task_id):
             subtask_id = create_subtask(task_id, "Text Input", save_name, 3)
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
-            q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
+            task_txt(save_file_path, process_file_path, subtask_id)
+
+    if onliy_text:
+        handle_embed(task_id)
 
 
 @app.route("/api/crawl_web_file_gen_qa", methods=["POST"])
@@ -451,12 +454,12 @@ def processing_all_data():
     urls = queue.get("urls", [])
     qas = queue.get("qas", [])
 
-    save_all_text(texts, task_id)
+    save_all_text(texts, task_id, texts and not qas and not urls and not uploaded_files)
     crawl_all_url(urls, task_id)
     save_all_qa(qas, task_id, qas and not texts and not urls and not uploaded_files)
 
     # 如果只有qa的话，直接跳转到status页面
-    if qas and not texts and not urls and not uploaded_files:
+    if (qas and not urls and not uploaded_files) or (texts and not urls and not uploaded_files):
         return jsonify({"redirect_url": f"/status?id={task_id}"}), 200
     else:
         return jsonify({"message": "Success"}), 200

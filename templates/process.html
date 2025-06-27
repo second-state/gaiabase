@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Processing & Embedding</title>
+    <script>
+        // 如果不存在localStorage.getItem('gaiabaseConfig')，就先自动跳转到config页面
+        if (!localStorage.getItem('gaiabaseConfig')) {
+            window.location.href = '/config';
+        }
+    </script>
     <style>
         * {
             margin: 0;
@@ -856,10 +862,6 @@
 <div class="container">
     <div class="header-container">
         <h1>Document Processing & Embedding</h1>
-        <a href="#" class="settings-icon" onclick="goToSettings(event)" title="Configure services">
-            ⚙️
-            <span class="settings-tooltip">Configure services</span>
-        </a>
     </div>
 
     <!-- Tab Navigation -->
@@ -1523,9 +1525,34 @@
         if (processType === "qa") {
             addQAToQueue()
         }else if (processType === "upload") {
-            processingQueue["files"] = uploadedFiles;
+            uploadedFiles.forEach(file => {
+                processingQueue.files.push({
+                    file: file,
+                    charCount: fileCharCounts.get(file.name) || 0
+                });
+            });
+            processingQueue["files"] = uploadedFiles.map(file => {
+                return {
+                    file: file,
+                    charCount: fileCharCounts.get(file.name) || 0
+                }
+            });
         }else if (processType === "url") {
             processingQueue["urls"] = urls;
+        }else if (processType === "text") {
+            const longText = textInput.value.trim();
+            const shortText = document.getElementById('textSummary').value.trim();
+
+            if (!longText && !shortText) {
+                showNotification('Please enter some text content', 'error');
+                return;
+            }
+
+            processingQueue.texts.push({
+                longText: longText,
+                shortText: shortText,
+                charCount: longText.length
+            });
         }
 
         const statusBar = document.getElementById('statusBar');
