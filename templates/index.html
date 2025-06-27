@@ -719,18 +719,22 @@
             switch(type) {
                 case 'documents':
                     showNotification('Navigating to document upload page...', 'info');
+                    window.location.href = '/process/upload';
                     // In real app: window.location.href = '/process/documents';
                     break;
                 case 'web':
                     showNotification('Navigating to web extraction page...', 'info');
+                    window.location.href = '/process/url';
                     // In real app: window.location.href = '/process/web';
                     break;
                 case 'text':
                     showNotification('Navigating to text input page...', 'info');
+                    window.location.href = '/process/text';
                     // In real app: window.location.href = '/process/text';
                     break;
                 case 'qa':
                     showNotification('Navigating to Q&A pairs page...', 'info');
+                    window.location.href = '/process/qa';
                     // In real app: window.location.href = '/process/qa';
                     break;
             }
