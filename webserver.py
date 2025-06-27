@@ -350,7 +350,7 @@ def save_all_text(text_list, task_id, onliy_text=False):
         if total_text:
             save_name = f"{item.get('shortText') or f'Input_Text{idx+1}'}" + ".txt"
             save_file_path = os.path.join(task_id, "original_files", save_name)
-            create_subtask(task_id, "Text Input", save_name, 3)
+            subtask_id = create_subtask(task_id, "Text Input", save_name, 3)
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
             process_file_path = os.path.join(task_id, "original_files", save_name)
@@ -359,6 +359,8 @@ def save_all_text(text_list, task_id, onliy_text=False):
             qa_file_path = os.path.join(task_id, "qa_files", save_name)
             with open(qa_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
+
+            update_subtask(subtask_id, 4, 0)
 
     if onliy_text:
         handle_embed(task_id)
