@@ -144,7 +144,7 @@ def task_url(url, process_file_path):
             f.write(plain_text)
             print(f"[log] 解析url处理完成: {url} -> {output_path}")
         update_subtask(subtask_id, 2,0)
-        q_qa.enqueue(task_qa, output_path, subtask_id, retry=Retry(max=3))
+        # q_qa.enqueue(task_qa, output_path, subtask_id, retry=Retry(max=3))
         return output_path
     except Exception as e:
         subtask_id = create_subtask(first_dir, url, sanitized_url, 2)

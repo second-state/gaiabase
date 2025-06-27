@@ -33,17 +33,128 @@ def create_connection():
         return None
 
 
-# 主任务相关sql
-def create_task(uuid, user_config, question_prompt="", answer_prompt="", split_length=10000):
+def create_user(github_id ,username, email):
     conn = create_connection()
     if conn is None:
         return None
     cursor = conn.cursor()
     try:
         cursor.execute("""
-                       INSERT INTO `task` (`uuid`, `question_prompt`, `answer_prompt`, `split_length`, `user_config`)
-                       VALUES (%s, %s, %s, %s, %s);
-                       """, (uuid, question_prompt, answer_prompt, split_length, user_config,))
+                       INSERT INTO `user` (`username`, `github_id`, `email`)
+                       VALUES (%s, %s, %s)
+                       ON DUPLICATE KEY UPDATE username = VALUES(username), email = VALUES(email);
+                       """, (username, str(github_id), email,))
+        conn.commit()
+        cursor.execute("SELECT id FROM `user` WHERE github_id = %s", (str(github_id),))
+        user_id = cursor.fetchone()[0]
+        return user_id
+    except Error as e:
+        print(f"Create user failed and rolled back. Error: {e}")
+        conn.rollback()
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def get_user(user_id):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+                       SELECT id, username, github_id, email
+                       FROM `user`
+                       WHERE id = %s;
+                       """, (user_id,))
+        result = cursor.fetchone()
+        return result
+    except Error as e:
+        print(f"Get user failed. Error: {e}")
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def get_subtask_info_by_user_id(user_id):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+                       SELECT s.*
+                       FROM subtask s
+                                JOIN task t ON s.task_id = t.uuid
+                                JOIN user u ON t.user_id = u.id
+                       WHERE u.id = %s;
+                       """, (user_id,))
+        subtasks = cursor.fetchall()
+
+        for subtask in subtasks:
+            subtask_id = subtask['id']
+            # 使用同样的dictionary=True cursor，或者创建新的dictionary cursor
+            cursor.execute("""
+                           SELECT status FROM embed_task WHERE subtask_id = %s;
+                           """, (subtask_id,))
+            embed_results = cursor.fetchall()
+            print(embed_results)
+            # 现在可以用字段名访问
+            embed_statuses = [row['status'] for row in embed_results]
+
+            embed_status = None
+            if embed_statuses:
+                if 0 in embed_statuses:
+                    embed_status = 0
+                elif -1 in embed_statuses:
+                    embed_status = -1
+                elif all(s == 1 for s in embed_statuses):
+                    embed_status = 1
+
+            subtask['embed_status'] = embed_status
+
+            cursor.execute("""
+                           SELECT status FROM tidb_task WHERE subtask_id = %s;
+                           """, (subtask_id,))
+            tidb_results = cursor.fetchall()
+
+            # 现在可以用字段名访问
+            tidb_statuses = [row['status'] for row in tidb_results]
+
+            tidb_status = None
+            if tidb_statuses:
+                if 0 in tidb_statuses:
+                    tidb_status = 0
+                elif -1 in tidb_statuses:
+                    tidb_status = -1
+                elif all(s == 1 for s in tidb_statuses):
+                    tidb_status = 1
+            subtask['tidb_status'] = tidb_status
+        return subtasks
+    except Error as e:
+        print(f"Get subtask info by user id failed. Error: {e}")
+        return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+# 主任务相关sql
+def create_task(uuid, user_config, question_prompt="", answer_prompt="", split_length=10000, user_id=None):
+    conn = create_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       INSERT INTO `task` (`uuid`, `question_prompt`, `answer_prompt`, `split_length`, `user_config`, `user_id`)
+                       VALUES (%s, %s, %s, %s, %s, %s);
+                       """, (uuid, question_prompt, answer_prompt, split_length, user_config,user_id,))
         conn.commit()
         return uuid
     except Error as e:

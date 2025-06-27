@@ -23,10 +23,10 @@ from pytidb import TiDBClient
 from pytidb.schema import TableModel, Field
 from sqlalchemy import MetaData, Table, delete
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
-from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort, Response, redirect
+from flask import Flask, render_template, request, jsonify, send_from_directory, render_template_string, abort, Response, redirect, url_for, session, make_response
 from flask_socketio import SocketIO
 from urllib.parse import unquote
 
@@ -36,6 +36,8 @@ from save_tidb import save_txt_to_tidb
 from gen_embed import gen_embed
 from process_file_task import *
 from query_function import *
+
+from authlib.integrations.flask_client import OAuth
 
 from utils import *
 
@@ -48,6 +50,8 @@ clients = {}
 FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 
 app = Flask(__name__)
+app.secret_key = "gaiabase"
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365 * 100)
 socketio = SocketIO(app)
 max_concurrent_requests = 2
 semaphore = threading.Semaphore(max_concurrent_requests)
@@ -57,12 +61,66 @@ redis_conn = Redis()
 q_process_doc = Queue('step1_process_doc', connection=redis_conn)
 q_process_pdf = Queue('step1_process_pdf', connection=redis_conn)
 q_process_txt = Queue('step1_process_txt', connection=redis_conn)
+q_qa = Queue('step2_qa', connection=redis_conn)
 q_gen_embed = Queue('step3_gen_embed', connection=redis_conn)
 q_del_embed = Queue('step5_del_embed', connection=redis_conn)
 q_save_tidb = Queue('step3_save_tidb', connection=redis_conn)
 q_del_tidb = Queue('step5_del_tidb', connection=redis_conn)
 
 nest_asyncio.apply()
+
+
+oauth = OAuth(app)
+
+# GitHub
+github = oauth.register(
+    name='github',
+    client_id='Ov23liUN6Fn7nTJaROGt',
+    client_secret='ee5fb34090e02116cc01796651a0511b943cb536',
+    access_token_url='https://github.com/login/oauth/access_token',
+    authorize_url='https://github.com/login/oauth/authorize',
+    api_base_url='https://api.github.com/',
+    userinfo_endpoint='https://api.github.com/user',
+    client_kwargs={'scope': 'user:email'},
+)
+
+@app.route('/auth/github')
+def github_login():
+    redirect_uri = url_for('github_callback', _external=True)
+    return github.authorize_redirect(redirect_uri)
+
+@app.route('/auth/github/callback')
+def github_callback():
+    token = github.authorize_access_token()
+    resp = github.get('user')
+    profile = resp.json()
+    # 保存用户信息到会话
+    response = make_response(redirect('/'))
+    # 创建或更新用户
+    user_id = create_user(profile['id'], profile['login'], profile['email'])
+    session['user_id'] = user_id
+    print(f"outside_user_id: {user_id}")
+
+    response.set_cookie('user_id', str(user_id), httponly=False, max_age=60*60*24*365)
+    response.set_cookie('username', profile['login'], httponly=False, max_age=60*60*24*365)
+
+    # 重定向到主页
+    return response
+
+
+@app.route("/auth/logout", methods=["POST"])
+def logout():
+    # 清除会话数据
+    session.clear()
+
+    # 创建响应对象
+    response = make_response(jsonify({"status": "success", "message": "已成功退出登录"}))
+
+    # 删除cookie
+    response.set_cookie('user_id', '', expires=0)
+    response.set_cookie('username', '', expires=0)
+
+    return response
 
 
 @app.route("/")
@@ -75,9 +133,19 @@ def config():
     return render_template("config.html")
 
 
-@app.route("/process")
-def process():
-    return render_template("process.html")
+@app.route("/tasks")
+def tasks():
+    return render_template("tasks.html")
+
+
+@app.route("/process/<string:type>")
+def process(type):
+    return render_template("process.html", type=type)
+
+
+@app.route("/url")
+def url():
+    return render_template("url.html")
 
 
 @app.route("/review")
@@ -88,6 +156,16 @@ def review():
 @app.route("/status")
 def status():
     return render_template("status.html")
+
+
+@app.route("/api/getAllTasks", methods=["GET"])
+def get_all_tasks():
+    try:
+        print(session['user_id'])
+        tasks = get_subtask_info_by_user_id(session['user_id'])
+        return jsonify(tasks)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/encrypt", methods=["POST"])
@@ -169,9 +247,10 @@ def create_qdrant_collection():
 def get_file_count():
     result_array = []
     files = request.files.getlist("files[]")
-
+    print(files)
     for file in files:
         file_bytes = file.read()
+        print(file_bytes)
         if file.filename.lower().endswith('.doc') or file.filename.lower().endswith('.docx'):
             filename = file.filename.lower()
             ext = os.path.splitext(filename)[1]
@@ -261,7 +340,7 @@ def save_all_qa(qa_data, task_id, only_qa=False):
 def crawl_all_url(host_url_list, task_id):
     print(host_url_list)
     for host_url in host_url_list:
-        process_file_path = os.path.join(task_id, "processed_files")
+        process_file_path = os.path.join(task_id, "crawl_files")
         q_save_url.enqueue(crawl_url, host_url, process_file_path, retry=Retry(max=3))
 
 
@@ -276,6 +355,57 @@ def save_all_text(text_list, task_id):
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(total_text)
             q_process_txt.enqueue(task_txt, save_file_path, process_file_path, subtask_id, retry=Retry(max=3))
+
+
+@app.route("/api/crawl_web_file_gen_qa", methods=["POST"])
+def crawl_web_file_gen_qa():
+    try:
+        data = request.get_json()
+        task_id = data.get("task_id")
+        files = data.get("files", [])
+
+        if not task_id:
+            return jsonify({"error": "Task ID is required"}), 400
+
+        if not files:
+            return jsonify({"error": "No files provided"}), 400
+
+        print(task_id)
+        print(files)
+
+        # 确保目录存在
+        crawl_path = os.path.join(task_id, "crawl_files")
+        process_path = os.path.join(task_id, "processed_files")
+        os.makedirs(crawl_path, exist_ok=True)
+        os.makedirs(process_path, exist_ok=True)
+
+        for file_item in files:
+            filename = file_item.get("filename")
+            subtask_id = file_item.get("subtask_id")
+            content = file_item.get("content")
+            print(f"Processing file: {filename}, content length: {len(content) if content else 'None'}")
+
+            if not filename or content is None:
+                continue
+
+            # 保存到 crawl_files 文件夹
+            crawl_file_path = os.path.join(crawl_path, filename)
+            with open(crawl_file_path, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            # 复制到 processed_files 文件夹
+            process_file_path = os.path.join(process_path, filename)
+            with open(process_file_path, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            # 创建子任务并开始生成问答
+            update_subtask(subtask_id, None, 2)
+            q_qa.enqueue(task_qa, process_file_path, subtask_id, retry=Retry(max=3))
+
+        return jsonify({"message": "Files processed and Q&A generation started"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 @app.route("/api/processingAllData", methods=["POST"])
@@ -299,10 +429,10 @@ def processing_all_data():
     question_prompt = settings.get("questionPrompt")
     answer_prompt = settings.get("answerPrompt")
 
-    for sub in ['original_files', 'processed_files', 'qa_files', 'err_files']:
+    for sub in ['original_files', 'processed_files', 'qa_files', 'crawl_files', 'err_files']:
         Path(f'./{task_id}/{sub}').mkdir(parents=True, exist_ok=True)
 
-    create_task(task_id, configuration, question_prompt, answer_prompt, split_length)
+    create_task(task_id, configuration, question_prompt, answer_prompt, split_length, session['user_id'])
 
     # 处理文件上传
     uploaded_files = []

@@ -3,13 +3,830 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Flask Tabs</title>
-    <script>
-        if (!localStorage.getItem('gaiabaseConfig') || localStorage.getItem('gaiabaseConfig') === 'undefined') {
-            window.location.href = "/config";
-        } else {
-            window.location.href = "/process";
+    <title>AI Document Processing Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    </script>
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            50% { transform: translateY(-100px) rotate(180deg); opacity: 1; }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 35, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .auth-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sign-in-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sign-in-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .sign-up-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: 1px solid transparent;
+        }
+
+        .sign-up-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-profile {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #333 0%, #666 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .dropdown-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .user-profile.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(40, 40, 50, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .dropdown-item.logout {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ef4444;
+        }
+
+        .dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .dropdown-icon {
+            font-size: 16px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .github-info {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .github-username {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .github-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 120px 40px 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header section */
+        .hero {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Data source grid */
+        .data-sources {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .data-source-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .data-source-card:nth-child(1) { animation-delay: 0.1s; }
+        .data-source-card:nth-child(2) { animation-delay: 0.2s; }
+        .data-source-card:nth-child(3) { animation-delay: 0.3s; }
+        .data-source-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .data-source-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .data-source-card:hover::before {
+            left: 100%;
+        }
+
+        .data-source-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow:
+                    0 20px 40px rgba(102, 126, 234, 0.2),
+                    0 0 0 1px rgba(102, 126, 234, 0.1);
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .data-source-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-icon.documents {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-icon.web {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .card-icon.text {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .card-icon.qa {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .card-description {
+            text-align: left;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .card-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .card-features li {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-features li::before {
+            content: '✓';
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .card-action {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-source-card:hover .card-action {
+            background: rgba(102, 126, 234, 0.8);
+            border-color: rgba(102, 126, 234, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Stats section - REMOVED */
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 0 20px;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+
+            .user-profile {
+                padding: 6px 12px;
+            }
+
+            .user-name {
+                max-width: 80px;
+            }
+
+            .user-dropdown {
+                right: -10px;
+                min-width: 180px;
+            }
+
+            .container {
+                padding: 100px 20px 40px;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .data-sources {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .data-source-card {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .card-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
+<body>
+<!-- Animated background particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Navigation -->
+<nav class="nav">
+    <div class="nav-brand">Document Processing</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link active">Data Processing</a>
+        <a href="/tasks" class="nav-link">Task Center</a>
+        <a href="/config" class="nav-link">Settings</a>
+
+        <!-- Auth Buttons (shown when not logged in) -->
+        <div class="auth-buttons" id="authButtons">
+            <button class="auth-btn sign-in-btn" onclick="window.location.href='/auth/github'">
+                Sign In
+            </button>
+            <button class="auth-btn sign-up-btn" onclick="window.location.href='/auth/github'">
+                Sign Up
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="user-profile" id="userProfile" onclick="toggleUserDropdown(event)">
+            <div class="user-avatar" id="userAvatar">🐙</div>
+            <div class="user-name" id="userName"></div>
+            <div class="dropdown-arrow">▼</div>
+
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown" id="userDropdown">
+                <div class="github-info">
+                    <div class="github-username">
+                        <span>🐙</span>
+                        <span id="dropdownUsername"></span>
+                    </div>
+                    <div class="github-id" id="githubId"></div>
+                </div>
+                <a href="#" class="dropdown-item logout" onclick="logout(event)">
+                    <span class="dropdown-icon">🚪</span>
+                    Log Out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main container -->
+<div class="container">
+    <!-- Hero section -->
+    <div class="hero">
+        <h1>Choose Your Data Source</h1>
+        <p>Support multiple data formats, intelligent content extraction, automatic Q&A generation, and comprehensive document processing solution</p>
+    </div>
+
+    <!-- Data source selection -->
+    <div class="data-sources">
+        <!-- Document Upload -->
+        <div class="data-source-card" onclick="selectDataSource('documents')">
+            <div class="card-icon documents">📁</div>
+            <h3 class="card-title">Document Upload</h3>
+            <p class="card-description">Upload PDF, Word, TXT and other format documents, automatically extract content and generate Q&A pairs</p>
+            <ul class="card-features">
+                <li>Multiple document formats</li>
+                <li>Intelligent content extraction</li>
+                <li>Auto Q&A generation</li>
+                <li>Batch processing support</li>
+            </ul>
+            <button class="card-action">
+                Start Upload
+                <span>→</span>
+            </button>
+        </div>
+
+        <!-- Web Content -->
+        <div class="data-source-card" onclick="selectDataSource('web')">
+            <div class="card-icon web">🔗</div>
+            <h3 class="card-title">Web Extraction</h3>
+            <p class="card-description">Enter web URLs, intelligently extract main content, support preview and editing</p>
+            <ul class="card-features">
+                <li>Smart web parsing</li>
+                <li>Content preview confirmation</li>
+                <li>Edit and modify support</li>
+                <li>Auto Q&A generation</li>
+            </ul>
+            <button class="card-action">
+                Extract Web
+                <span>→</span>
+            </button>
+        </div>
+
+        <!-- Text Input -->
+        <div class="data-source-card" onclick="selectDataSource('text')">
+            <div class="card-icon text">📝</div>
+            <h3 class="card-title">Text Input</h3>
+            <p class="card-description">Directly paste summaries or text content, immediately generate embeddings and store in vector database</p>
+            <ul class="card-features">
+                <li>Direct text embedding</li>
+                <li>No Q&A generation needed</li>
+                <li>Instant vector storage</li>
+                <li>Ideal for summaries & notes</li>
+            </ul>
+            <button class="card-action">
+                Input Text
+                <span>→</span>
+            </button>
+        </div>
+
+        <!-- Q&A Pairs -->
+        <div class="data-source-card" onclick="selectDataSource('qa')">
+            <div class="card-icon qa">❓</div>
+            <h3 class="card-title">Q&A Pairs</h3>
+            <p class="card-description">Directly import prepared Q&A pairs, support multiple formats and batch import</p>
+            <ul class="card-features">
+                <li>Multiple input formats</li>
+                <li>Automatic format recognition</li>
+                <li>Batch import support</li>
+                <li>Quality check validation</li>
+            </ul>
+            <button class="card-action">
+                Import Q&A
+                <span>→</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let userData = {};
+
+    document.cookie.split(';').forEach(cookie => {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'username' || name === 'user_id') {
+            if (!value) return;
+            userData[name] = decodeURIComponent(value);
+        }
+    })
+
+    if(Object.keys(userData).length > 0) {
+        document.getElementById('authButtons').style.display = 'none';
+        updateUserProfile();
+    } else {
+        document.getElementById('userProfile').style.display = 'none';
+    }
+
+    function updateUserProfile() {
+        document.getElementById('userProfile').style.display = 'flex';
+        document.getElementById('userName').textContent = userData['username'] || 'Guest';
+        document.getElementById('dropdownUsername').innerText = userData['username'] || 'Guest';
+        document.getElementById('githubId').innerText = "ID: " + userData['user_id'];
+    }
+
+    function logout() {
+        fetch('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                showNotification('Logged out successfully', 'success');
+                window.location.reload();
+            } else {
+                showNotification('Logout failed. Please try again.', 'error');
+            }
+        });
+    }
+
+    function toggleUserDropdown() {
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+        userDropdown.classList.toggle('show');
+        userProfile.classList.toggle('open');
+    }
+
+
+    // Create animated particles
+    function createParticles() {
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 50;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+
+            // Random position
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+
+            particlesContainer.appendChild(particle);
+        }
+    }
+
+    // Data source selection
+    function selectDataSource(type) {
+        // Add click animation
+        event.currentTarget.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            event.currentTarget.style.transform = '';
+        }, 150);
+
+        // Simulate navigation delay for smooth transition
+        setTimeout(() => {
+            switch(type) {
+                case 'documents':
+                    showNotification('Navigating to document upload page...', 'info');
+                    // In real app: window.location.href = '/process/documents';
+                    break;
+                case 'web':
+                    showNotification('Navigating to web extraction page...', 'info');
+                    // In real app: window.location.href = '/process/web';
+                    break;
+                case 'text':
+                    showNotification('Navigating to text input page...', 'info');
+                    // In real app: window.location.href = '/process/text';
+                    break;
+                case 'qa':
+                    showNotification('Navigating to Q&A pairs page...', 'info');
+                    // In real app: window.location.href = '/process/qa';
+                    break;
+            }
+        }, 200);
+    }
+
+    // Navigation functions
+    function goToTaskCenter(event) {
+        if (event) event.preventDefault();
+        showNotification('Navigating to task center...', 'info');
+        window.location.href = '/tasks';
+    }
+
+    function goToSettings(event) {
+        if (event) event.preventDefault();
+        showNotification('Navigating to settings page...', 'info');
+        window.location.href = '/config';
+    }
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+                position: fixed;
+                top: 90px;
+                right: 30px;
+                padding: 16px 24px;
+                border-radius: 12px;
+                color: #fff;
+                font-weight: 500;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+
+        if (type === 'success') {
+            notification.style.background = 'rgba(34, 197, 94, 0.9)';
+        } else if (type === 'error') {
+            notification.style.background = 'rgba(239, 68, 68, 0.9)';
+        } else {
+            notification.style.background = 'rgba(102, 126, 234, 0.9)';
+        }
+
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            setTimeout(() => notification.remove(), 400);
+        }, 3000);
+    }
+
+    // Add animation styles
+    const animationStyles = document.createElement('style');
+    animationStyles.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+    document.head.appendChild(animationStyles);
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        createParticles();
+    });
+
+    // Add smooth scrolling and enhanced interactions
+    document.querySelectorAll('.data-source-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.zIndex = '100';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.zIndex = '10';
+        });
+    });
+</script>
+</body>
 </html>

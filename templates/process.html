@@ -19,9 +19,232 @@
             padding: 20px;
         }
 
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 35, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .auth-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sign-in-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sign-in-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .sign-up-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: 1px solid transparent;
+        }
+
+        .sign-up-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-profile {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #333 0%, #666 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .dropdown-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .user-profile.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(40, 40, 50, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .dropdown-item.logout {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ef4444;
+        }
+
+        .dropdown-item.logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .dropdown-icon {
+            font-size: 16px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .github-info {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .github-username {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .github-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
         .container {
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 80px auto 0;
             animation: fadeIn 0.6s ease-out;
         }
 
@@ -589,6 +812,47 @@
     </style>
 </head>
 <body>
+<nav class="nav">
+    <div class="nav-brand">Document Processing</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link active">Data Processing</a>
+        <a href="/tasks" class="nav-link">Task Center</a>
+        <a href="/config" class="nav-link">Settings</a>
+
+        <!-- Auth Buttons (shown when not logged in) -->
+        <div class="auth-buttons" id="authButtons">
+            <button class="auth-btn sign-in-btn" onclick="window.location.href='/auth/github'">
+                Sign In
+            </button>
+            <button class="auth-btn sign-up-btn" onclick="window.location.href='/auth/github'">
+                Sign Up
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="user-profile" id="userProfile" onclick="toggleUserDropdown(event)">
+            <div class="user-avatar" id="userAvatar">🐙</div>
+            <div class="user-name" id="userName"></div>
+            <div class="dropdown-arrow">▼</div>
+
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown" id="userDropdown">
+                <div class="github-info">
+                    <div class="github-username">
+                        <span>🐙</span>
+                        <span id="dropdownUsername"></span>
+                    </div>
+                    <div class="github-id" id="githubId"></div>
+                </div>
+                <a href="#" class="dropdown-item logout" onclick="logout(event)">
+                    <span class="dropdown-icon">🚪</span>
+                    Log Out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
 <div class="container">
     <div class="header-container">
         <h1>Document Processing & Embedding</h1>
@@ -599,24 +863,24 @@
     </div>
 
     <!-- Tab Navigation -->
-    <div class="tab-container">
-        <button class="tab-btn active" onclick="switchTab('upload')">
-            <span class="tab-icon">📁</span>
-            File Upload
-        </button>
-        <button class="tab-btn" onclick="switchTab('url')">
-            <span class="tab-icon">🔗</span>
-            URL Extract
-        </button>
-        <button class="tab-btn" onclick="switchTab('text')">
-            <span class="tab-icon">📝</span>
-            Text Input
-        </button>
-        <button class="tab-btn" onclick="switchTab('qa')">
-            <span class="tab-icon">❓</span>
-            Q&A Input
-        </button>
-    </div>
+{#    <div class="tab-container">#}
+{#        <button class="tab-btn active" onclick="switchTab('upload')">#}
+{#            <span class="tab-icon">📁</span>#}
+{#            File Upload#}
+{#        </button>#}
+{#        <button class="tab-btn" onclick="switchTab('url')">#}
+{#            <span class="tab-icon">🔗</span>#}
+{#            URL Extract#}
+{#        </button>#}
+{#        <button class="tab-btn" onclick="switchTab('text')">#}
+{#            <span class="tab-icon">📝</span>#}
+{#            Text Input#}
+{#        </button>#}
+{#        <button class="tab-btn" onclick="switchTab('qa')">#}
+{#            <span class="tab-icon">❓</span>#}
+{#            Q&A Input#}
+{#        </button>#}
+{#    </div>#}
 
     <!-- File Upload Tab -->
     <div id="upload-tab" class="tab-content active">
@@ -632,9 +896,9 @@
                 <input type="file" id="fileInput" multiple accept=".txt,.md,.pdf,.doc,.docx">
             </div>
             <div class="file-list" id="fileList"></div>
-            <button class="btn btn-success add-to-queue-btn" onclick="addFilesToQueue()" id="addFilesBtn" style="display: none;">
-                Add Files to Processing Queue
-            </button>
+{#            <button class="btn btn-success add-to-queue-btn" onclick="addFilesToQueue()" id="addFilesBtn" style="display: none;">#}
+{#                Add Files to Processing Queue#}
+{#            </button>#}
         </div>
     </div>
 
@@ -651,9 +915,9 @@
             </div>
             <button class="btn" onclick="addUrl()">Add URL</button>
             <div class="file-list" id="urlList" style="margin-top: 20px;"></div>
-            <button class="btn btn-success add-to-queue-btn" onclick="addUrlsToQueue()" id="addUrlsBtn" style="display: none;">
-                Add URLs to Processing Queue
-            </button>
+{#            <button class="btn btn-success add-to-queue-btn" onclick="addUrlsToQueue()" id="addUrlsBtn" style="display: none;">#}
+{#                Add URLs to Processing Queue#}
+{#            </button>#}
         </div>
     </div>
 
@@ -673,12 +937,12 @@
                 <div class="char-counter" id="textCharCounter">0 characters</div>
             </div>
             <div class="form-group">
-                <label for="textSummary">Short Text (optional)</label>
+                <label for="textSummary">Short Text</label>
                 <input type="text" id="textSummary" placeholder="Add a brief summary or short description">
             </div>
-            <button class="btn btn-success add-to-queue-btn" onclick="addTextToQueue()">
-                Add Text to Processing Queue
-            </button>
+{#            <button class="btn btn-success add-to-queue-btn" onclick="addTextToQueue()">#}
+{#                Add Text to Processing Queue#}
+{#            </button>#}
         </div>
     </div>
 
@@ -716,42 +980,45 @@
     </div>
 
     <!-- Processing Queue Summary -->
-    <div class="queue-summary" id="queueSummary">
-        <h3>
-            <span>📊</span>
-            Processing Queue Summary
-        </h3>
-        <div id="queueContent">
-            <p class="empty-queue">No data sources added yet</p>
-        </div>
-    </div>
+{#    <div class="queue-summary" id="queueSummary">#}
+{#        <h3>#}
+{#            <span>📊</span>#}
+{#            Processing Queue Summary#}
+{#        </h3>#}
+{#        <div id="queueContent">#}
+{#            <p class="empty-queue">No data sources added yet</p>#}
+{#        </div>#}
+{#    </div>#}
 
     <!-- Embedding Settings Section -->
     <div class="section" id="embeddingSettings">
-        <div class="section-header">
+        <div class="section-header" id="embeddingSettingsTitle" style="cursor: pointer;margin-bottom: 0px;" onclick="toggleEmbeddingSettings()">
             <div class="section-icon" style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);">⚙️</div>
             <h2>Embedding Settings</h2>
+            <div style="margin-left: auto; font-size: 20px; transition: transform 0.3s ease;" id="embedSettingsArrow">▼</div>
         </div>
-        <div class="form-group">
-            <label for="splitLength">
-                Split Length
-                <span class="info-tooltip" data-tooltip="Maximum character length before splitting content. Large documents exceeding this limit will be processed into smaller chunks or Q&A pairs">?</span>
-            </label>
-            <input type="number" id="splitLength" value="1000000" min="10000" max="10000000">
-        </div>
-        <div class="form-group">
-            <label for="questionPrompt">
-                Prompt for Generating Questions
-                <span class="info-tooltip" data-tooltip="This prompt will be used to generate questions from your content">?</span>
-            </label>
-            <textarea id="questionPrompt" placeholder="Example: Based on the following content, generate relevant questions that test understanding of the key concepts, main ideas, and important details. Make the questions clear and specific." rows="4">Respond with a list of 10 questions. The text in the user message must contain specific answers to each question. Each question must be on its own line. Just list the questions without any introductory text or numbers.</textarea>
-        </div>
-        <div class="form-group">
-            <label for="answerPrompt">
-                Prompt for Generating Answers
-                <span class="info-tooltip" data-tooltip="This prompt will be used to generate comprehensive answers to the questions">?</span>
-            </label>
-            <textarea id="answerPrompt" placeholder="Example: Provide detailed and accurate answers to the questions based on the content. Include relevant examples and explanations where appropriate. Keep answers comprehensive but concise." rows="4">Give a comprehensive and well-reasoned answer to the user question strictly based on the context below.</textarea>
+        <div id="embeddingSettingsContent" style="display: none; overflow: hidden; transition: max-height 0.3s ease-out; max-height: 0;">
+            <div class="form-group">
+                <label for="splitLength">
+                    Split Length
+                    <span class="info-tooltip" data-tooltip="Maximum character length before splitting content. Large documents exceeding this limit will be processed into smaller chunks or Q&A pairs">?</span>
+                </label>
+                <input type="number" id="splitLength" value="1000000" min="10000" max="10000000">
+            </div>
+            <div class="form-group">
+                <label for="questionPrompt">
+                    Prompt for Generating Questions
+                    <span class="info-tooltip" data-tooltip="This prompt will be used to generate questions from your content">?</span>
+                </label>
+                <textarea id="questionPrompt" placeholder="Example: Based on the following content, generate relevant questions that test understanding of the key concepts, main ideas, and important details. Make the questions clear and specific." rows="4">Respond with a list of 10 questions. The text in the user message must contain specific answers to each question. Each question must be on its own line. Just list the questions without any introductory text or numbers.</textarea>
+            </div>
+            <div class="form-group">
+                <label for="answerPrompt">
+                    Prompt for Generating Answers
+                    <span class="info-tooltip" data-tooltip="This prompt will be used to generate comprehensive answers to the questions">?</span>
+                </label>
+                <textarea id="answerPrompt" placeholder="Example: Provide detailed and accurate answers to the questions based on the content. Include relevant examples and explanations where appropriate. Keep answers comprehensive but concise." rows="4">Give a comprehensive and well-reasoned answer to the user question strictly based on the context below.</textarea>
+            </div>
         </div>
     </div>
 
@@ -766,11 +1033,58 @@
 </div>
 
 <script>
+
+    let userData ={};
+
+    document.cookie.split(';').forEach(cookie => {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'username' || name === 'user_id') {
+            if (!value) return;
+            userData[name] = decodeURIComponent(value);
+        }
+    })
+
+    if(Object.keys(userData).length > 0) {
+        document.getElementById('authButtons').style.display = 'none';
+        updateUserProfile();
+    } else {
+        document.getElementById('userProfile').style.display = 'none';
+    }
+
+    function updateUserProfile() {
+        document.getElementById('userProfile').style.display = 'flex';
+        document.getElementById('userName').textContent = userData['username'] || 'Guest';
+        document.getElementById('dropdownUsername').innerText = userData['username'] || 'Guest';
+        document.getElementById('githubId').innerText = "ID: " + userData['user_id'];
+    }
+
+    function logout() {
+        fetch('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                showNotification('Logged out successfully', 'success');
+                window.location.reload();
+            } else {
+                showNotification('Logout failed. Please try again.', 'error');
+            }
+        });
+    }
+
+    function toggleUserDropdown() {
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+        userDropdown.classList.toggle('show');
+        userProfile.classList.toggle('open');
+    }
+
     // Global variables for temporary storage
     let uploadedFiles = [];
     let fileCharCounts = new Map();
     let urls = [];
-    let currentTab = 'upload';
 
     const pageSessionId = crypto.randomUUID();
 
@@ -782,30 +1096,24 @@
         qas: []
     };
 
+    const processType = "{{ type }}";
+
     // Tab switching
     function switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        event.target.closest('.tab-btn').classList.add('active');
-
         // Update tab content
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
         document.getElementById(`${tabName}-tab`).classList.add('active');
 
-        currentTab = tabName;
-
-        if(tabName === "qa") {
-            document.getElementById('queueSummary').style.display = 'none';
+        if(tabName === "qa" || tabName === "text") {
             document.getElementById('embeddingSettings').style.display = 'none';
         } else {
-            document.getElementById('queueSummary').style.display = 'block';
             document.getElementById('embeddingSettings').style.display = 'block';
         }
     }
+
+    switchTab(processType)
 
     // File upload handling
     const uploadArea = document.getElementById('uploadArea');
@@ -839,6 +1147,7 @@
                 uploadedFiles.push(file);
                 displayFile(file);
                 readFileContent(file);
+                document.getElementById('processBtn').disabled = false;
             } else {
                 showNotification(`Invalid file type: ${file.name}`, 'error');
             }
@@ -862,7 +1171,7 @@
             updateFileDisplay(file.name, -1);
         };
 
-        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
             reader.readAsText(file);
         } else {
             const formdata = new FormData();
@@ -872,6 +1181,7 @@
                 body: formdata
             })
             const fileInfo = await response.json();
+            console.log(fileInfo)
             updateFileDisplay(fileInfo["files"][0]["file_name"], fileInfo["files"][0]["file_size"]);
         }
     }
@@ -965,20 +1275,21 @@
     }
 
     function updateAddFilesButton() {
-        const btn = document.getElementById('addFilesBtn');
-        btn.style.display = uploadedFiles.length > 0 ? 'block' : 'none';
+        {#const btn = document.getElementById('addFilesBtn');#}
+        {#btn.style.display = uploadedFiles.length > 0 ? 'block' : 'none';#}
     }
 
     // URL handling
     function addUrl() {
         const urlInput = document.getElementById('urlInput');
         const url = urlInput.value.trim();
+        const processBtn = document.getElementById('processBtn');
 
         if (url && isValidUrl(url)) {
             urls.push(url);
             displayUrl(url);
             urlInput.value = '';
-            updateAddUrlsButton();
+            processBtn.disabled = false;
         } else {
             showNotification('Please enter a valid URL', 'error');
         }
@@ -1010,7 +1321,6 @@
     function removeUrl(url) {
         urls = urls.filter(u => u !== url);
         updateUrlList();
-        updateAddUrlsButton();
     }
 
     function updateUrlList() {
@@ -1019,20 +1329,20 @@
         urls.forEach(url => displayUrl(url));
     }
 
-    function updateAddUrlsButton() {
-        const btn = document.getElementById('addUrlsBtn');
-        btn.style.display = urls.length > 0 ? 'block' : 'none';
-    }
-
     // Character counting
     const textInput = document.getElementById('textInput');
     const textCharCounter = document.getElementById('textCharCounter');
     const qaInput = document.getElementById('qaInput');
     const qaCharCounter = document.getElementById('qaCharCounter');
+    const processBtn = document.getElementById('processBtn');
 
     function updateCharCounter(input, counter, showWarning = true) {
         const charCount = input.value.length;
         counter.textContent = `${charCount} characters`;
+
+        if (charCount > 0) {
+            processBtn.disabled = false;
+        }
 
         if (showWarning) {
             const splitLength = parseInt(document.getElementById('splitLength').value);
@@ -1139,7 +1449,6 @@
         updateAddFilesButton();
 
         // Update summary
-        updateQueueSummary();
         showNotification(`${processingQueue.files.length} file(s) added to processing queue`, 'success');
     }
 
@@ -1152,10 +1461,8 @@
         // Clear temporary storage
         urls = [];
         document.getElementById('urlList').innerHTML = '';
-        updateAddUrlsButton();
 
         // Update summary
-        updateQueueSummary();
         showNotification(`${processingQueue.urls.length} URL(s) added to processing queue`, 'success');
     }
 
@@ -1179,8 +1486,6 @@
         document.getElementById('textSummary').value = '';
         updateCharCounter(textInput, textCharCounter);
 
-        // Update summary
-        updateQueueSummary();
         showNotification('Text content added to processing queue', 'success');
     }
 
@@ -1211,93 +1516,17 @@
         processingQueue.qas.push({
             content: parseQAPairs(format, qaContent, format === 'custom' ? document.getElementById('customDelimiter').value : null),
         });
-
-        // Clear form
-        {#qaInput.value = '';#}
-        {#updateCharCounter(qaInput, qaCharCounter, false);#}
-
-        // Update summary
-        {#updateQueueSummary();#}
-        {#showNotification(`Q&A set with ${pairCount} pairs added to processing queue`, 'success');#}
-    }
-
-    document.getElementById('qaInput').addEventListener('input', () => {
-        updateQueueSummary()
-    });
-
-    // Update queue summary
-    function updateQueueSummary() {
-        const queueContent = document.getElementById('queueContent');
-        const processBtn = document.getElementById('processBtn');
-        const qaValue = document.getElementById('qaInput').value;
-
-        const totalItems = processingQueue.files.length +
-            processingQueue.urls.length +
-            processingQueue.texts.length +
-            processingQueue.qas.length;
-
-        if (totalItems === 0 && !qaValue) {
-            queueContent.innerHTML = '<p class="empty-queue">No data sources added yet</p>';
-            processBtn.disabled = true;
-            return;
-        }
-
-        processBtn.disabled = false;
-
-        let statsHtml = '<div class="queue-stats">';
-
-        if (processingQueue.files.length > 0) {
-            const fileTypes = processingQueue.files.reduce((acc, item) => {
-                const ext = item.file.name.split('.').pop().toUpperCase();
-                acc[ext] = (acc[ext] || 0) + 1;
-                return acc;
-            }, {});
-            const fileTypesStr = Object.entries(fileTypes).map(([ext, count]) => `${count} ${ext}`).join(', ');
-            statsHtml += `
-                    <div class="queue-stat">
-                        <span class="queue-stat-icon">📁</span>
-                        <span>${processingQueue.files.length} Files (${fileTypesStr})</span>
-                    </div>
-                `;
-        }
-
-        if (processingQueue.urls.length > 0) {
-            statsHtml += `
-                    <div class="queue-stat">
-                        <span class="queue-stat-icon">🔗</span>
-                        <span>${processingQueue.urls.length} URLs</span>
-                    </div>
-                `;
-        }
-
-        if (processingQueue.texts.length > 0) {
-            statsHtml += `
-                    <div class="queue-stat">
-                        <span class="queue-stat-icon">📝</span>
-                        <span>${processingQueue.texts.length} Text ${processingQueue.texts.length > 1 ? 'entries' : 'entry'}</span>
-                    </div>
-                `;
-        }
-
-        if (processingQueue.qas.length > 0) {
-            const totalPairs = processingQueue.qas.reduce((sum, qa) => sum + qa.content.length, 0);
-            statsHtml += `
-                    <div class="queue-stat">
-                        <span class="queue-stat-icon">❓</span>
-                        <span>${processingQueue.qas.length} Q&A ${processingQueue.qas.length > 1 ? 'sets' : 'set'} (${totalPairs} pairs)</span>
-                    </div>
-                `;
-        }
-
-        statsHtml += '</div>';
-        statsHtml += `<div class="queue-total">Total: ${totalItems} data source${totalItems > 1 ? 's' : ''} ready for processing</div>`;
-
-        queueContent.innerHTML = statsHtml;
     }
 
     // Process documents
     async function processDocuments() {
-        addQAToQueue()
+        if (processType === "qa") {
+            addQAToQueue()
+        }else if (processType === "upload") {
+            processingQueue["files"] = uploadedFiles;
+        }else if (processType === "url") {
+            processingQueue["urls"] = urls;
+        }
 
         const statusBar = document.getElementById('statusBar');
         const statusText = document.getElementById('statusText');
@@ -1339,8 +1568,9 @@
                 statusBar.classList.remove('show');
                 showNotification('Documents processed successfully!', 'success');
                 processingQueue = { files: [], urls: [], texts: [], qas: [] };
-                updateQueueSummary();
-                if (data.redirect_url) {
+                if (processType === "url") {
+                    window.location.href = "/url?id=" + pageSessionId;
+                }else if (data.redirect_url) {
                     window.location.href = data.redirect_url;
                 } else {
                     window.location.href = "/review?id=" + pageSessionId;
@@ -1418,7 +1648,29 @@
 
     // Initialize
     updateQAPlaceholder();
-    updateQueueSummary();
+
+    function toggleEmbeddingSettings() {
+        const content = document.getElementById('embeddingSettingsContent');
+        const arrow = document.getElementById('embedSettingsArrow');
+        const title = document.getElementById('embeddingSettingsTitle');
+
+        if (content.style.display === 'none') {
+            title.style.marginBottom = "35px";
+            content.style.display = 'block';
+            setTimeout(() => {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                arrow.style.transform = 'rotate(180deg)';
+            }, 10);
+        } else {
+            title.style.marginBottom = "0";
+            content.style.maxHeight = '0px';
+
+            arrow.style.transform = 'rotate(0deg)';
+            setTimeout(() => {
+                content.style.display = 'none';
+            }, 300);
+        }
+    }
 
     // Settings navigation
     function goToSettings(event) {
