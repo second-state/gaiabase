@@ -1311,10 +1311,36 @@
         }
 
         pollingInterval = setInterval(() => {
-            // Simulate checking generation status
-            // In real implementation, this would be an API call
+            // 发送请求检查文档状态
+            query_documents();
+
+            // 获取最新的文档状态
             const doc = documents.find(d => d.id === docId);
 
+            // 如果找不到文档或者文档状态为错误，停止轮询
+            if (!doc) {
+                clearInterval(pollingInterval);
+                showNotification('文档不存在或已被删除', 'error');
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('loadingState').style.display = 'none';
+                return;
+            }
+
+            // 如果文档状态为错误，停止轮询并显示错误
+            if (doc.status === -1) {
+                clearInterval(pollingInterval);
+                showEditor(doc, true);
+                showNotification('生成问答对时出错', 'error');
+                return;
+            }
+
+            // 如果文档已经到达步骤3或更高，说明生成完成
+            if (doc.step >= 3) {
+                clearInterval(pollingInterval);
+                currentDocument = doc;
+                showEditor(doc);
+                showNotification('问答对生成完成', 'success');
+            }
         }, 2000);
     }
 
