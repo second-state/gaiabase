@@ -742,7 +742,7 @@
         document.getElementById('authButtons').style.display = 'none';
         updateUserProfile();
     } else {
-        window.location.href = '/';
+        {#window.location.href = '/';#}
     }
 
     function updateUserProfile() {
@@ -789,26 +789,27 @@
         // 按UUID分组任务
         const tasksByUUID = {};
         tasksList.forEach(task => {
-            console.log(task)
-            console.log(new Date(task.create_time))
             if (!tasksByUUID[task.task_id]) {
                 tasksByUUID[task.task_id] = {
                     task_id: task.task_id,
-                    uploadTime: new Date(task.create_time),
+                    create_time: new Date(task.create_time),
                     subtasks: []
                 };
             }
             tasksByUUID[task.task_id].subtasks.push(task);
         });
 
-        console.log(tasksByUUID)
+        const sortedTaskIds = Object.keys(tasksByUUID).sort((a, b) => {
+            return tasksByUUID[b].create_time - tasksByUUID[a].create_time;
+        });
 
         // 创建每个日期组
-        for (const task_id of Object.keys(tasksByUUID)) {
+        for (const task_id of sortedTaskIds) {
+            console.log(task_id)
             const index = Object.keys(tasksByUUID).indexOf(task_id);
             const task = tasksByUUID[task_id];
-            const date = task.uploadTime.toLocaleDateString();
-            const time = task.uploadTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            const date = task.create_time.toLocaleDateString();
+            const time = task.create_time.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
             const key = `${date} - ${time}`;
             const isToday = key.startsWith(new Date().toLocaleDateString());
             const dateTitle = isToday ? `Today - ${key.split(' - ')[1]}` : key;
@@ -929,6 +930,8 @@
     function createStatusItems(subtasks) {
         // 按组件类型分组显示状态
         const components = [...new Set(subtasks.map(task => task.component))];
+
+        console.log(components)
 
         return components.map(component => {
             const task = subtasks.find(t => t.component === component);
