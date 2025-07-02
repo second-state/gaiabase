@@ -120,6 +120,11 @@ def crawl_url(host_url, process_file_path):
         raise e
 
 
+def sanitize_filename(name):
+    # 替换非法字符为空格或下划线
+    return re.sub(r'[\\/*?:"<>|]', '_', name)
+
+
 def task_url(url, process_file_path):
     sanitized_url = re.sub(r'[\/:*?"<>|]', '_', url)
     first_dir = Path(process_file_path).parts[0]
@@ -135,6 +140,7 @@ def task_url(url, process_file_path):
         h = html2text.HTML2Text()
         h.ignore_images = True
         title = soup.title.string if soup.title else sanitized_url
+        title = sanitize_filename(title)
         print(f"[log] 页面标题: {title}")
         plain_text = h.handle(htmltext)
         filename = f"{title}.md"
