@@ -1224,7 +1224,38 @@
     // Action handlers
     function retryDocument(docName) {
         showNotification(`Retrying ${docName}...`, 'info');
-        // Implement retry logic
+        // 找到对应的文档对象
+        const doc = documents.find(doc => doc.name === docName);
+        if (!doc) {
+            showNotification(`无法找到文档 ${docName}`, 'error');
+            return;
+        }
+
+        // 调用reEmbed API
+        fetch('/api/reEmbed', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                uuid: uuid,
+                filenameList: [doc.originalFileName]
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('重试请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            showNotification(`${docName} 重试已启动`, 'success');
+            // 重新查询文档状态
+            setTimeout(query_documents, 1000);
+        })
+        .catch(error => {
+            showNotification(`重试 ${docName} 失败: ${error.message}`, 'error');
+        });
     }
 
     // Action handlers

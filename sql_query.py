@@ -586,6 +586,28 @@ def update_embed_task_status(embed_task_id, status):
             conn.close()
 
 
+def delete_embed_tasks_by_subtask_id(subtask_id):
+    conn = create_connection()
+    if conn is None:
+        return False
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       DELETE FROM `embed_task`
+                       WHERE subtask_id = %s;
+                       """, (subtask_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Error as e:
+        print(f"Delete embed tasks failed and rolled back. Error: {e}")
+        conn.rollback()
+        return False
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
 def update_tidb_task_status(tidb_task_id, tidb_id, status):
     conn = create_connection()
     if conn is None:
@@ -603,6 +625,28 @@ def update_tidb_task_status(tidb_task_id, tidb_id, status):
         print(f"Update tidb task status failed and rolled back. Error: {e}")
         conn.rollback()
         return None
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
+def delete_tidb_tasks_by_subtask_id(subtask_id):
+    conn = create_connection()
+    if conn is None:
+        return False
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       DELETE FROM `tidb_task`
+                       WHERE subtask_id = %s;
+                       """, (subtask_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Error as e:
+        print(f"Delete embed tasks failed and rolled back. Error: {e}")
+        conn.rollback()
+        return False
     finally:
         if conn:
             cursor.close()
