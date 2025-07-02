@@ -102,8 +102,8 @@ def save_txt_to_tidb(file_path, db_url, table_name, tidb_id, task_id, subtask_id
         print(f"✅ 成功将文件内容写入 `{dbname}.{table_name}`")
     except Exception as e:
         update_tidb_task_status(tidb_id, 0, -1)
-        err_output_path =  Path(task_id) / "err_files" / f"{subtask_id}_embed_err.txt"
-        with open(err_output_path, 'a', encoding='utf-8') as f:
+        err_output_path =  Path(task_id) / "err_files" / f"{subtask_id}_tidb_err.txt"
+        with open(err_output_path, 'w', encoding='utf-8') as f:
             f.write(str(e))
         print(f"❌ 保存到 TiDB 时出错: {e}")
         raise e
