@@ -30,6 +30,25 @@ def extract_json(text):
             return json.loads(json_str)
         except json.JSONDecodeError as e:
             print("JSON 解析失败:", e)
+            jsonlist = []
+            # 尝试提取 "question" 和 "answer" 对
+            while text:
+                # 使用正则表达式匹配 "question" 和 "answer"
+                pattern = r'"question"\s*:\s*"(.*?)"\s*,\s*"answer"\s*:\s*"(.*?)"\s*}'
+                match = re.search(pattern, text)
+
+                if not match:
+                    break
+
+                question = match.group(1)
+                answer = match.group(2)
+
+                jsonlist.append({"question": question, "answer": answer})
+
+                # 删除已处理的部分
+                text = text[match.end():]
+
+            return json.dumps(jsonlist, indent=4, ensure_ascii=False)
     else:
         print("未找到 JSON 数据")
     return None
