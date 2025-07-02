@@ -633,14 +633,14 @@ def wait_for_summary(summary_job, check_interval=5):
         return None
 
 
-def handle_embed(task_id, filename=[]):
+def handle_embed(task_id, filenameList=[]):
     task_info = get_task_info(task_id)
     user_config = task_info[3] if task_info else None
     decrypt_user_config = decrypt_data(user_config)
     process_folder_path = os.path.join(task_id, "processed_files")
     for root, dirs, files in os.walk(process_folder_path):
         for file in files:
-            if filename and file not in filename:
+            if filenameList and file not in filenameList:
                 continue
             file_path = os.path.join(root, file)
             subtask_data = get_subtask_id_by_uuid_and_name(task_id, file)
@@ -649,7 +649,7 @@ def handle_embed(task_id, filename=[]):
             print(f"Processing file: {file_path}, Subtask ID: {subtask_id}")
             tidb_subtask_id = create_tidb_task(subtask_id)
             print(f"Created TiDB task with ID: {tidb_subtask_id}")
-            q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["tidb-table-name"], tidb_subtask_id, task_id, subtask_id)
+            # q_save_tidb.enqueue(save_txt_to_tidb, file_path, decrypt_user_config["tidb-url"], decrypt_user_config["tidb-table-name"], tidb_subtask_id, task_id, subtask_id)
     qa_folder_path = os.path.join(task_id, "qa_files")
     for root, dirs, files in os.walk(qa_folder_path):
         for file in files:
@@ -661,7 +661,7 @@ def handle_embed(task_id, filename=[]):
                 subtask_data = get_subtask_id_by_uuid_and_name(task_id, filename)
                 subtask_id = subtask_data[0]
                 save_file_data = subtask_data[1]
-                if filename and save_file_data not in filename:
+                if filename and save_file_data not in filenameList:
                     continue
                 delete_embed_tasks_by_subtask_id(subtask_id)
                 print(f"Processing file: {file_path}, Subtask ID: {subtask_id}, Save File Data: {save_file_data}")
