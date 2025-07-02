@@ -730,9 +730,10 @@ def run_all_embed():
 @app.route('/api/reEmbed', methods=['POST'])
 def reembed():
     data = request.get_json()
-    task_id = data.get("uuid")
+    task_id = data.get("task_id")
     embed_filename_list = data.get("embedFilenameList")
     tidb_filename_list = data.get("tidbFilenameList")
+    print(f"Re-embedding task_id: {task_id}, embed_filename_list: {embed_filename_list}, tidb_filename_list: {tidb_filename_list}")
     return handle_embed(task_id, embed_filename_list, tidb_filename_list)
 
 
