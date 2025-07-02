@@ -724,10 +724,10 @@ def handle_embed(task_id, filename=[]):
 def run_all_embed():
     data = request.get_json()
     task_id = data.get("uuid")
-    return (handle_embed(task_id)
+    return handle_embed(task_id)
 
 
-@app.route('/api/reEmbed', methods=['POST']))
+@app.route('/api/reEmbed', methods=['POST'])
 def reembed():
     data = request.get_json()
     task_id = data.get("uuid")
