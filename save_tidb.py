@@ -57,7 +57,7 @@ def save_txt_to_tidb(file_path, db_url, table_name, tidb_id, task_id, subtask_id
 
         # 定义表结构
         class Chunk(TableModel, table=True):
-            __tablename__ = table_name
+            __tablename__ = f"`{table_name}`"
             id: int = Field(primary_key=True)
 
             title: str = Field(sa_type=Text)
