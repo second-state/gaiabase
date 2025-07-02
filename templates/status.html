@@ -1227,7 +1227,7 @@
         // 找到对应的文档对象
         const doc = documents.find(doc => doc.name === docName);
         if (!doc) {
-            showNotification(`无法找到文档 ${docName}`, 'error');
+            showNotification(`Unable to find document ${docName}`, 'error');
             return;
         }
 
@@ -1239,22 +1239,23 @@
             },
             body: JSON.stringify({
                 uuid: uuid,
-                filenameList: [doc.originalFileName]
+                embedFilenameList: [doc.embedStatus === -1 ? doc.originalFileName : ''],
+                tidbFilenameList: [doc.tidbStatus === -1 ? doc.originalFileName : '']
             })
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('重试请求失败');
+                throw new Error('Retry request failed');
             }
             return response.json();
         })
         .then(data => {
-            showNotification(`${docName} 重试已启动`, 'success');
+            showNotification(`${docName} Retry started`, 'success');
             // 重新查询文档状态
             setTimeout(query_documents, 1000);
         })
         .catch(error => {
-            showNotification(`重试 ${docName} 失败: ${error.message}`, 'error');
+            showNotification(`Retry ${docName} fail: ${error.message}`, 'error');
         });
     }
 
