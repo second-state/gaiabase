@@ -131,6 +131,10 @@ def logout():
     return response
 
 
+@app.route("/static/<path:filename>")
+def static_files(filename):
+    return send_from_directory("static", filename)
+
 @app.route("/")
 def index():
     return render_template("index.html")
