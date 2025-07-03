@@ -1238,7 +1238,7 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                uuid: uuid,
+                task_id: uuid,
                 embedFilenameList: [doc.embedStatus === -1 ? doc.originalFileName : ''],
                 tidbFilenameList: [doc.tidbStatus === -1 ? doc.originalFileName : '']
             })
