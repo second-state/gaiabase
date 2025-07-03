@@ -1201,6 +1201,7 @@
         if (doc.status === -1) {
             return `
                     <button class="action-btn" onclick="retryDocument('${doc.name}')">Retry</button>
+                    <button class="action-btn" onclick="deleteDocument('${doc.name}', '${doc.id}')">Delete</button>
                     <button class="action-btn" onclick="viewDetails('${doc.id}')">Details</button>
                 `;
         } else if (doc.status === 0) {
