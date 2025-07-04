@@ -705,6 +705,9 @@ def handle_embed(task_id, embed_filename_list=[], tidb_filename_list=[]):
                     point_id = str(uuid.uuid4())
                     subtask_data = get_subtask_id_by_uuid_and_name(task_id, file)
                     subtask_id = subtask_data[0]
+                    if embed_filename_list and file not in embed_filename_list:
+                        continue
+                    delete_embed_tasks_by_subtask_id(subtask_id)
                     create_embed_task(subtask_id, point_id)
                     q_gen_embed.enqueue(gen_embed, file, text_data, decrypt_user_config["embedding-base-url"],
                                         decrypt_user_config["embedding-model"],
