@@ -601,6 +601,7 @@
             for (const subtask of task.subtasks) {
                 const taskCard = await createTaskCard(subtask, taskStatus);
                 taskCard.dataset.task_id = subtask.task_id;
+                taskCard.dataset.subtask_id = subtask.id;
                 taskListEl.appendChild(taskCard);
             }
         }
@@ -619,10 +620,10 @@
         });
 
         // 获取所有现有任务卡片
-        const taskCards = document.querySelectorAll('.task-card[data-task_id]');
+        const taskCards = document.querySelectorAll('.task-card[data-subtask_id]');
 
         for (const card of taskCards) {
-            const task_id = card.dataset.task_id;
+            const task_id = card.dataset.subtask_id;
             const updatedTask = tasksByUUID[task_id];
 
             if (!updatedTask) continue; // 如果没有更新数据，跳过
@@ -975,7 +976,6 @@
     function closeDeleteModal() {
         document.getElementById('deleteModal').classList.remove('show');
         document.body.style.overflow = 'auto';
-        currentTaskToDelete = null;
     }
 
     function confirmDeleteAction() {
@@ -993,8 +993,18 @@
                 .then(response => {
                     if (response.ok) {
                         showNotification(`${subtask_filename} deleted successfully!`, 'success');
-                        query_documents(); // Refresh the document list
+                        const taskCard = document.querySelector(`.task-card[data-subtask_id="${currentTaskToDelete}"]`);
+                        if (taskCard) {
+                            taskCard.remove();
+                            const taskGroup = taskCard.closest('.task-group');
+                            if (taskGroup && taskGroup.querySelector('.task-card') === null) {
+                                taskGroup.remove();
+                            }
+                        }
+                        currentTaskToDelete = null;
                     } else {
+                        const taskCard = document.querySelector(`.task-card[data-subtask_id="${currentTaskToDelete}"]`);
+                        console.log(taskCard)
                         throw new Error('Failed to delete document');
                     }
                 })
