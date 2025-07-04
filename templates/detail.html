@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/public.css">
+    <title>Web URL Processing Workflow</title>
+    <style>
+        .step.active .step-number {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .step.completed + .step .step-connector {
+            background: #10b981;
+        }
+
+        /* Main content area styles */
+        .main-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 500px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .url-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .url-item:last-child {
+            border-bottom: none;
+        }
+
+        .url-text {
+            color: #667eea;
+            word-break: break-all;
+            margin-right: 15px;
+        }
+
+        .content-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .view-more-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .qa-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .answer {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        .detail-step {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .detail-step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .step-icon.completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-icon.current {
+            background: #667eea;
+            color: white;
+        }
+
+        .step-icon.pending {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .detail-step-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .detail-content {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        /* Button styles */
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .step-indicator {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .step-connector {
+                display: none;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <div class="nav-brand">Document Processing</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link active">Data Processing</a>
+        <a href="/tasks" class="nav-link">Task Center</a>
+        <a href="/config" class="nav-link">Settings</a>
+
+        <!-- Auth Buttons (shown when not logged in) -->
+        <div class="auth-buttons" id="authButtons">
+            <button class="auth-btn sign-in-btn" onclick="window.location.href='/auth/github'">
+                Sign In
+            </button>
+            <button class="auth-btn sign-up-btn" onclick="window.location.href='/auth/github'">
+                Sign Up
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="user-profile" id="userProfile" onclick="toggleUserDropdown(event)">
+            <div class="user-avatar" id="userAvatar">🐙</div>
+            <div class="user-name" id="userName"></div>
+            <div class="dropdown-arrow">▼</div>
+
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown" id="userDropdown">
+                <div class="github-info">
+                    <div class="github-username">
+                        <span>🐙</span>
+                        <span id="dropdownUsername"></span>
+                    </div>
+                    <div class="github-id" id="githubId"></div>
+                </div>
+                <a href="#" class="dropdown-item logout" onclick="logout(event)">
+                    <span class="dropdown-icon">🚪</span>
+                    Log Out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <!-- Step indicator -->
+    <div class="progress-container">
+        <div class="progress-content">
+            <div class="progress-steps">
+                <div class="progress-line"></div>
+                <div class="progress-line-active" style="width: 0%;"></div>
+                <div id="step-1" class="progress-step completed">
+                    <span id="step-1-number">✓</span>
+                    <span id="step-1-text" class="progress-label"></span>
+                </div>
+                <div id="step-2" class="progress-step active">
+                    <span id="step-2-number">2</span>
+                    <span id="step-2-text" class="progress-label"></span>
+                </div>
+                <div id="step-3" class="progress-step">
+                    <span id="step-3-number">3</span>
+                    <span id="step-3-text" class="progress-label"></span>
+                </div>
+                <div id="step-4" class="progress-step">
+                    <span id="step-4-number">4</span>
+                    <span id="step-4-text" class="progress-label"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Details View -->
+        <div class="details-section" id="details-view">
+            <h1 class="page-title">Task Details</h1>
+            <p class="page-subtitle">Web URL Content Extraction & Q&A Generation - Content Review</p>
+
+            <div class="detail-step">
+                <div class="detail-step-header">
+                    <div class="step-icon completed">1</div>
+                    <div class="detail-step-title">Step 1: URLs Provided</div>
+                </div>
+                <div class="detail-content">
+                    <div class="content-item">
+                        <strong>Input URLs (2 items):</strong>
+                        <div style="margin: 12px 0;">
+                            <div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
+                                <span class="url-text">https://blog.openai.com/transformers-explained</span>
+                            </div>
+                            <div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
+                                <span class="url-text">https://jakevdp.github.io/PythonDataScienceHandbook/</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-step">
+                <div class="detail-step-header">
+                    <div class="step-icon completed">2</div>
+                    <div class="detail-step-title">Step 2: Extracted Content</div>
+                </div>
+                <div class="detail-content">
+                    <div class="content-item">
+                        <h4 style="color: #fff; margin-bottom: 12px;">Understanding Transformer Architecture in Modern AI</h4>
+                        <div style="color: #667eea; font-size: 0.9rem; margin-bottom: 12px;">Source: https://blog.openai.com/transformers-explained</div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                            <div style="color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 0.9rem;">
+                                "The Transformer architecture represents a paradigm shift in how we approach sequence-to-sequence modeling in artificial intelligence. Unlike traditional recurrent neural networks (RNNs) or convolutional neural networks (CNNs), transformers rely entirely on attention mechanisms to draw global dependencies between input and output sequences..."
+                            </div>
+                            <button class="view-more-btn" style="margin-top: 12px;" onclick="toggleDetailContent('content1')">Show Full Content</button>
+                        </div>
+                    </div>
+
+                    <div class="content-item">
+                        <h4 style="color: #fff; margin-bottom: 12px;">Python Data Science Handbook - Matplotlib Guide</h4>
+                        <div style="color: #667eea; font-size: 0.9rem; margin-bottom: 12px;">Source: https://jakevdp.github.io/PythonDataScienceHandbook/</div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px;">
+                            <div style="color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 0.9rem;">
+                                "Matplotlib is probably the single most used Python package for 2D-graphics. It provides both a very quick way to visualize data from Python and publication-quality figures in many formats. We are going to explore matplotlib in interactive mode covering most common cases..."
+                            </div>
+                            <button class="view-more-btn" style="margin-top: 12px;" onclick="toggleDetailContent('content2')">Show Full Content</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-step">
+                <div class="detail-step-header">
+                    <div class="step-icon completed">3</div>
+                    <div class="detail-step-title">Step 3: Generated Q&A Pairs</div>
+                </div>
+                <div class="detail-content">
+                    <div class="qa-item" style="margin-bottom: 16px;">
+                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q1: What is the main advantage of Transformer architecture over traditional RNNs?</div>
+                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">The main advantage is that Transformers rely entirely on attention mechanisms to draw global dependencies, eliminating the need for sequential processing and enabling significant parallelization during training and inference.</div>
+                    </div>
+
+                    <div class="qa-item" style="margin-bottom: 16px;">
+                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q2: What makes matplotlib the most popular Python visualization package?</div>
+                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">Matplotlib provides both quick data visualization capabilities and publication-quality figures in many formats, with both convenient interactive interfaces and formal object-oriented interfaces for complex applications.</div>
+                    </div>
+
+                    <div class="qa-item" style="margin-bottom: 16px;">
+                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q3: How does the self-attention mechanism work in Transformers?</div>
+                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">Self-attention allows the model to weigh the importance of different parts of the input sequence when processing each element, providing multiple ways to focus on different parts and capturing various types of relationships.</div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
+                        <strong style="color: #10b981;">Summary:</strong> Generated 3 high-quality Q&A pairs covering core concepts from both articles. Questions focus on key technical concepts and implementation details.
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="backToTaskCenter()">← Back to Task Center</button>
+                <button class="btn btn-primary" onclick="downloadQA()">Download Q&A File</button>
+                <button class="btn btn-secondary" onclick="editContent()">Edit Content</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+</script>
+</body>
+</html>

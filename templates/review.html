@@ -3,368 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/public.css">
     <title>Q&A Review & Edit</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-            min-height: 100vh;
-            color: #e0e0e0;
-        }
-
-        .nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 15, 35, 0.9);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 0 40px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 1000;
-        }
-
-        .nav-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .auth-btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sign-in-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .sign-in-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: #fff;
-        }
-
-        .sign-up-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            border: 1px solid transparent;
-        }
-
-        .sign-up-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .user-profile {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .user-profile:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #333 0%, #666 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .user-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 120px;
-        }
-
-        .dropdown-arrow {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
-            transition: transform 0.3s ease;
-        }
-
-        .user-profile.open .dropdown-arrow {
-            transform: rotate(180deg);
-        }
-
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 8px;
-            background: rgba(40, 40, 50, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 8px 0;
-            min-width: 200px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .user-dropdown.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .dropdown-item.logout {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ef4444;
-        }
-
-        .dropdown-item.logout:hover {
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        .dropdown-icon {
-            font-size: 16px;
-            width: 16px;
-            text-align: center;
-        }
-
-        .github-info {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .github-username {
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .github-id {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.8rem;
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .nav-link:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-link.active {
-            color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-        }
-
-        /* Navigation Bar */
-        .navbar {
-            background: rgba(20, 20, 30, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 0 20px;
-            margin: 70px auto 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .nav-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 60px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-link:hover {
-            color: #fff;
-        }
-
-        .nav-link.active {
-            color: #667eea;
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 20px 40px 50px;
-            margin-bottom: 20px;
-        }
-
-        .progress-content {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .progress-steps {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-        }
-
-        .progress-line {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 0;
-        }
-
-        .progress-line-active {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            width: 50%;
-            z-index: 1;
-            transition: width 0.5s ease;
-        }
-
-        .progress-step {
-            background: #1a1a2e;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            position: relative;
-            z-index: 2;
-            transition: all 0.3s ease;
-        }
-
-        .progress-step.completed {
-            background: #667eea;
-            border-color: #667eea;
-            color: #fff;
-        }
-
-        .progress-step.active {
-            border-color: #667eea;
-            color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-        }
-
-        .progress-label {
-            position: absolute;
-            top: 50px;
-            white-space: nowrap;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
         /* Main Layout */
         .main-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 20px 0;
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
@@ -856,115 +502,108 @@
         </div>
     </div>
 </nav>
-
-<!-- Navigation -->
-<nav class="navbar">
-    <div class="nav-content">
-        <h1 style="color: #fff; font-size: 1.5rem; font-weight: 600;">Q&A Review & Edit</h1>
-    </div>
-</nav>
-
-<!-- Progress Bar -->
-<div class="progress-container">
-    <div class="progress-content">
-        <div class="progress-steps">
-            <div class="progress-line"></div>
-            <div class="progress-line-active" style="width: 33%;"></div>
-
-            <div class="progress-step completed">
-                <span>✓</span>
-                <span class="progress-label">Upload</span>
-            </div>
-            <div class="progress-step active">
-                <span>2</span>
-                <span class="progress-label">Review</span>
-            </div>
-            <div class="progress-step">
-                <span>3</span>
-                <span class="progress-label">Embedding</span>
-            </div>
-            <div class="progress-step">
-                <span>4</span>
-                <span class="progress-label">Complete</span>
+<div class="container">
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-content">
+            <div class="progress-steps">
+                <div class="progress-line"></div>
+                <div class="progress-line-active" style="width: 0%;"></div>
+                <div id="step-1" class="progress-step completed">
+                    <span id="step-1-number">✓</span>
+                    <span id="step-1-text" class="progress-label"></span>
+                </div>
+                <div id="step-2" class="progress-step active">
+                    <span id="step-2-number">2</span>
+                    <span id="step-2-text" class="progress-label"></span>
+                </div>
+                <div id="step-3" class="progress-step">
+                    <span id="step-3-number">3</span>
+                    <span id="step-3-text" class="progress-label"></span>
+                </div>
+                <div id="step-4" class="progress-step">
+                    <span id="step-4-number">4</span>
+                    <span id="step-4-text" class="progress-label"></span>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Main Content -->
-<div class="main-container">
-    <!-- Document List Panel -->
-    <div class="document-panel">
-        <div class="panel-header">
-            <h2 class="panel-title">Documents</h2>
-        </div>
-
-        <div class="document-stats">
-            <div class="stat-item">
-                <div class="stat-value" id="totalCount">12</div>
-                <div class="stat-label">Total</div>
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Document List Panel -->
+        <div class="document-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Documents</h2>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="reviewCount">8</div>
-                <div class="stat-label">Need Review</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="generatingCount">2</div>
-                <div class="stat-label">Generating</div>
-            </div>
-        </div>
 
-        <div class="document-list" id="documentList">
-            <!-- Document items will be populated here -->
-        </div>
-    </div>
-
-    <!-- Q&A Editor Panel -->
-    <div class="editor-panel" id="editorPanel">
-        <div class="empty-state" id="emptyState">
-            <div class="empty-icon">📝</div>
-            <div class="empty-title">Select a document</div>
-            <div class="empty-text">Choose a document from the left panel to review its Q&A pairs</div>
-        </div>
-
-        <div id="editorContent" style="display: none;">
-            <div class="editor-header">
-                <h2 class="editor-title" id="editorTitle">Document Title</h2>
-                <div class="editor-actions">
-                    <button class="btn btn-secondary" onclick="regenerateAll()">
-                        🔄 Regenerate All
-                    </button>
-                    <button class="btn btn-secondary" onclick="saveDraft()">
-                        💾 Save Draft
-                    </button>
+            <div class="document-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCount">12</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="reviewCount">8</div>
+                    <div class="stat-label">Need Review</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="generatingCount">2</div>
+                    <div class="stat-label">Generating</div>
                 </div>
             </div>
 
-            <div class="qa-list" id="qaList">
-                <!-- Q&A items will be populated here -->
+            <div class="document-list" id="documentList">
+                <!-- Document items will be populated here -->
+            </div>
+        </div>
+
+        <!-- Q&A Editor Panel -->
+        <div class="editor-panel" id="editorPanel">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📝</div>
+                <div class="empty-title">Select a document</div>
+                <div class="empty-text">Choose a document from the left panel to review its Q&A pairs</div>
             </div>
 
-            <button id="addQaBtn" class="btn add-qa-btn" onclick="addNewQA()">
-                <span>➕</span> Add New Q&A Pair
-            </button>
-        </div>
+            <div id="editorContent" style="display: none;">
+                <div class="editor-header">
+                    <h2 class="editor-title" id="editorTitle">Document Title</h2>
+                    <div class="editor-actions">
+                        <button class="btn btn-secondary" onclick="regenerateAll()">
+                            🔄 Regenerate All
+                        </button>
+                        <button class="btn btn-secondary" onclick="saveDraft()">
+                            💾 Save Draft
+                        </button>
+                    </div>
+                </div>
 
-        <div class="loading" id="loadingState" style="display: none;">
-            <div class="spinner"></div>
+                <div class="qa-list" id="qaList">
+                    <!-- Q&A items will be populated here -->
+                </div>
+
+                <button id="addQaBtn" class="btn add-qa-btn" onclick="addNewQA()">
+                    <span>➕</span> Add New Q&A Pair
+                </button>
+            </div>
+
+            <div class="loading" id="loadingState" style="display: none;">
+                <div class="spinner"></div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Bottom Actions -->
-<div class="bottom-actions">
-    <div class="actions-content">
-        <div class="action-info">
-            <span id="lastSaved"></span>
-        </div>
-        <div class="action-buttons">
-            <button class="btn btn-secondary" onclick="skipDocument()">Skip Document</button>
-            <button class="btn btn-success" onclick="approveAndNext()">Approve & Next</button>
-            <button class="btn" onclick="finalizeAll()">Finalize All & Create Embeddings</button>
+    <!-- Bottom Actions -->
+    <div class="bottom-actions">
+        <div class="actions-content">
+            <div class="action-info">
+                <span id="lastSaved"></span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="skipDocument()">Skip Document</button>
+                <button class="btn btn-success" onclick="approveAndNext()">Approve & Next</button>
+                <button class="btn" onclick="finalizeAll()">Finalize All & Create Embeddings</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1024,8 +663,6 @@
     let unsavedChanges = false;
 
     const params = new URLSearchParams(window.location.search);
-    console.log(params)
-    console.log(params.get("id"))
 
     // 获取 id 参数
     const uuid = params.get("id");
@@ -1112,6 +749,38 @@
 
                 documents.length = 0; // Clear existing documents
                 documents.push(...formatData); // Add fetched documents
+                if(formatData[0] && formatData[0].type) {
+                    switch (formatData[0].type) {
+                        case 1:
+                            document.getElementById('step-1-text').innerText = "Upload Files";
+                            document.getElementById('step-2-text').innerText = 'Generate Q&A';
+                            document.getElementById('step-3-text').innerText = 'Task Detail';
+                            document.getElementById('step-4').style.display = 'none';
+                            break;
+                        case 2:
+                            document.getElementById('step-1-text').innerText = "Provide URLs";
+                            document.getElementById('step-2-number').innerText = "✓";
+                            document.getElementById('step-2-text').innerText = 'Preview Content';
+                            document.getElementById('step-2').classList.remove("active");
+                            document.getElementById('step-2').classList.add("completed");
+                            document.getElementById('step-3-text').innerText = 'Generate Q&A';
+                            document.getElementById('step-3').classList.add("active");
+                            document.getElementById('step-4-text').innerText = 'Task Detail';
+                            break;
+                        case 3:
+                            document.getElementById('step-1-text').innerText = "Enter Text";
+                            document.getElementById('step-2-text').innerText = 'Task Detail';
+                            document.getElementById('step-3').style.display = 'none';
+                            document.getElementById('step-4').style.display = 'none';
+                            break;
+                        case 4:
+                            document.getElementById('step-1-text').innerText = "Enter Q&A";
+                            document.getElementById('step-2-text').innerText = 'Task Detail';
+                            document.getElementById('step-3').style.display = 'none';
+                            document.getElementById('step-4').style.display = 'none';
+                            break;
+                    }
+                }
                 renderDocumentList();
                 updateStats();
             })

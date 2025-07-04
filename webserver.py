@@ -52,6 +52,7 @@ FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 app = Flask(__name__)
 app.secret_key = "gaiabase"
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365 * 100)
+session.permanent = True
 socketio = SocketIO(app)
 max_concurrent_requests = 2
 semaphore = threading.Semaphore(max_concurrent_requests)
@@ -167,6 +168,11 @@ def review():
 @app.route("/status")
 def status():
     return render_template("status.html")
+
+
+@app.route("/detail")
+def detail():
+    return render_template("detail.html")
 
 
 @app.route("/api/getAllTasks", methods=["GET"])
