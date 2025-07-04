@@ -980,9 +980,11 @@
 
     function confirmDeleteAction() {
         if (currentTaskToDelete) {
+            let task_id = "";
             let subtask_filename = "";
             tasksList.forEach(task => {
                 if (task.id === currentTaskToDelete) {
+                    task_id = task.task_id;
                     subtask_filename = task.save_name;
                 }
             });
@@ -996,7 +998,7 @@
                         const taskCard = document.querySelector(`.task-card[data-subtask_id="${currentTaskToDelete}"]`);
                         if (taskCard) {
                             taskCard.remove();
-                            const taskGroup = taskCard.closest('.task-group');
+                            const taskGroup = document.querySelector(`.task-group[data-task-id="${task_id}"]`);
                             if (taskGroup && taskGroup.querySelector('.task-card') === null) {
                                 taskGroup.remove();
                             }
