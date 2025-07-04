@@ -52,7 +52,6 @@ FCApp = FirecrawlApp(api_key=os.getenv("FIRECRAWL_KEY"))
 app = Flask(__name__)
 app.secret_key = "gaiabase"
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365 * 100)
-session.permanent = True
 socketio = SocketIO(app)
 max_concurrent_requests = 2
 semaphore = threading.Semaphore(max_concurrent_requests)
@@ -71,13 +70,13 @@ q_del_tidb = Queue('step5_del_tidb', connection=redis_conn)
 nest_asyncio.apply()
 
 # 为了测试目的，创建一个函数来设置默认用户 ID
-def set_default_user_id():
-    @app.before_request
-    def set_user_id():
-        if 'user_id' not in session:
-            session['user_id'] = 1  # 默认测试用户 ID
-
-set_default_user_id()
+# def set_default_user_id():
+#     @app.before_request
+#     def set_user_id():
+#         if 'user_id' not in session:
+#             session['user_id'] = 1  # 默认测试用户 ID
+#
+# set_default_user_id()
 
 oauth = OAuth(app)
 
@@ -107,6 +106,7 @@ def github_callback():
     response = make_response(redirect('/'))
     # 创建或更新用户
     user_id = create_user(profile['id'], profile['login'], profile['email'])
+    session.permanent = True
     session['user_id'] = user_id
 
     response.set_cookie('user_id', str(user_id), httponly=False, max_age=60*60*24*365)
