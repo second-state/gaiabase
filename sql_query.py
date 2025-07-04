@@ -102,7 +102,6 @@ def get_subtask_info_by_user_id(user_id):
                            SELECT status FROM embed_task WHERE subtask_id = %s;
                            """, (subtask_id,))
             embed_results = cursor.fetchall()
-            print(embed_results)
             # 现在可以用字段名访问
             embed_statuses = [row['status'] for row in embed_results]
 

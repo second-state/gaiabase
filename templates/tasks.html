@@ -622,7 +622,6 @@
         const taskCards = document.querySelectorAll('.task-card[data-task_id]');
 
         for (const card of taskCards) {
-            console.log(card)
             const task_id = card.dataset.task_id;
             const updatedTask = tasksByUUID[task_id];
 
@@ -742,7 +741,7 @@
                         Retry
                     </button>` : ''
         }
-                <button class="action-btn delete-btn" onclick="confirmDelete('${subtask.task_id}', '${subtask.save_name}')">
+                <button class="action-btn delete-btn" onclick="confirmDelete('${subtask.id}', '${subtask.save_name}')">
                     <span>🗑️</span>
                     Delete
                 </button>
@@ -964,6 +963,8 @@
         });
     }
 
+    let currentTaskToDelete = null;
+
     function confirmDelete(taskId, filename) {
         currentTaskToDelete = taskId;
         document.getElementById('deleteFilename').textContent = filename;
@@ -979,21 +980,27 @@
 
     function confirmDeleteAction() {
         if (currentTaskToDelete) {
-            showNotification('Deleting task and cleaning up data...', 'info');
-
-            // Find and remove the task card
-            const taskCard = document.querySelector(`[onclick*="${currentTaskToDelete}"]`).closest('.task-card');
-            taskCard.style.animation = 'fadeOut 0.3s ease-out';
-
-            setTimeout(() => {
-                taskCard.remove();
-                updateGroupCounts();
-                showNotification('Task deleted successfully', 'success');
-            }, 300);
-
-            // In real app: make API call to delete
-            // fetch(`/api/tasks/${currentTaskToDelete}`, { method: 'DELETE' })
-
+            let subtask_filename = "";
+            tasksList.forEach(task => {
+                if (task.id === currentTaskToDelete) {
+                    subtask_filename = task.save_name;
+                }
+            });
+            showNotification(`Deleting ${subtask_filename ? subtask_filename : "task"} and cleaning up data...`, 'info');
+            fetch(`/api/deleteSubtask/${currentTaskToDelete}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showNotification(`${subtask_filename} deleted successfully!`, 'success');
+                        query_documents(); // Refresh the document list
+                    } else {
+                        throw new Error('Failed to delete document');
+                    }
+                })
+                .catch(error => {
+                    showNotification(`Error deleting ${subtask_filename}: ${error.message}`, 'error');
+                });
             closeDeleteModal();
         }
     }

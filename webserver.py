@@ -107,7 +107,6 @@ def github_callback():
     # 创建或更新用户
     user_id = create_user(profile['id'], profile['login'], profile['email'])
     session['user_id'] = user_id
-    print(f"outside_user_id: {user_id}")
 
     response.set_cookie('user_id', str(user_id), httponly=False, max_age=60*60*24*365)
     response.set_cookie('username', profile['login'], httponly=False, max_age=60*60*24*365)
@@ -173,7 +172,6 @@ def status():
 @app.route("/api/getAllTasks", methods=["GET"])
 def get_all_tasks():
     try:
-        print(session['user_id'])
         tasks = get_subtask_info_by_user_id(session['user_id'])
         return jsonify(tasks)
     except Exception as e:
@@ -259,10 +257,8 @@ def create_qdrant_collection():
 def get_file_count():
     result_array = []
     files = request.files.getlist("files[]")
-    print(files)
     for file in files:
         file_bytes = file.read()
-        print(file_bytes)
         if file.filename.lower().endswith('.doc') or file.filename.lower().endswith('.docx'):
             filename = file.filename.lower()
             ext = os.path.splitext(filename)[1]
@@ -273,7 +269,6 @@ def get_file_count():
                 content = textract.process(tmp_path).decode("utf-8")
             finally:
                 os.remove(tmp_path)
-            print(content)
             result_array.append({
                 "file_name": file.filename,
                 "file_size": len(content)
@@ -293,7 +288,6 @@ def get_file_count():
 
 def save_all_file(files, task_id):
     for file_object in files:
-        print(file_object)
         file = file_object["file"]
         filename = file.filename
         file_extension = filename.rsplit('.', 1)[-1].lower()
@@ -390,9 +384,6 @@ def crawl_web_file_gen_qa():
 
         if not files:
             return jsonify({"error": "No files provided"}), 400
-
-        print(task_id)
-        print(files)
 
         # 确保目录存在
         crawl_path = os.path.join(task_id, "crawl_files")
@@ -742,7 +733,7 @@ def reembed():
 
 
 @app.route('/api/deleteSubtask/<subtask_id>', methods=['DELETE'])
-def get_embed_and_tidb_id(subtask_id):
+def delete_subtask(subtask_id):
     if not subtask_id:
         return jsonify({"error": "Subtask ID is required"}), 400
 
@@ -793,9 +784,13 @@ def get_embed_and_tidb_id(subtask_id):
         print(f"表名: {table.name}")
 
         # 删除指定 id 的数据
-        if id_data["tidb_ids"]:
-            delete_stmt = delete(table).where(table.c.id.in_(id_data["tidb_ids"]))
-            db.execute(delete_stmt)
+        try:
+            if id_data["tidb_ids"]:
+                delete_stmt = delete(table).where(table.c.id.in_(id_data["tidb_ids"]))
+                db.execute(delete_stmt)
+        except Exception as e:
+            print(f"删除 TiDB 数据失败: {e}")
+            return jsonify({"error": f"删除 TiDB 数据失败: {str(e)}"}), 500
 
         delete_subtask(subtask_id)
         return jsonify({"status": "success"})
