@@ -70,13 +70,13 @@ q_del_tidb = Queue('step5_del_tidb', connection=redis_conn)
 nest_asyncio.apply()
 
 # 为了测试目的，创建一个函数来设置默认用户 ID
-# def set_default_user_id():
-#     @app.before_request
-#     def set_user_id():
-#         if 'user_id' not in session:
-#             session['user_id'] = 1  # 默认测试用户 ID
-#
-# set_default_user_id()
+def set_default_user_id():
+    @app.before_request
+    def set_user_id():
+        if 'user_id' not in session:
+            session['user_id'] = 1  # 默认测试用户 ID
+
+set_default_user_id()
 
 oauth = OAuth(app)
 
@@ -733,7 +733,7 @@ def reembed():
 
 
 @app.route('/api/deleteSubtask/<subtask_id>', methods=['DELETE'])
-def delete_subtask(subtask_id):
+def get_embed_and_tidb_id(subtask_id):
     if not subtask_id:
         return jsonify({"error": "Subtask ID is required"}), 400
 
@@ -784,13 +784,9 @@ def delete_subtask(subtask_id):
         print(f"表名: {table.name}")
 
         # 删除指定 id 的数据
-        try:
-            if id_data["tidb_ids"]:
-                delete_stmt = delete(table).where(table.c.id.in_(id_data["tidb_ids"]))
-                db.execute(delete_stmt)
-        except Exception as e:
-            print(f"删除 TiDB 数据失败: {e}")
-            return jsonify({"error": f"删除 TiDB 数据失败: {str(e)}"}), 500
+        if id_data["tidb_ids"]:
+            delete_stmt = delete(table).where(table.c.id.in_(id_data["tidb_ids"]))
+            db.execute(delete_stmt)
 
         delete_subtask(subtask_id)
         return jsonify({"status": "success"})
