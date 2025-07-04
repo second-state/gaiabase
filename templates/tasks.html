@@ -983,7 +983,8 @@
             let task_id = "";
             let subtask_filename = "";
             tasksList.forEach(task => {
-                if (task.id === currentTaskToDelete) {
+                if (task.id === parseInt(currentTaskToDelete)) {
+                    console.log(`Deleting task with ID: ${task.task_id}`);
                     task_id = task.task_id;
                     subtask_filename = task.save_name;
                 }
@@ -1005,8 +1006,6 @@
                         }
                         currentTaskToDelete = null;
                     } else {
-                        const taskCard = document.querySelector(`.task-card[data-subtask_id="${currentTaskToDelete}"]`);
-                        console.log(taskCard)
                         throw new Error('Failed to delete document');
                     }
                 })
