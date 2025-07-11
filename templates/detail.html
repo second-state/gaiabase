@@ -439,7 +439,7 @@ async function render() {
     let step2Title = '';
     let step2Content = '';
     if (subtask_source === 1 || subtask_source === 4) {
-        // 文件/qa，渲染Q&A
+        // 文件/qa，渲染Q&A，分文件显示
         step2Title = subtask_source === 1 ? 'Extracted Q&A' : 'Q&A Content';
         let qaHtml = '';
         for (let d of data) {
@@ -450,19 +450,26 @@ async function render() {
             try {
                 qaList = await qaRes.json();
             } catch {}
-            if (Array.isArray(qaList)) {
-                qaList.forEach((qa, idx) => {
-                    if (!qa || qa.length < 2) return;
-                    qaHtml += `
-                    <div class="qa-item" style="margin-bottom: 16px;">
-                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q${idx+1}: ${escapeHtml(qa[0])}</div>
-                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">${escapeHtml(qa[1])}</div>
+            qaHtml += `
+                <div class="content-item">
+                    <h4 style="color: #fff; margin-bottom: 12px;">${escapeHtml(d.save_name)}</h4>
+                    <div>
+                        ${
+                            Array.isArray(qaList) && qaList.length > 0
+                            ? qaList.map((qa, idx) => (
+                                qa && qa.length >= 2
+                                ? `<div class="qa-item" style="margin-bottom: 16px;">
+                                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q${idx+1}: ${escapeHtml(qa[0])}</div>
+                                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">${escapeHtml(qa[1])}</div>
+                                   </div>`
+                                : ''
+                              )).join('')
+                            : `<div style="color:#aaa;">No Q&A found for this file.</div>`
+                        }
                     </div>
-                    `;
-                });
-            }
+                </div>
+            `;
         }
-        if (!qaHtml) qaHtml = '<div style="color:#aaa;">No Q&A found.</div>';
         step2Content = `<div class="detail-content">${qaHtml}</div>`;
     } else if (subtask_source === 2 || subtask_source === 3) {
         // url/text，渲染内容
@@ -502,7 +509,7 @@ async function render() {
         ${step2Content}
     `;
 
-    // Step 3 渲染（仅url型有）
+    // Step 3 渲染（仅url型有，分文件显示Q&A）
     if (subtask_source === 2) {
         document.getElementById('step3').style.display = '';
         let qaHtml = '';
@@ -514,19 +521,26 @@ async function render() {
             try {
                 qaList = await qaRes.json();
             } catch {}
-            if (Array.isArray(qaList)) {
-                qaList.forEach((qa, idx) => {
-                    if (!qa || qa.length < 2) return;
-                    qaHtml += `
-                    <div class="qa-item" style="margin-bottom: 16px;">
-                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q${idx+1}: ${escapeHtml(qa[0])}</div>
-                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">${escapeHtml(qa[1])}</div>
+            qaHtml += `
+                <div class="content-item">
+                    <h4 style="color: #fff; margin-bottom: 12px;">${escapeHtml(d.save_name)}</h4>
+                    <div>
+                        ${
+                            Array.isArray(qaList) && qaList.length > 0
+                            ? qaList.map((qa, idx) => (
+                                qa && qa.length >= 2
+                                ? `<div class="qa-item" style="margin-bottom: 16px;">
+                                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q${idx+1}: ${escapeHtml(qa[0])}</div>
+                                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">${escapeHtml(qa[1])}</div>
+                                   </div>`
+                                : ''
+                              )).join('')
+                            : `<div style="color:#aaa;">No Q&A found for this file.</div>`
+                        }
                     </div>
-                    `;
-                });
-            }
+                </div>
+            `;
         }
-        if (!qaHtml) qaHtml = '<div style="color:#aaa;">No Q&A found.</div>';
         document.getElementById('step3').innerHTML = `
             <div class="detail-step-header">
                 <div class="step-icon completed">3</div>
