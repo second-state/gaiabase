@@ -76,13 +76,13 @@ def set_default_user_id():
         if 'user_id' not in session:
             session['user_id'] = 1  # 默认测试用户 ID
 
-set_default_user_id()
+# set_default_user_id()
 
 oauth = OAuth(app)
 
 # GitHub
 github_openmcp = oauth.register(
-    name='github',
+    name='github_openmcp',
     client_id='Ov23liUN6Fn7nTJaROGt',
     client_secret='ee5fb34090e02116cc01796651a0511b943cb536',
     access_token_url='https://github.com/login/oauth/access_token',
@@ -94,7 +94,7 @@ github_openmcp = oauth.register(
 
 # GitHub
 github_cardea = oauth.register(
-    name='github',
+    name='github_cardea',
     client_id='Ov23liBTui2TFHGDKT94',
     client_secret='03a2fba3129e2a4350b4c2997565fa6cc86f4f70',
     access_token_url='https://github.com/login/oauth/access_token',
