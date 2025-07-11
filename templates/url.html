@@ -544,7 +544,7 @@
     function submitAllUrlFiles() {
         // 检查是否有URL内容
         if (subtaskList.length === 0) {
-            showNotification('没有可用于生成问答的内容', 'error');
+            showNotification('No content available for Q&A generation', 'error');
             return;
         }
 
@@ -564,7 +564,7 @@
         });
 
         if (fileContents.length === 0) {
-            showNotification('没有可用内容，请稍后再试', 'error');
+            showNotification('No content available, please try again later', 'error');
             return;
         }
 
@@ -601,7 +601,7 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('服务器响应错误');
+                throw new Error('Server response error');
             }
             return response.json();
         })
@@ -611,8 +611,8 @@
             window.location.href = `/review?id=${uuid}`;
         })
         .catch(error => {
-            console.error("生成问答数据时出错:", error);
-            showNotification('生成问答数据失败，请重试', 'error');
+            console.error("Error while generating question and answer data:", error);
+            showNotification('Failed to generate question and answer data, please try again', 'error');
             // 恢复按钮状态
             actionButtons.innerHTML = originalButtonsHTML;
         });

@@ -989,7 +989,7 @@
             // 如果找不到文档或者文档状态为错误，停止轮询
             if (!doc) {
                 clearInterval(pollingInterval);
-                showNotification('文档不存在或已被删除', 'error');
+                showNotification('The document does not exist or has been deleted', 'error');
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('loadingState').style.display = 'none';
                 return;
@@ -999,7 +999,7 @@
             if (doc.status === -1) {
                 clearInterval(pollingInterval);
                 showEditor(doc, true);
-                showNotification('生成问答对时出错', 'error');
+                showNotification('Error generating question-answer pairs', 'error');
                 return;
             }
 
@@ -1008,7 +1008,7 @@
                 clearInterval(pollingInterval);
                 currentDocument = doc;
                 showEditor(doc);
-                showNotification('问答对生成完成', 'success');
+                showNotification('Question and answer pair generation completed', 'success');
             }
         }, 2000);
     }

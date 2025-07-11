@@ -70,18 +70,18 @@ q_del_tidb = Queue('step5_del_tidb', connection=redis_conn)
 nest_asyncio.apply()
 
 # 为了测试目的，创建一个函数来设置默认用户 ID
-# def set_default_user_id():
-#     @app.before_request
-#     def set_user_id():
-#         if 'user_id' not in session:
-#             session['user_id'] = 1  # 默认测试用户 ID
-#
-# set_default_user_id()
+def set_default_user_id():
+    @app.before_request
+    def set_user_id():
+        if 'user_id' not in session:
+            session['user_id'] = 1  # 默认测试用户 ID
+
+set_default_user_id()
 
 oauth = OAuth(app)
 
 # GitHub
-github = oauth.register(
+github_openmcp = oauth.register(
     name='github',
     client_id='Ov23liUN6Fn7nTJaROGt',
     client_secret='ee5fb34090e02116cc01796651a0511b943cb536',
@@ -92,13 +92,35 @@ github = oauth.register(
     client_kwargs={'scope': 'user:email'},
 )
 
+# GitHub
+github_cardea = oauth.register(
+    name='github',
+    client_id='Ov23liBTui2TFHGDKT94',
+    client_secret='03a2fba3129e2a4350b4c2997565fa6cc86f4f70',
+    access_token_url='https://github.com/login/oauth/access_token',
+    authorize_url='https://github.com/login/oauth/authorize',
+    api_base_url='https://api.github.com/',
+    userinfo_endpoint='https://api.github.com/user',
+    client_kwargs={'scope': 'user:email'},
+)
+
 @app.route('/auth/github')
 def github_login():
     redirect_uri = url_for('github_callback', _external=True)
+    referer = request.referrer or ""
+    if 'kb.openmcp.app' in referer:
+        github = github_openmcp
+    else:
+        github = github_cardea
     return github.authorize_redirect(redirect_uri)
 
 @app.route('/auth/github/callback')
 def github_callback():
+    referer = request.referrer or ""
+    if 'kb.openmcp.app' in referer:
+        github = github_openmcp
+    else:
+        github = github_cardea
     token = github.authorize_access_token()
     resp = github.get('user')
     profile = resp.json()
@@ -247,10 +269,13 @@ def create_qdrant_collection():
         qdrant_api_key = data.get("qdrant_api_key")
         collection_name = data.get("collection_name")
         vector_size = int(data.get("vector_size"))
+        tidb_url = data.get("tidb_url")
+        tidb_table_name = data.get("tidb_table_name")
         if not collection_name:
             return jsonify({"error": "Collection name is required"}), 400
 
         error_collection = create_collection(qdrant_url, qdrant_api_key, collection_name, vector_size)
+        error_tidb = create_table()
         if error_collection:
             return jsonify(error_collection), 409
         else:
@@ -632,6 +657,51 @@ def wait_for_summary(summary_job, check_interval=5):
     else:
         print(f"汇总任务失败: {summary_job.exc_info}")
         return None
+
+
+def create_tidb_table():
+    try:
+        # 解析 db_url
+        parsed = urllib.parse.urlparse(db_url)
+        if parsed.scheme != "mysql":
+            raise ValueError("仅支持 mysql:// 开头的连接字符串")
+
+        userinfo = parsed.username
+        password = parsed.password
+        host = parsed.hostname
+        port = parsed.port or 4000
+        dbname = parsed.path.lstrip("/")
+
+        # 连接 TiDB
+        db = TiDBClient.connect(
+            host=host,
+            port=port,
+            username=userinfo,
+            password=password,
+            database=dbname,
+        )
+
+        # 定义表结构
+        class Chunk(TableModel, table=True):
+            __tablename__ = table_name
+            id: int = Field(primary_key=True)
+
+            title: str = Field(sa_type=Text)
+            content: str = Field(sa_type=Text)
+
+        # 创建表
+        table = db.create_table(schema=Chunk)
+
+        # 创建全文索引（如需要）
+        if not table.has_fts_index("content"):
+            table.create_fts_index("content")
+    except Exception as e:
+        update_tidb_task_status(tidb_id, 0, -1)
+        err_output_path =  Path(task_id) / "err_files" / f"{subtask_id}_tidb_err.txt"
+        with open(err_output_path, 'w', encoding='utf-8') as f:
+            f.write(str(e))
+        print(f"❌ 保存到 TiDB 时出错: {e}")
+        raise e
 
 
 def handle_embed(task_id, embed_filename_list=[], tidb_filename_list=[]):
