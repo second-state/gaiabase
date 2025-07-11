@@ -277,25 +277,8 @@
     <!-- Step indicator -->
     <div class="progress-container">
         <div class="progress-content">
-            <div class="progress-steps">
-                <div class="progress-line"></div>
-                <div class="progress-line-active" style="width: 0%;"></div>
-                <div id="step-1" class="progress-step completed">
-                    <span id="step-1-number">✓</span>
-                    <span id="step-1-text" class="progress-label"></span>
-                </div>
-                <div id="step-2" class="progress-step active">
-                    <span id="step-2-number">2</span>
-                    <span id="step-2-text" class="progress-label"></span>
-                </div>
-                <div id="step-3" class="progress-step">
-                    <span id="step-3-number">3</span>
-                    <span id="step-3-text" class="progress-label"></span>
-                </div>
-                <div id="step-4" class="progress-step">
-                    <span id="step-4-number">4</span>
-                    <span id="step-4-text" class="progress-label"></span>
-                </div>
+            <div class="progress-steps" id="progress-steps">
+                <!-- 动态渲染进度条 -->
             </div>
         </div>
     </div>
@@ -306,94 +289,322 @@
             <h1 class="page-title">Task Details</h1>
             <p class="page-subtitle">Web URL Content Extraction & Q&A Generation - Content Review</p>
 
-            <div class="detail-step">
-                <div class="detail-step-header">
-                    <div class="step-icon completed">1</div>
-                    <div class="detail-step-title">Step 1: URLs Provided</div>
-                </div>
-                <div class="detail-content">
-                    <div class="content-item">
-                        <strong>Input URLs (2 items):</strong>
-                        <div style="margin: 12px 0;">
-                            <div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
-                                <span class="url-text">https://blog.openai.com/transformers-explained</span>
-                            </div>
-                            <div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
-                                <span class="url-text">https://jakevdp.github.io/PythonDataScienceHandbook/</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="detail-step" id="step1">
+                <!-- Step 1内容将由JS渲染 -->
             </div>
 
-            <div class="detail-step">
-                <div class="detail-step-header">
-                    <div class="step-icon completed">2</div>
-                    <div class="detail-step-title">Step 2: Extracted Content</div>
-                </div>
-                <div class="detail-content">
-                    <div class="content-item">
-                        <h4 style="color: #fff; margin-bottom: 12px;">Understanding Transformer Architecture in Modern AI</h4>
-                        <div style="color: #667eea; font-size: 0.9rem; margin-bottom: 12px;">Source: https://blog.openai.com/transformers-explained</div>
-                        <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                            <div style="color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 0.9rem;">
-                                "The Transformer architecture represents a paradigm shift in how we approach sequence-to-sequence modeling in artificial intelligence. Unlike traditional recurrent neural networks (RNNs) or convolutional neural networks (CNNs), transformers rely entirely on attention mechanisms to draw global dependencies between input and output sequences..."
-                            </div>
-                            <button class="view-more-btn" style="margin-top: 12px;" onclick="toggleDetailContent('content1')">Show Full Content</button>
-                        </div>
-                    </div>
-
-                    <div class="content-item">
-                        <h4 style="color: #fff; margin-bottom: 12px;">Python Data Science Handbook - Matplotlib Guide</h4>
-                        <div style="color: #667eea; font-size: 0.9rem; margin-bottom: 12px;">Source: https://jakevdp.github.io/PythonDataScienceHandbook/</div>
-                        <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px;">
-                            <div style="color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 0.9rem;">
-                                "Matplotlib is probably the single most used Python package for 2D-graphics. It provides both a very quick way to visualize data from Python and publication-quality figures in many formats. We are going to explore matplotlib in interactive mode covering most common cases..."
-                            </div>
-                            <button class="view-more-btn" style="margin-top: 12px;" onclick="toggleDetailContent('content2')">Show Full Content</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="detail-step" id="step2">
+                <!-- Step 2内容将由JS渲染 -->
             </div>
 
-            <div class="detail-step">
-                <div class="detail-step-header">
-                    <div class="step-icon completed">3</div>
-                    <div class="detail-step-title">Step 3: Generated Q&A Pairs</div>
-                </div>
-                <div class="detail-content">
-                    <div class="qa-item" style="margin-bottom: 16px;">
-                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q1: What is the main advantage of Transformer architecture over traditional RNNs?</div>
-                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">The main advantage is that Transformers rely entirely on attention mechanisms to draw global dependencies, eliminating the need for sequential processing and enabling significant parallelization during training and inference.</div>
-                    </div>
-
-                    <div class="qa-item" style="margin-bottom: 16px;">
-                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q2: What makes matplotlib the most popular Python visualization package?</div>
-                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">Matplotlib provides both quick data visualization capabilities and publication-quality figures in many formats, with both convenient interactive interfaces and formal object-oriented interfaces for complex applications.</div>
-                    </div>
-
-                    <div class="qa-item" style="margin-bottom: 16px;">
-                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q3: How does the self-attention mechanism work in Transformers?</div>
-                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">Self-attention allows the model to weigh the importance of different parts of the input sequence when processing each element, providing multiple ways to focus on different parts and capturing various types of relationships.</div>
-                    </div>
-
-                    <div style="margin-top: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
-                        <strong style="color: #10b981;">Summary:</strong> Generated 3 high-quality Q&A pairs covering core concepts from both articles. Questions focus on key technical concepts and implementation details.
-                    </div>
-                </div>
+            <div class="detail-step" id="step3" style="display:none;">
+                <!-- Step 3内容将由JS渲染 -->
             </div>
 
             <div class="actions">
                 <button class="btn btn-secondary" onclick="backToTaskCenter()">← Back to Task Center</button>
                 <button class="btn btn-primary" onclick="downloadQA()">Download Q&A File</button>
-                <button class="btn btn-secondary" onclick="editContent()">Edit Content</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+function getQueryParam(name) {
+    const url = window.location.search;
+    const params = new URLSearchParams(url);
+    return params.get(name);
+}
 
+function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, function(m) {
+        return ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[m];
+    });
+}
+
+function fileNameNoExt(name) {
+    return name.replace(/\.[^/.]+$/, "");
+}
+
+function toggleDetailContent(id) {
+    const btn = document.getElementById('btn-' + id);
+    const content = document.getElementById('content-' + id);
+    if (!btn || !content) return;
+    if (btn.dataset.expanded === "true") {
+        content.innerText = btn.dataset.short;
+        btn.innerText = "Show Full Content";
+        btn.dataset.expanded = "false";
+    } else {
+        content.innerText = btn.dataset.full;
+        btn.innerText = "Hide Full Content";
+        btn.dataset.expanded = "true";
+    }
+}
+
+// 动态渲染进度条
+function renderProgressBar(subtask_source) {
+    const steps = [];
+    // 步骤说明
+    // 2步：step1(已完成), step2(已完成), step3(当前: Task Details)
+    // 3步：step1(已完成), step2(已完成), step3(已完成), step4(当前: Task Details)
+    let totalSteps = (subtask_source === 2) ? 4 : 3;
+    let labels = [];
+    if (subtask_source === 2) {
+        labels = ['Input URLs', 'Extracted Content', 'Generated Q&A', 'Task Details'];
+    } else if (subtask_source === 1) {
+        labels = ['Input Files', 'Extracted Q&A', 'Task Details'];
+    } else if (subtask_source === 3) {
+        labels = ['Input Texts', 'Text Content', 'Task Details'];
+    } else if (subtask_source === 4) {
+        labels = ['Input Q&A', 'Q&A Content', 'Task Details'];
+    } else {
+        labels = ['Step1', 'Step2', 'Task Details'];
+    }
+    let html = '<div class="progress-line"></div><div class="progress-line-active" style="width: 100%;"></div>';
+    for (let i = 0; i < totalSteps; ++i) {
+        let status = '';
+        if (i < totalSteps - 1) status = 'completed';
+        else status = 'active';
+        html += `
+            <div id="step-${i+1}" class="progress-step ${status}">
+                <span id="step-${i+1}-number">${status === 'completed' ? '✓' : (i+1)}</span>
+                <span id="step-${i+1}-text" class="progress-label">${labels[i] || ''}</span>
+            </div>
+        `;
+    }
+    document.getElementById('progress-steps').innerHTML = html;
+}
+
+async function render() {
+    const uuid = getQueryParam('id');
+    if (!uuid) return;
+    const res = await fetch('/api/getAllSubtaskByUuid', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({uuid})
+    });
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    const subtask_source = data[0].subtask_source;
+    renderProgressBar(subtask_source);
+
+    // Step 1 渲染
+    let step1Title = '';
+    let step1Label = '';
+    let items = [];
+    if (subtask_source === 1) {
+        step1Title = 'Files Provided';
+        step1Label = `Input Files (${data.length} items):`;
+        items = data.map(d => `<div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
+            <span class="url-text">${escapeHtml(d.save_name)}</span>
+        </div>`);
+    } else if (subtask_source === 2) {
+        step1Title = 'URLs Provided';
+        step1Label = `Input URLs (${data.length} items):`;
+        items = data.map(d => `<div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
+            <span class="url-text">${escapeHtml(d.original_name)}</span>
+        </div>`);
+    } else if (subtask_source === 3) {
+        step1Title = 'Text Provided';
+        step1Label = `Input Texts (${data.length} items):`;
+        items = data.map(d => `<div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
+            <span class="url-text">${escapeHtml(d.save_name)}</span>
+        </div>`);
+    } else if (subtask_source === 4) {
+        step1Title = 'Q&A Provided';
+        step1Label = `Input Q&A (${data.length} items):`;
+        items = data.map(d => `<div class="url-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin: 8px 0;">
+            <span class="url-text">${escapeHtml(d.save_name)}</span>
+        </div>`);
+    }
+    document.getElementById('step1').innerHTML = `
+        <div class="detail-step-header">
+            <div class="step-icon completed">1</div>
+            <div class="detail-step-title">Step 1: ${step1Title}</div>
+        </div>
+        <div class="detail-content">
+            <div class="content-item">
+                <strong>${step1Label}</strong>
+                <div style="margin: 12px 0;">
+                    ${items.join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Step 2 渲染
+    let step2Title = '';
+    let step2Content = '';
+    if (subtask_source === 1 || subtask_source === 4) {
+        // 文件/qa，渲染Q&A
+        step2Title = subtask_source === 1 ? 'Extracted Q&A' : 'Q&A Content';
+        let qaHtml = '';
+        for (let d of data) {
+            let qa_file_name = d.save_name;
+            qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
+            let qaRes = await fetch(`/api/fileContent/${d.task_id}/qa_files/${qa_file_name}`);
+            let qaList = [];
+            try {
+                qaList = await qaRes.json();
+            } catch {}
+            if (Array.isArray(qaList)) {
+                qaList.forEach((qa, idx) => {
+                    if (!qa || qa.length < 2) return;
+                    qaHtml += `
+                    <div class="qa-item" style="margin-bottom: 16px;">
+                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q${idx+1}: ${escapeHtml(qa[0])}</div>
+                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">${escapeHtml(qa[1])}</div>
+                    </div>
+                    `;
+                });
+            }
+        }
+        if (!qaHtml) qaHtml = '<div style="color:#aaa;">No Q&A found.</div>';
+        step2Content = `<div class="detail-content">${qaHtml}</div>`;
+    } else if (subtask_source === 2 || subtask_source === 3) {
+        // url/text，渲染内容
+        step2Title = subtask_source === 2 ? 'Extracted Content' : 'Text Content';
+        let contentHtml = '';
+        for (let i = 0; i < data.length; ++i) {
+            const d = data[i];
+            let fileRes = await fetch(`/api/fileContent/${d.task_id}/crawl_files/${d.save_name}`);
+            let fileText = '';
+            try {
+                fileText = await fileRes.text();
+            } catch {}
+            let shortText = fileText.length > 400 ? fileText.slice(0, 400) + '...' : fileText;
+            let showBtn = fileText.length > 400 ? `<button class="view-more-btn" id="btn-content${i}" data-short="${escapeHtml(shortText)}" data-full="${escapeHtml(fileText)}" data-expanded="false" onclick="toggleDetailContent('content${i}')">Show Full Content</button>` : '';
+            let sourceLine = '';
+            if (subtask_source === 2) {
+                sourceLine = `<div style="color: #667eea; font-size: 0.9rem; margin-bottom: 12px;">Source: ${escapeHtml(d.original_name)}</div>`;
+            }
+            contentHtml += `
+            <div class="content-item">
+                <h4 style="color: #fff; margin-bottom: 12px;">${escapeHtml(fileNameNoExt(d.save_name))}</h4>
+                ${sourceLine}
+                <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 0.9rem;" id="content-content${i}">${escapeHtml(shortText)}</div>
+                    ${showBtn}
+                </div>
+            </div>
+            `;
+        }
+        step2Content = `<div class="detail-content">${contentHtml}</div>`;
+    }
+    document.getElementById('step2').innerHTML = `
+        <div class="detail-step-header">
+            <div class="step-icon completed">2</div>
+            <div class="detail-step-title">Step 2: ${step2Title}</div>
+        </div>
+        ${step2Content}
+    `;
+
+    // Step 3 渲染（仅url型有）
+    if (subtask_source === 2) {
+        document.getElementById('step3').style.display = '';
+        let qaHtml = '';
+        for (let d of data) {
+            let qa_file_name = d.save_name;
+            qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
+            let qaRes = await fetch(`/api/fileContent/${d.task_id}/qa_files/${qa_file_name}`);
+            let qaList = [];
+            try {
+                qaList = await qaRes.json();
+            } catch {}
+            if (Array.isArray(qaList)) {
+                qaList.forEach((qa, idx) => {
+                    if (!qa || qa.length < 2) return;
+                    qaHtml += `
+                    <div class="qa-item" style="margin-bottom: 16px;">
+                        <div class="question" style="color: #10b981; font-weight: 600; margin-bottom: 8px;">Q${idx+1}: ${escapeHtml(qa[0])}</div>
+                        <div class="answer" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">${escapeHtml(qa[1])}</div>
+                    </div>
+                    `;
+                });
+            }
+        }
+        if (!qaHtml) qaHtml = '<div style="color:#aaa;">No Q&A found.</div>';
+        document.getElementById('step3').innerHTML = `
+            <div class="detail-step-header">
+                <div class="step-icon completed">3</div>
+                <div class="detail-step-title">Step 3: Generated Q&A Pairs</div>
+            </div>
+            <div class="detail-content">${qaHtml}</div>
+        `;
+    } else {
+        document.getElementById('step3').style.display = 'none';
+    }
+}
+
+async function downloadQA() {
+    const uuid = getQueryParam('id');
+    if (!uuid) return;
+    // 获取数据
+    const res = await fetch('/api/getAllSubtaskByUuid', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({uuid})
+    });
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+        alert('No data found');
+        return;
+    }
+    const subtask_source = data[0].subtask_source;
+    if (![1,2,4].includes(subtask_source)) {
+        alert('当前类型不支持下载Q&A');
+        return;
+    }
+    let qaArr = [];
+    for (let d of data) {
+        let qaList = [];
+        if (subtask_source === 2) {
+            // url型，Q&A文件名规则同step3
+            let qa_file_name = d.save_name;
+            qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
+            try {
+                let qaRes = await fetch(`/api/fileContent/${d.task_id}/qa_files/${qa_file_name}`);
+                qaList = await qaRes.json();
+            } catch {}
+        } else {
+            // file/qa型
+            let qa_file_name = d.save_name;
+            qa_file_name = qa_file_name.substring(0, qa_file_name.lastIndexOf('.')) + '_qa.json';
+            try {
+                let qaRes = await fetch(`/api/fileContent/${d.task_id}/qa_files/${qa_file_name}`);
+                qaList = await qaRes.json();
+            } catch {}
+        }
+        if (Array.isArray(qaList)) {
+            qaList.forEach(qa => {
+                if (qa && qa.length >= 2) {
+                    qaArr.push({question: qa[0], answer: qa[1]});
+                }
+            });
+        }
+    }
+    if (qaArr.length === 0) {
+        alert('没有可导出的Q&A内容');
+        return;
+    }
+    const blob = new Blob([JSON.stringify(qaArr, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${uuid}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+window.onload = render;
+
+// 保留原有按钮功能
+function backToTaskCenter() {
+    window.location.href = '/tasks';
+}
 </script>
 </body>
 </html>

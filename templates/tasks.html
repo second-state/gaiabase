@@ -920,7 +920,7 @@
     function viewGroupDetails(groupId, step, source) {
         showNotification(`Would navigate to Details page`, 'info');
         if (step >= 4 || source === 3 || source === 4) {
-            window.location.href = `/status?id=${groupId}`;
+            window.location.href = `/detail?id=${groupId}`;
         } else {
             window.location.href = `/review?id=${groupId}`;
         }

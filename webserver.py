@@ -284,6 +284,17 @@ def create_qdrant_collection():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/updateUserConfig", methods=["POST"])
+def update_user_config():
+    data = request.get_json()
+    uuid = data.get("uuid")
+    user_config = data.get("userConfig")
+    if not uuid or not user_config:
+        return jsonify({"error": "UUID 和用户配置是必需的"}), 400
+    update_task_user_config(uuid, user_config)
+    return jsonify({"message": "用户配置更新成功"}), 200
+
+
 @app.route("/api/getFileCount", methods=["POST"])
 def get_file_count():
     result_array = []

@@ -595,7 +595,23 @@
 
         const encrypted = await encrypt(config);
         if (encrypted) {
-            localStorage.setItem('gaiabaseConfig', encrypted);
+            const urlParams = new URLSearchParams(window.location.search);
+            const configId = urlParams.get('id');
+
+            if (configId) {
+                await fetch('/api/updateUserConfig', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        uuid: configId,
+                        userConfig: encrypted
+                    })
+                });
+            } else {
+                localStorage.setItem('gaiabaseConfig', encrypted);
+            }
         }
 
         try {

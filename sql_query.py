@@ -166,6 +166,29 @@ def create_task(uuid, user_config, question_prompt="", answer_prompt="", split_l
             conn.close()
 
 
+def update_task_user_config(uuid, user_config):
+    conn = create_connection()
+    if conn is None:
+        return False
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                       UPDATE `task`
+                       SET user_config = %s
+                       WHERE uuid = %s;
+                       """, (user_config, uuid,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Error as e:
+        print(f"Update task user_config failed and rolled back. Error: {e}")
+        conn.rollback()
+        return False
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+
 def check_task_status(uuid):
     conn = create_connection()
     if conn is None:
